@@ -2,7 +2,6 @@
   "name": "task_manager",
   "version": "1.0.0",
   "main": "dist/server.js",
-  "type": "module",
   "nodemonConfig": {
     "watch": [
       "server"
@@ -29,18 +28,18 @@
     "@types/dotenv": "^6.1.1",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.27",
-    "typescript": "^5.9.2"
+    "typeorm": "^0.3.27"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/node": "^24.6.2",
+    "@types/node": "^24.7.0",
     "@types/typescript": "^0.4.29",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "envalid": "^8.1.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "typescript": "^5.9.3"
   }
 }

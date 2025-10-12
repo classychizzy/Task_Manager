@@ -5,6 +5,7 @@ declare class App {
     constructor();
     private initializeMiddlewares;
     listen(port: number): void;
+    initializeDatabase(): Promise<void>;
 }
 export default App;
 //# sourceMappingURL=app.d.ts.map
