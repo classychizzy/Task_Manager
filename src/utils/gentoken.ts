@@ -1,0 +1,18 @@
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import { UserDTO } from '../dto/user_dto';
+dotenv.config();
+
+
+const secret = process.env.JWT_SECRET ;
+
+
+if (!secret) {
+  throw new Error("JWT_SECRET environment variable is not set");
+}
+
+export const generateToken = (user: UserDTO) => {
+    const Payload = {user_id: user.user_id};
+    return jwt.sign(Payload, secret, {expiresIn: '1h'})
+}
+    

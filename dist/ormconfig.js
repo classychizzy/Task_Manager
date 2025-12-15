@@ -59,10 +59,9 @@ const AppDataSource = new typeorm_1.DataSource({
     logging: false,
     entities: [
         process.env.DEPLOYMENT_ENV === 'production' ?
-            "build/entity/*{.js,.ts}"
-            : "src/entity/*{.js,.ts}",
+            "dist/entities/*{.js,.ts}"
+            : "src/entities/*{.js,.ts}",
     ],
     migrations: ["src/migration/*{.ts}"],
 });
 exports.default = AppDataSource;
-//# sourceMappingURL=ormconfig.js.map

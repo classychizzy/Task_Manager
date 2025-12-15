@@ -7,19 +7,28 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "commonjs",
-    "target": "esnext",
-    
+    // "module": "commonjs",
+    // "target": "esnext",
+    "target": "ESNext",
+    "module": "CommonJS",
+    "allowJs": true,
     // For nodejs:
     "lib": ["esnext"],
-    "types": ["node"],
+    // "lib": ["ES2015", "ES2016","dom"],
+    "moduleResolution": "node",
+    "typeRoots": ["./node_modules/@types"],
+
+    // "types": ["node"],
     // and npm install -D @types/node
 
     // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
+    // "sourceMap": true,
+    // "declaration": true,
+    // "declarationMap": true,
     "esModuleInterop": true,
+    "emitDecoratorMetadata": true, // helps ensure i don't get error with typeorm decorators
+    "experimentalDecorators": true,
+    
 
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
@@ -35,11 +44,16 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
+    "strictPropertyInitialization": false, //helps with property initialization in typeorm
+    // "jsx": "react-jsx",
     //"verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
+    // "isolatedModules": true,
+    // "noUncheckedSideEffectImports": true,
+    // "moduleDetection": "force",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    
   }
 }

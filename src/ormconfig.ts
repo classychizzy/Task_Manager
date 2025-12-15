@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import * as dotenv from 'dotenv';
+
 //import * as dotenv dotenv';
 
 
@@ -33,8 +34,8 @@ const AppDataSource = new DataSource({
   logging: false,
   entities: [
     process.env.DEPLOYMENT_ENV === 'production' ?
-    "build/entity/*{.js,.ts}"
-    :"src/entity/*{.js,.ts}",
+    "dist/entities/*{.js,.ts}"
+    :"src/entities/*{.js,.ts}",
   ],
   migrations: ["src/migration/*{.ts}"],
 });
