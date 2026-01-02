@@ -40,7 +40,8 @@ class App {
         });
         console.log('Initializing controllers...');
         //base route for all initialized routes in the controller
-         this.app.use('/api/v1', new Auth_Controller().router);
+         this.app.use('/api/v1/auth', new Auth_Controller().router);
+        
          
     }   
 

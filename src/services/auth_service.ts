@@ -2,9 +2,9 @@ import { UserDTO } from "../dto/user_dto";
 
 import AppDataSource from "../ormconfig";
 import { UserRepository } from "../repositories/user_repository";
-import {Response} from 'express';
+import { Response } from 'express';
 import { STATUS_CODES } from "http";
-import { IsEmail } from 'class-validator';
+//import { IsEmail } from 'class-validator';
 import { validateEmail } from "../validator/user_validation";
 import { hashPassword } from '../utils/hashPassword';
 import { User_entity } from "../entities/user_entity";
@@ -21,8 +21,22 @@ export class Auth_Service {
     }
 
     async registerUser(userData: UserDTO) {
+        /**  console.log(
+             userData.firstName,
+             userData.lastName,
+             userData.username,
+             userData.email,
+             userData.password
+         );
+         */
+
         // check if user exists first
-        const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
+        const existingUser = await this.userRepository.findOne({
+            where: {
+                email: userData.email
+            },
+        });
+
         if (existingUser) {
             let response = {
                 status_code: 400,
@@ -32,18 +46,22 @@ export class Auth_Service {
             }
             return response;
         }
-        
+
         // Here you would typically hash the password before saving
         const hashedPassword = await hashPassword(userData.password);
         userData.password = hashedPassword;
-        
+
         // For simplicity, we'll save it as is for now.
         try {
 
-            let IsEmailValid = validateEmail(userData.email);
+            console.log(userData.email, typeof userData.email);
 
-            if(!IsEmailValid){
-                
+            let IsEmailValid = validateEmail(userData.email);
+            console.log(IsEmailValid);
+
+
+            if (!IsEmailValid) {
+
                 let response = {
                     status_code: 400,
                     status: 'failed',
@@ -51,7 +69,7 @@ export class Auth_Service {
                     data: null
                 }
 
-                return response;    
+                return response;
             }
 
             //create an instance of user entity
@@ -65,7 +83,7 @@ export class Auth_Service {
             newUser.password = userData.password; // In a real app, hash this!
 
             // await AppDataSource.manager.save(newUser);
-           
+
             await this.userRepository.save(newUser);
             // return newUser;
 
@@ -77,15 +95,14 @@ export class Auth_Service {
             }
 
             return response;
-            
+
         } catch (error) {
 
             let errorMessage = "An unknown error occurred during registration.";
             if (error instanceof Error) {
                 // Now TypeScript knows `error` has a `message` property
                 errorMessage = error.message;
-                 
-                
+
             }
 
             let response = {
@@ -98,18 +115,30 @@ export class Auth_Service {
             }
 
             return response;
-            
+
         }
     }
 
-    async findUserByEmail(user: UserDTO) {
+    async findUserByEmail(userData: UserDTO) {
+
+        console.log(userData.email);
+
 
         try {
 
-            const userEntity = await this.userRepository.findOne(
-                { 
-                    where: { 
-                        email: user.email 
+            if (!userData?.email) {
+                return {
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Email is required',
+                    data: null,
+                };
+            }
+
+            const user = await this.userRepository.findOne(
+                {
+                    where: {
+                        email: userData.email,
                     },
                     // relations: {
                     //     projects: {
@@ -119,7 +148,7 @@ export class Auth_Service {
                     //     comments: true,
                     //     task_assignments: true
                     // }
-                    relations:[
+                    relations: [
                         "projects",
                         "projects.tasks",
                         "tasks",
@@ -130,9 +159,10 @@ export class Auth_Service {
                         user_id: "DESC"
                     }
                 }
+
             );
 
-            if(!userEntity){
+            if (!user) {
 
                 let response = {
                     status_code: 404,
@@ -140,7 +170,7 @@ export class Auth_Service {
                     message: 'User not found',
                     data: null
                 }
-                
+
                 return response;
 
             }
@@ -149,12 +179,12 @@ export class Auth_Service {
                 status_code: 200,
                 status: 'success',
                 message: 'User retrieved successfully',
-                data: userEntity
+                data: user
             }
 
             return response;
 
-            //return await AppDataSource.manager.findOne(User, { where: { email: user.email } });
+            // return await AppDataSource.manager.findOne(User_entity, { where: { email: user.email } });
 
         } catch (error) {
 
@@ -174,9 +204,32 @@ export class Auth_Service {
             }
 
             return response;
-                
-            
+
+
         }
+    }
+
+    async loginUser(userData: UserDTO) {
+        try {
+
+            if (!userData?.email && !userData?.password) {}
+            const user = await this.userRepository.findOne({
+                where: {
+                    email: userData.email,
+                    password: userData.password,
+                },
+                relations: ["projects",
+                        "projects.tasks",
+                        "tasks",
+                        "comments",
+                        "task_assignments"
+                    ],
+                    order: {
+                        user_id: "DESC"
+                    }
+            });
+
+            
     }
     
 }

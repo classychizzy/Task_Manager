@@ -18,76 +18,26 @@ export class Auth_Controller {
     }
 
     public async registerUser(req: Request, res: Response) {
-        console.log("we test");
-        //access request body data
-        try {
-            //write payload here
-               const user = await this.authService.registerUser(req.body);
-               console.log(req.body);
-               return res.status(200).json({data: user,
-                message: "User registered successfully",
-                status: "success",
-                status_code: 200
-               });
-             
-        }catch (error) {
-            console.log("failed");
-            let errorMessage = "An unknown error occurred during registration.";
-            if (error instanceof Error) {
-                // Now TypeScript knows `error` has a `message` property
-                return res.status(400).json({ errorMessage: error.message });
-
-            }
-            let response = {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                    data: null
-            }
-            return res.json(response);
-        }
+        const user = await this.authService.registerUser(req.body);
+        return res.json(user);
     }
 
     public async loginUser(req: Request, res: Response) {
+
+        const userData = req.body as UserDTO;
+        console.log(userData);
         
-    
+        return res.json("await this.authService.loginUser(req.body)");
 
     }
 
     public async findUserByEmail(req: Request, res: Response) {
-        let user = await this.authService.findUserByEmail(req.body);
-        try {
-            if (user) {
-                let response = {
-                    status_code: 200,
-                    status: 'success',
-                    message: 'User found successfully.',
-                    data: user
-                }
-                return res.json(response);
-            
-            }
-            
-            
-        }
-        catch (error) {
-            let errorMessage = "an unknown error occured"
-
-            if (error instanceof Error) {
-                return res.status(400).json({ errorMessage: error.message });
-            }
-            let response = {  
-                status_code: 500,
-                messsage: 'Internal server error.',
-                status: 'failed',
-                errorMessage: errorMessage,
-                data: null
-            }
-            return res.json(response);
-
-        }
-
+        
+        const userData = req.body as UserDTO;
+        console.log(userData);
+        
+        let user = await this.authService.findUserByEmail(userData);
+        return res.json(user);
         
     }
 
@@ -107,9 +57,9 @@ export class Auth_Controller {
             //add middleware here
             this.loginUser.bind(this)
         );
-        this.router.get('/user',
+        this.router.post('/user',
             //add middleware here
-             this.authService.findUserByEmail.bind(this)
+             this.findUserByEmail.bind(this)
         );
         // this.router.get('/find/:id', 
         //     //add middleware here
