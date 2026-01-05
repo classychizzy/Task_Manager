@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { UserDTO } from '../dto/user_dto';
+import UserPayload from '../types/express'
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,7 +12,7 @@ if (!secret) {
 }
 
 export const generateToken = (user: UserDTO) => {
-    const Payload = {user_id: user.user_id};
-    return jwt.sign(Payload, secret, {expiresIn: '1h'})
+    //const Payload = {username: user.username};
+    return jwt.sign(UserPayload, secret, {expiresIn: '1h'})
 }
     

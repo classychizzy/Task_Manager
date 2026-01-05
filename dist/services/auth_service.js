@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Auth_Service = void 0;
 const user_repository_1 = require("../repositories/user_repository");
+//import { IsEmail } from 'class-validator';
 const user_validation_1 = require("../validator/user_validation");
 const hashPassword_1 = require("../utils/hashPassword");
 const user_entity_1 = require("../entities/user_entity");
@@ -14,8 +15,20 @@ class Auth_Service {
         this.userRepository = user_repository_1.UserRepository;
     }
     async registerUser(userData) {
+        /**  console.log(
+             userData.firstName,
+             userData.lastName,
+             userData.username,
+             userData.email,
+             userData.password
+         );
+         */
         // check if user exists first
-        const existingUser = await this.userRepository.findOne({ where: { email: userData.email } });
+        const existingUser = await this.userRepository.findOne({
+            where: {
+                email: userData.email
+            },
+        });
         if (existingUser) {
             let response = {
                 status_code: 400,
@@ -30,7 +43,9 @@ class Auth_Service {
         userData.password = hashedPassword;
         // For simplicity, we'll save it as is for now.
         try {
+            console.log(userData.email, typeof userData.email);
             let IsEmailValid = (0, user_validation_1.validateEmail)(userData.email);
+            console.log(IsEmailValid);
             if (!IsEmailValid) {
                 let response = {
                     status_code: 400,
@@ -76,11 +91,20 @@ class Auth_Service {
             return response;
         }
     }
-    async findUserByEmail(user) {
+    async findUserByEmail(userData) {
+        console.log(userData.email);
         try {
-            const userEntity = await this.userRepository.findOne({
+            if (!userData?.email) {
+                return {
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Email is required',
+                    data: null,
+                };
+            }
+            const user = await this.userRepository.findOne({
                 where: {
-                    email: user.email
+                    email: userData.email,
                 },
                 // relations: {
                 //     projects: {
@@ -101,7 +125,7 @@ class Auth_Service {
                     user_id: "DESC"
                 }
             });
-            if (!userEntity) {
+            if (!user) {
                 let response = {
                     status_code: 404,
                     status: 'failed',
@@ -114,15 +138,59 @@ class Auth_Service {
                 status_code: 200,
                 status: 'success',
                 message: 'User retrieved successfully',
-                data: userEntity
+                data: user
             };
             return response;
-            //return await AppDataSource.manager.findOne(User, { where: { email: user.email } });
+            // return await AppDataSource.manager.findOne(User_entity, { where: { email: user.email } });
         }
         catch (error) {
             let errorMessage = "An unknown error occurred during registration.";
             if (error instanceof Error) {
                 // Now TypeScript knows `error` has a `message` property
+                errorMessage = error.message;
+            }
+            let response = {
+                // It's better to use a proper error status code
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            };
+            return response;
+        }
+    }
+    async loginUser(userData) {
+        try {
+            const isemailValid = (0, user_validation_1.validateEmail)(userData.email);
+            //
+            const user = await this.userRepository.findOne({
+                where: {
+                    email: userData.email,
+                    username: userData.username
+                }
+            });
+            const ispasswordValid = await (0, hashPassword_1.comparePassword)(userData.password, user.password);
+            if (!user || !ispasswordValid) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                };
+                return response;
+            }
+            let response = {
+                Status_code: 200,
+                status: 'success',
+                message: 'User logged in successfully',
+                data: user
+            };
+            return response;
+        }
+        catch (error) {
+            let errorMessage = "An unknown error occurred during login.";
+            if (error instanceof Error) {
                 errorMessage = error.message;
             }
             let response = {

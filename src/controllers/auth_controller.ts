@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { UserDTO } from "../dto/user_dto";
 import { LoginDto } from "../dto/login_dto";
-import { Auth_Service } from "../services/auth_service";
+import { Auth_Service } from "../services/auth/auth_service";
 import * as express from 'express';
 import { STATUS_CODES } from "http";
 
@@ -26,8 +26,11 @@ export class Auth_Controller {
 
         const userData = req.body as UserDTO;
         console.log(userData);
+        const user = await this.authService.loginUser(userData);
+        return res.json(user);
         
-        return res.json("await this.authService.loginUser(req.body)");
+        
+        //return res.json("await this.authService.loginUser(req.body)");
 
     }
 

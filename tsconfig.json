@@ -18,7 +18,8 @@
     "lib": ["esnext"],
     // "lib": ["ES2015", "ES2016","dom"],
     "moduleResolution": "node",
-    "typeRoots": ["./node_modules/@types"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+
 
     // "types": ["node"],
     // and npm install -D @types/node
@@ -57,5 +58,7 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     
-  }
+  },
+  "include":["src"]
+
 }

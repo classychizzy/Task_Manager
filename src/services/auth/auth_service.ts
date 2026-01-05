@@ -1,13 +1,13 @@
-import { UserDTO } from "../dto/user_dto";
+import { UserDTO } from "../../dto/user_dto";
 
-import AppDataSource from "../ormconfig";
-import { UserRepository } from "../repositories/user_repository";
-import { Response } from 'express';
+import AppDataSource from "../../ormconfig";
+import { UserRepository } from "../../repositories/user_repository";
+import { Response, Request} from 'express';
 import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
-import { validateEmail } from "../validator/user_validation";
-import { hashPassword } from '../utils/hashPassword';
-import { User_entity } from "../entities/user_entity";
+import { validateEmail, validatePassword } from '../../validator/user_validation';
+import { hashPassword, comparePassword } from '../../utils/hashPassword';
+import { User_entity } from "../../entities/user_entity";
 
 //handles all user and authentication issues
 
@@ -161,6 +161,7 @@ export class Auth_Service {
                 }
 
             );
+            
 
             if (!user) {
 
@@ -211,25 +212,60 @@ export class Auth_Service {
 
     async loginUser(userData: UserDTO) {
         try {
-
-            if (!userData?.email && !userData?.password) {}
+            const isemailValid = validateEmail(userData.email);
+            //
+           
             const user = await this.userRepository.findOne({
                 where: {
                     email: userData.email,
-                    password: userData.password,
-                },
-                relations: ["projects",
-                        "projects.tasks",
-                        "tasks",
-                        "comments",
-                        "task_assignments"
-                    ],
-                    order: {
-                        user_id: "DESC"
-                    }
+                   username: userData.username
+                }
             });
 
             
+
+            const ispasswordValid = await comparePassword(userData.password, user!.password);
+            if (!user || !ispasswordValid) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                }
+                return response;
+
+
+            }
+
+            let response = {
+                Status_code: 200,
+                status: 'success',
+                message: 'User logged in successfully',
+                data: user
+
+            }
+            return response;
+  
+
+        }
+        catch (error) {
+            let errorMessage = "An unknown error occurred during login.";
+            if (error instanceof Error) { errorMessage = error.message;
+            }
+
+            let response = {
+                // It's better to use a proper error status code
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            }
+
+            return response;
+        }
+
+
+        
     }
-    
-}
+    }
