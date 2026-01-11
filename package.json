@@ -18,7 +18,7 @@
   "scripts": {
     "start": "nodemon --max_old_space_size=4096 dist/server.js",
     "dev": "nodemon --exec ts-node --legacy-watch src/server.ts",
-    "build": "rimraf ./dist && npx tsc",
+    "build": "rimraf ./dist && tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc",
     "watch-node": "nodemon --max_old_space_size=4096 dist/server.js",
@@ -53,6 +53,7 @@
     "envalid": "^8.1.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
 }

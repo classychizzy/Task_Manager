@@ -1,5 +1,5 @@
 import { UserDTO } from "../../dto/user_dto";
-
+import { UserPayload } from "../../types/express";
 import AppDataSource from "../../ormconfig";
 import { UserRepository } from "../../repositories/user_repository";
 import { Response, Request} from 'express';
@@ -7,7 +7,11 @@ import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
 import { validateEmail, validatePassword } from '../../validator/user_validation';
 import { hashPassword, comparePassword } from '../../utils/hashPassword';
-import { User_entity } from "../../entities/user_entity";
+import { User_entity } from "../../entities/user_entity";``
+import { TokenService } from "./token_service";
+import { RefreshRepository } from '../../repositories/refresh_repository';
+import { Refresh_entity } from "../../entities/refresh_entity";
+
 
 //handles all user and authentication issues
 
@@ -15,9 +19,14 @@ import { User_entity } from "../../entities/user_entity";
 export class Auth_Service {
     //set up user repository here
     private userRepository: typeof UserRepository;
+    private RefreshRepository: typeof RefreshRepository;
+    private readonly tokenService: TokenService;
+
 
     constructor() {
         this.userRepository = UserRepository;
+        this.RefreshRepository = RefreshRepository;
+        this.tokenService = new TokenService();
     }
 
     async registerUser(userData: UserDTO) {
@@ -212,13 +221,14 @@ export class Auth_Service {
 
     async loginUser(userData: UserDTO) {
         try {
-            const isemailValid = validateEmail(userData.email);
-            //
+            // const isemailValid = validateEmail(userData.email);
+            
            
             const user = await this.userRepository.findOne({
                 where: {
                     email: userData.email,
                    username: userData.username
+                   
                 }
             });
 
@@ -237,14 +247,54 @@ export class Auth_Service {
 
             }
 
-            let response = {
-                Status_code: 200,
-                status: 'success',
-                message: 'User logged in successfully',
-                data: user
+            const payload: UserPayload = {
+                id: user.user_id,
+                email: user.email,
+                username: user.username,
+            }
+           
+            const tokenService = new TokenService();
+            const accessToken = tokenService.generateAccessToken(payload);
+            const refreshToken = tokenService.generateRefreshToken(payload);
+
+            let validateRefreshToken = await RefreshRepository.findOne({
+                where: {
+                    user_id: user.user_id
+                }
+            });
+
+            if(validateRefreshToken){
+                validateRefreshToken.user_id = user.user_id;
+                validateRefreshToken.user = user;
+                validateRefreshToken.revoked = false;
+                validateRefreshToken.expires_at = new Date(Date.now() + 86400000);
+                validateRefreshToken.tokenHash = refreshToken;
+                await this.RefreshRepository.save(validateRefreshToken);
+            }else{
+
+                const newRefreshToken = new Refresh_entity();
+                newRefreshToken.user_id = user.user_id;
+                newRefreshToken.user = user;
+                newRefreshToken.revoked = false;
+                newRefreshToken.expires_at = new Date(Date.now() + 86400000);
+                newRefreshToken.tokenHash = refreshToken;
+                await this.RefreshRepository.save(newRefreshToken);
 
             }
-            return response;
+
+           let response = {
+            status_code: 200,
+            status: 'success',
+            message: 'User logged in successfully',
+            data: {
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                user: user
+            }
+           }
+        
+           return response;
+
   
 
         }
@@ -268,4 +318,8 @@ export class Auth_Service {
 
         
     }
-    }
+
+    async logoutUser(req: Request, res: Response) {
+
+
+    }}

@@ -1,18 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Auth_Service = void 0;
-const user_repository_1 = require("../repositories/user_repository");
+const user_repository_1 = require("../../repositories/user_repository");
 //import { IsEmail } from 'class-validator';
-const user_validation_1 = require("../validator/user_validation");
-const hashPassword_1 = require("../utils/hashPassword");
-const user_entity_1 = require("../entities/user_entity");
+const user_validation_1 = require("../../validator/user_validation");
+const hashPassword_1 = require("../../utils/hashPassword");
+const user_entity_1 = require("../../entities/user_entity");
+``;
+const token_service_1 = require("./token_service");
+const refresh_repository_1 = require("../../repositories/refresh_repository");
 //handles all user and authentication issues
 //create a service class where you will write your queries and logics
 class Auth_Service {
-    //set up user repository here
-    userRepository;
     constructor() {
         this.userRepository = user_repository_1.UserRepository;
+        this.RefreshRepository = refresh_repository_1.RefreshRepository;
+        this.tokenService = new token_service_1.TokenService();
     }
     async registerUser(userData) {
         /**  console.log(
@@ -180,11 +183,29 @@ class Auth_Service {
                 };
                 return response;
             }
+            const payload = {
+                id: user.user_id,
+                email: user.email,
+                username: user.username,
+            };
+            const tokenService = new token_service_1.TokenService();
+            const accessToken = tokenService.generateAccessToken(payload);
+            const refreshToken = tokenService.generateRefreshToken(payload);
+            // save the token
+            const hashtoken = await (0, hashPassword_1.hashPassword)(refreshToken);
+            const token = await this.RefreshRepository.save({
+                user_id: user.user_id,
+                token: hashtoken
+            });
             let response = {
-                Status_code: 200,
+                status_code: 200,
                 status: 'success',
                 message: 'User logged in successfully',
-                data: user
+                data: {
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    user: user
+                }
             };
             return response;
         }

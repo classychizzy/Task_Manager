@@ -9,41 +9,40 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Comment_Entity = void 0;
-const user_entity_1 = require("./user_entity");
-const task_entity_1 = require("./task_entity");
+exports.Refresh_entity = void 0;
 const typeorm_1 = require("typeorm");
-let Comment_Entity = class Comment_Entity {
+const user_entity_1 = require("./user_entity");
+let Refresh_entity = class Refresh_entity {
 };
-exports.Comment_Entity = Comment_Entity;
+exports.Refresh_entity = Refresh_entity;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
-], Comment_Entity.prototype, "comment_id", void 0);
+], Refresh_entity.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text' }),
+    (0, typeorm_1.Column)({ type: 'int' }),
+    __metadata("design:type", Number)
+], Refresh_entity.prototype, "user_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], Comment_Entity.prototype, "content", void 0);
+], Refresh_entity.prototype, "tokenHash", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar' }),
-    __metadata("design:type", String)
-], Comment_Entity.prototype, "priority_level", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Date)
-], Comment_Entity.prototype, "created_at", void 0);
+], Refresh_entity.prototype, "expires_at", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' }),
+    (0, typeorm_1.Column)({ default: true }),
+    __metadata("design:type", Boolean)
+], Refresh_entity.prototype, "revoked", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
-], Comment_Entity.prototype, "updated_at", void 0);
+], Refresh_entity.prototype, "created_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.comments),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.refresh),
     __metadata("design:type", user_entity_1.User_entity)
-], Comment_Entity.prototype, "user", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => task_entity_1.Task_entity, (task) => task.comments),
-    __metadata("design:type", task_entity_1.Task_entity)
-], Comment_Entity.prototype, "task", void 0);
-exports.Comment_Entity = Comment_Entity = __decorate([
+], Refresh_entity.prototype, "user", void 0);
+exports.Refresh_entity = Refresh_entity = __decorate([
     (0, typeorm_1.Entity)()
-], Comment_Entity);
+], Refresh_entity);

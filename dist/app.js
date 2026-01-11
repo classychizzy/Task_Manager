@@ -44,8 +44,6 @@ const auth_controller_1 = require("./controllers/auth_controller");
 const helmet_1 = __importDefault(require("helmet"));
 const http = __importStar(require("http"));
 class App {
-    app;
-    port;
     constructor() {
         this.app = (0, express_1.default)();
         this.port = Number(process.env.PORT) || 9000;

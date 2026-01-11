@@ -12,24 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User_entity = void 0;
 const comments_entity_1 = require("./comments_entity");
 const projects_entity_1 = require("./projects_entity");
+const refresh_entity_1 = require("./refresh_entity");
 const Task_assignment_entity_1 = require("./Task_assignment_entity");
 const task_entity_1 = require("./task_entity");
 const typeorm_1 = require("typeorm");
 let User_entity = class User_entity {
-    user_id;
-    firstName;
-    lastName;
-    username;
-    email;
-    password;
-    isActive;
-    created_at;
-    updated_at;
-    //relationships
-    projects;
-    tasks;
-    comments;
-    task_assignments;
 };
 exports.User_entity = User_entity;
 __decorate([
@@ -61,7 +48,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User_entity.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }),
+    (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], User_entity.prototype, "created_at", void 0);
 __decorate([
@@ -84,6 +71,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => Task_assignment_entity_1.Task_assignment_entity, (task_assignment) => task_assignment.user),
     __metadata("design:type", Array)
 ], User_entity.prototype, "task_assignments", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => refresh_entity_1.Refresh_entity, (refresh) => refresh.user),
+    __metadata("design:type", Array)
+], User_entity.prototype, "refresh", void 0);
 exports.User_entity = User_entity = __decorate([
     (0, typeorm_1.Entity)()
 ], User_entity);

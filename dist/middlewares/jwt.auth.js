@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateToken = authenticateToken;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-function authenticateToken(req, res, next) {
+function authenticateToken(req, next) {
     const authheader = req.headers['authorization'];
     const token = authheader && authheader.split(' ')[1];
     if (!token) {
@@ -25,8 +25,13 @@ function authenticateToken(req, res, next) {
                 message: 'invalid or expired token',
                 data: null
             };
-            req.user = decoded;
-            next();
+            return response;
         }
+        else {
+            console.log(decoded);
+            const user = decoded;
+            return user;
+        }
+        next();
     });
 }

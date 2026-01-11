@@ -14,15 +14,6 @@ const typeorm_1 = require("typeorm");
 const task_entity_1 = require("./task_entity");
 const user_entity_1 = require("./user_entity");
 let Task_assignment_entity = class Task_assignment_entity {
-    task_assignment_id;
-    task_id;
-    user_id;
-    permission;
-    created_at;
-    updated_at;
-    //relationship
-    user;
-    task;
 };
 exports.Task_assignment_entity = Task_assignment_entity;
 __decorate([

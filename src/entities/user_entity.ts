@@ -1,9 +1,10 @@
 
 import { Comment_Entity } from './comments_entity';
 import { Project_entity } from './projects_entity';
+import { Refresh_entity } from './refresh_entity';
 import { Task_assignment_entity } from './Task_assignment_entity';
 import { Task_entity } from './task_entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
 
 
 
@@ -31,7 +32,7 @@ export class User_entity {
   @Column({type: 'boolean', default: true})
   isActive: boolean;
 
-  @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+  @CreateDateColumn()
   created_at: Date;
 
   @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP'})
@@ -49,6 +50,9 @@ export class User_entity {
 
   @OneToMany(() => Task_assignment_entity, (task_assignment) => task_assignment.user)
   task_assignments: Task_assignment_entity[];
+
+  // @OneToMany(() => Refresh_entity, (refresh) => refresh.user)
+  // refresh: Refresh_entity[];
 
 
 }
