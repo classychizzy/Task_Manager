@@ -1,23 +1,12 @@
-import jwt from "jsonwebtoken"
-import express from "express"
+import { UserPayload } from "../userpayload";
 
 
 
 
-// Define the structure of your user object
- export interface UserPayload {
-  id: number;
-  email: string;
-  username: string;
-  // Add other user properties as needed
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: UserPayload;
+  }
 }
 
-declare global {
-  namespace Express {
-    interface Request  {
-      user?: UserPayload;
-    }
-}
-}
-
-export {}
+export {};

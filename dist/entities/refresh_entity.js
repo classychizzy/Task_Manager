@@ -40,9 +40,13 @@ __decorate([
     __metadata("design:type", Date)
 ], Refresh_entity.prototype, "created_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.refresh),
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User_entity, {
+        cascade: ["remove"],
+        createForeignKeyConstraints: false
+    }),
+    (0, typeorm_1.JoinColumn)(),
     __metadata("design:type", user_entity_1.User_entity)
 ], Refresh_entity.prototype, "user", void 0);
 exports.Refresh_entity = Refresh_entity = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: 'refresh_token', schema: 'public' })
 ], Refresh_entity);

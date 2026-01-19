@@ -1,9 +1,7 @@
 import { UserDTO } from "../../dto/user_dto";
-import { UserPayload } from "../../types/express";
-import AppDataSource from "../../ormconfig";
+import { UserPayload } from "../../types/userpayload";
 import { UserRepository } from "../../repositories/user_repository";
-import { Response, Request} from 'express';
-import { STATUS_CODES } from "http";
+//import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
 import { validateEmail, validatePassword } from '../../validator/user_validation';
 import { hashPassword, comparePassword } from '../../utils/hashPassword';
@@ -11,6 +9,7 @@ import { User_entity } from "../../entities/user_entity";``
 import { TokenService } from "./token_service";
 import { RefreshRepository } from '../../repositories/refresh_repository';
 import { Refresh_entity } from "../../entities/refresh_entity";
+
 
 
 //handles all user and authentication issues
@@ -57,8 +56,8 @@ export class Auth_Service {
         }
 
         // Here you would typically hash the password before saving
-        const hashedPassword = await hashPassword(userData.password);
-        userData.password = hashedPassword;
+        // const hashedPassword = await hashPassword(userData.password);
+        // userData.password = hashedPassword;
 
         // For simplicity, we'll save it as is for now.
         try {
@@ -89,7 +88,10 @@ export class Auth_Service {
             newUser.lastName = userData.lastName;
             newUser.username = userData.username;
             newUser.email = userData.email;
-            newUser.password = userData.password; // In a real app, hash this!
+            newUser.password = userData.password;
+            newUser.hashPassword();
+
+            //newUser.password = await hashPassword( userData.password); // In a real app, hash this!
 
             // await AppDataSource.manager.save(newUser);
 
@@ -227,15 +229,10 @@ export class Auth_Service {
             const user = await this.userRepository.findOne({
                 where: {
                     email: userData.email,
-                   username: userData.username
-                   
                 }
             });
 
-            
-
-            const ispasswordValid = await comparePassword(userData.password, user!.password);
-            if (!user || !ispasswordValid) {
+            if(!user){
                 let response = {
                     status_code: 404,
                     status: 'failed',
@@ -243,8 +240,28 @@ export class Auth_Service {
                     data: null
                 }
                 return response;
+            }
+            
 
+            // const ispasswordValid = await comparePassword(userData.password, user!.password);
+            // if (!user || !ispasswordValid) {
+            //     let response = {
+            //         status_code: 404,
+            //         status: 'failed',
+            //         message: 'User not found',
+            //         data: null
+            //     }
+            //     return response;
+            // }
 
+            if (!user.checkIfUnencryptedPasswordIsValid(userData.password)) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                }
+                return response;
             }
 
             const payload: UserPayload = {
@@ -319,7 +336,6 @@ export class Auth_Service {
         
     }
 
-    async logoutUser(req: Request, res: Response) {
+    
 
-
-    }}
+    }

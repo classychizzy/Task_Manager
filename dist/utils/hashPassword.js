@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.comparePassword = exports.hashPassword = void 0;
+//this file does nothing, it's just for understanding how hashing works under the hood.
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const salt_Rounds = 10;
 const hashPassword = async (password) => {

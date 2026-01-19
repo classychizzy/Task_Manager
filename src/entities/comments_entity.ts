@@ -5,7 +5,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 
 
 
-@Entity()
+@Entity({name: 'comments', schema: 'public'})
 export class Comment_Entity {
     @PrimaryGeneratedColumn()
     comment_id: number;

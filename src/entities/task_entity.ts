@@ -9,7 +9,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'ty
 
 
 
-@Entity()
+@Entity({name: 'tasks', schema: 'public'})
 export class Task_entity {
     @PrimaryGeneratedColumn()
     task_id: number;

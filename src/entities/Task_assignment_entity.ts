@@ -4,7 +4,7 @@ import { Task_entity } from "./task_entity";
 import { User_entity } from "./user_entity";
 
 
-@Entity()
+@Entity({name: 'task_assignments', schema: 'public'})
 export class Task_assignment_entity {
     @PrimaryGeneratedColumn()
     task_assignment_id: number;
@@ -27,6 +27,7 @@ export class Task_assignment_entity {
     //relationship
     @ManyToOne(() => User_entity, (user) => user.task_assignments)
     user: User_entity;
+    
 
     @ManyToOne(() => Task_entity, (task) => task.task_assignments)
     task: Task_entity;

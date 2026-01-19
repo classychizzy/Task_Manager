@@ -3,6 +3,7 @@ import App from './app';
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 import { validateEnv } from './utils/validateEnv';
+import AppDataSource from './ormconfig';
 
 dotenv.config();
 validateEnv();
@@ -15,3 +16,8 @@ app.initializeDatabase().then(() => {
 });
 
 
+//console.log('DB:', AppDataSource.options.database)
+
+
+
+ 

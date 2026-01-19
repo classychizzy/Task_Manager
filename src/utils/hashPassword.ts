@@ -1,3 +1,4 @@
+//this file does nothing, it's just for understanding how hashing works under the hood.
 import bcrypt from 'bcrypt'
 
 const salt_Rounds = 10;

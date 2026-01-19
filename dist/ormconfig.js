@@ -56,7 +56,7 @@ const AppDataSource = new typeorm_1.DataSource({
     password: password,
     database: database,
     synchronize: true,
-    logging: false,
+    logging: false, //["query", "error"] use this when logging errors related to db mismatch
     entities: [
         process.env.DEPLOYMENT_ENV === 'production' ?
             "dist/entities/*{.js,.ts}"

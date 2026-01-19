@@ -11,7 +11,7 @@ class TokenService {
             throw new Error('JWT_SECRET environment variable is not set.');
         }
         this.AccessSecret = process.env.JWT_ACCESS_SECRET;
-        this.RefreshSecret = process.env.JWT_SECRET;
+        this.RefreshSecret = process.env.JWT_REFRESH_SECRET;
         // this.expiresIn = process.env.JWT_EXPIRES_IN as string;
     }
     generateAccessToken(payload) {
@@ -21,15 +21,12 @@ class TokenService {
              username: user.username,
              // Add other relevant user data to the payload
          };*/
-        if (process.env.JWT_EXPIRES_IN_ACCESS_TOKEN) {
-            this.option.expiresIn = process.env.JWT_EXPIRES_IN_ACCESS_TOKEN;
-            this.option.algorithm = 'HS256';
-        }
-        else {
-            this.option.expiresIn = Number('1');
-            this.option.algorithm = 'HS256';
-        }
-        return jsonwebtoken_1.default.sign(payload, this.AccessSecret, this.option);
+        const options = {
+            expiresIn: 600,
+            algorithm: 'HS256'
+        };
+        const signIn = jsonwebtoken_1.default.sign(payload, this.AccessSecret, options);
+        return signIn;
     }
     generateRefreshToken(payload) {
         /* const payload: UserPayload = {
@@ -37,11 +34,11 @@ class TokenService {
              email: user.email,
              username: user.username
          }; */
-        if (process.env.JWT_EXPIRES_IN_REFRESH_TOKEN) {
-            this.option.expiresIn = Number(process.env.JWT_EXPIRES_IN_REFRESH_TOKEN ?? '7d');
-            this.option.algorithm = 'HS256';
-        }
-        return jsonwebtoken_1.default.sign(payload, this.RefreshSecret, this.option);
+        const options = {
+            expiresIn: 86400,
+            algorithm: 'HS256'
+        };
+        return jsonwebtoken_1.default.sign(payload, this.RefreshSecret, options);
     }
     verifyAccessToken(token) {
         try {

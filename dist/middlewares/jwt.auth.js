@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authenticateToken = authenticateToken;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-function authenticateToken(req, next) {
+function authenticateToken(req, res, next) {
     const authheader = req.headers['authorization'];
     const token = authheader && authheader.split(' ')[1];
     if (!token) {
@@ -17,21 +17,16 @@ function authenticateToken(req, next) {
         };
         return response;
     }
-    jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jsonwebtoken_1.default.verify(token, process.env.JWT_ACCESS_SECRET, (err, decoded) => {
         if (err) {
-            let response = {
-                status_code: 403,
-                status: 'failed',
-                message: 'invalid or expired token',
-                data: null
-            };
-            return response;
+            console.log(err);
+            return res.status(403).json({
+                status: "failed",
+                message: "Invalid or expired token",
+                data: null,
+            });
         }
-        else {
-            console.log(decoded);
-            const user = decoded;
-            return user;
-        }
+        req.user = decoded; // ← THIS is what makes runtime work
         next();
     });
 }

@@ -1,14 +1,16 @@
 //main app file
 import express from 'express';
 //import type { Request, Response } from 'express';
-import bodyParser from 'body-parser';
+//import bodyParser from 'body-parser';
 import cors from 'cors';
 import AppDataSource from './ormconfig';
 import { Auth_Controller } from './controllers/auth_controller';
 import helmet from 'helmet';
 import { Request, Response } from 'express';
 import * as http from 'http';
-import { register } from 'module';
+//import { register } from 'module';
+import { authenticateToken } from './middlewares/jwt.auth';
+import { Project_Controller } from './controllers/project_controller';
 
 
 
@@ -41,6 +43,11 @@ class App {
         console.log('Initializing controllers...');
         //base route for all initialized routes in the controller
          this.app.use('/api/v1/auth', new Auth_Controller().router);
+         //route handler for projects
+         this.app.use( '/api/v1/projects',
+                        authenticateToken,
+                        new Project_Controller().router,
+                    );
         
          
     }   

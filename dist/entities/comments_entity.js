@@ -45,5 +45,5 @@ __decorate([
     __metadata("design:type", task_entity_1.Task_entity)
 ], Comment_Entity.prototype, "task", void 0);
 exports.Comment_Entity = Comment_Entity = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: 'comments', schema: 'public' })
 ], Comment_Entity);

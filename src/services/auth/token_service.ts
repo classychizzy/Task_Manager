@@ -1,5 +1,5 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
-import { UserPayload } from '../../types/express';
+import { UserPayload } from '../../types/userpayload';
 //import { User_entity } from '../../entities/user_entity';
 import { str } from 'envalid';
 
@@ -15,7 +15,7 @@ export class TokenService {
             throw new Error('JWT_SECRET environment variable is not set.');
         }
         this.AccessSecret = process.env.JWT_ACCESS_SECRET;
-        this.RefreshSecret = process.env.JWT_REFRESH_SECRET as string;
+        this.RefreshSecret = process.env.JWT_REFRESH_SECRET;
 
         // this.expiresIn = process.env.JWT_EXPIRES_IN as string;
 

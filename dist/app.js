@@ -38,11 +38,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 //main app file
 const express_1 = __importDefault(require("express"));
+//import type { Request, Response } from 'express';
+//import bodyParser from 'body-parser';
 const cors_1 = __importDefault(require("cors"));
 const ormconfig_1 = __importDefault(require("./ormconfig"));
 const auth_controller_1 = require("./controllers/auth_controller");
 const helmet_1 = __importDefault(require("helmet"));
 const http = __importStar(require("http"));
+//import { register } from 'module';
+const jwt_auth_1 = require("./middlewares/jwt.auth");
+const project_controller_1 = require("./controllers/project_controller");
 class App {
     constructor() {
         this.app = (0, express_1.default)();
@@ -66,6 +71,8 @@ class App {
         console.log('Initializing controllers...');
         //base route for all initialized routes in the controller
         this.app.use('/api/v1/auth', new auth_controller_1.Auth_Controller().router);
+        //route handler for projects
+        this.app.use('/api/v1/projects', jwt_auth_1.authenticateToken, new project_controller_1.Project_Controller().router);
     }
     listen() {
         http.createServer(this.app).listen(this.port, () => {

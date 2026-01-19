@@ -8,8 +8,5 @@ export interface UserDTO{
     username: string;
     email: string;
     password: string;
-    isActive: boolean;
-    created_at?: Date;
-    updated_at?: Date;
 
 }

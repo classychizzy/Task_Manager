@@ -39,10 +39,7 @@ class Auth_Controller {
         this.router.post('/user', 
         //add middleware here
         this.findUserByEmail.bind(this));
-        // this.router.get('/find/:id', 
-        //     //add middleware here
-        //     this.findUserByEmail.bind(this)
-        // );
+        //
     }
 }
 exports.Auth_Controller = Auth_Controller;

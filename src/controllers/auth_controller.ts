@@ -44,9 +44,7 @@ export class Auth_Controller {
         
     }
 
-
     
-
 
     private initializeRoutes() {
         this.router.get('/welcome', (req: Request, res: Response) => {
@@ -59,15 +57,13 @@ export class Auth_Controller {
         this.router.post('/login',
             //add middleware here
             this.loginUser.bind(this)
+           
         );
         this.router.post('/user',
             //add middleware here
              this.findUserByEmail.bind(this)
         );
-        // this.router.get('/find/:id', 
-        //     //add middleware here
-        //     this.findUserByEmail.bind(this)
-        // );
+      //
 
     }
 

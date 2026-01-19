@@ -1,0 +1,210 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Project_service = void 0;
+const project_repository_1 = require("../../repositories/project_repository");
+const projects_entity_1 = require("../../entities/projects_entity");
+const user_repository_1 = require("../../repositories/user_repository");
+class Project_service {
+    constructor() {
+        this.ProjectRepository = project_repository_1.ProjectRepository;
+        this.UserRepository = user_repository_1.UserRepository;
+    }
+    async CreateProject(CreateProjectDTO, userid) {
+        const user = await this.UserRepository.findOne({
+            where: {
+                user_id: userid
+            }
+        });
+        if (!user) {
+            throw new Error('User not found');
+        }
+        const newProject = new projects_entity_1.Project_entity();
+        console.log(newProject);
+        /* this also works
+        const project = await this.ProjectRepository.findOne({
+             where: {
+                 name: CreateProjectDTO.name,
+                 description: CreateProjectDTO.description,
+                 user: user
+             }
+         }); */
+        newProject.name = CreateProjectDTO.name;
+        newProject.description = CreateProjectDTO.description;
+        newProject.user = user;
+        console.log(newProject);
+        await this.ProjectRepository.save(newProject);
+        return newProject;
+    }
+    async getAllProjects(userId) {
+        try {
+            const projects = await this.ProjectRepository.find({
+                where: {
+                    is_deleted: false,
+                    user: {
+                        user_id: userId
+                    }
+                },
+                relations: ["user", "tasks"]
+            });
+            console.log("Searching for projects with userId:", userId);
+            // First, check what projects exist with just the user filter: i used this to debug
+            // const projectsWithoutDeletedFilter = await this.ProjectRepository
+            //     .createQueryBuilder('project')
+            //     .leftJoinAndSelect('project.user', 'user')
+            //     .leftJoinAndSelect('project.tasks', 'tasks')
+            //     .where('user.user_id = :userId', { userId })
+            //     .getMany();
+            // console.log("PROJECTS WITHOUT DELETED FILTER:", JSON.stringify(projectsWithoutDeletedFilter, null, 2));
+            // Now check what happens when we add is_deleted filter
+            // const projectsWithDeletedFilter = await this.ProjectRepository
+            //     .createQueryBuilder('project')
+            //     .leftJoinAndSelect('project.user', 'user')
+            //     .leftJoinAndSelect('project.tasks', 'tasks')
+            //     .where('user.user_id = :userId', { userId })
+            //     .andWhere('project.is_deleted = :isDeleted', { isDeleted: false })
+            //     .getMany();
+            // console.log("PROJECTS WITH DELETED FILTER (false):", JSON.stringify(projectsWithDeletedFilter, null, 2));
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'Projects retrieved successfully',
+                data: projects
+            };
+            return response;
+        }
+        catch (error) {
+            let errorMessage = "unable to retreive projects";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            let response = {
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            };
+            return response;
+        }
+    }
+    async fetchProjectById(projectId, userId) {
+        console.log("=== START fetchProjectById ===");
+        console.log("Project ID:", projectId, "User ID:", userId);
+        try {
+            // console.log("About to query database...");
+            const project = await this.ProjectRepository.findOne({
+                where: {
+                    project_id: projectId,
+                    is_deleted: false,
+                    user: {
+                        user_id: userId
+                    }
+                },
+                relations: ["tasks"],
+            });
+            // console.log("Project found:", project);
+            if (!project) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Project not found',
+                    data: null
+                };
+                return response;
+            }
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'Project retrieved successfully',
+                data: project
+            };
+            return response;
+        }
+        catch (error) {
+            let errorMessage = "unable to retreive project";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            let response = {
+                status_code: "500",
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            };
+            return response;
+        }
+    }
+    async updateProject(projectId, userId, updateData) {
+        const project = await this.ProjectRepository.findOne({
+            where: {
+                project_id: projectId,
+                is_deleted: false,
+                user: {
+                    user_id: userId
+                }
+            },
+            relations: ["tasks"],
+        });
+        if (!project) {
+            let response = {
+                status_code: 404,
+                status: 'failed',
+                message: 'Project not found',
+                data: null
+            };
+            return response;
+        }
+        if (updateData.name) {
+            project.name = updateData.name;
+        }
+        if (updateData.description) {
+            project.description = updateData.description;
+        }
+        project.updated_at = new Date();
+        await this.ProjectRepository.save(project);
+        let response = {
+            status_code: 200,
+            status: 'success',
+            message: 'Project updated successfully',
+            data: project
+        };
+        return response;
+    }
+    async DeleteProject(projectId, userId) {
+        console.log("let's begin");
+        const project = await this.ProjectRepository.findOne({
+            where: {
+                project_id: projectId,
+                user: {
+                    user_id: userId
+                }
+            },
+        });
+        if (!project) {
+            let response = {
+                status_code: 404,
+                status: 'failed',
+                message: 'Project not found',
+                data: null
+            };
+            return response;
+        }
+        // soft delete implementation
+        project.deleted_at = new Date();
+        project.is_deleted = true;
+        project.updated_at = new Date();
+        console.log("deleted project");
+        await this.ProjectRepository.save(project);
+        let response = {
+            status_code: 200,
+            status: 'success',
+            message: 'Project deleted successfully',
+            data: null
+        };
+        return response;
+    }
+    async restoreProject(projectId, userId) {
+    }
+}
+exports.Project_service = Project_service;

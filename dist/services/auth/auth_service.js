@@ -2,13 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Auth_Service = void 0;
 const user_repository_1 = require("../../repositories/user_repository");
+//import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
 const user_validation_1 = require("../../validator/user_validation");
-const hashPassword_1 = require("../../utils/hashPassword");
 const user_entity_1 = require("../../entities/user_entity");
 ``;
 const token_service_1 = require("./token_service");
 const refresh_repository_1 = require("../../repositories/refresh_repository");
+const refresh_entity_1 = require("../../entities/refresh_entity");
 //handles all user and authentication issues
 //create a service class where you will write your queries and logics
 class Auth_Service {
@@ -42,8 +43,8 @@ class Auth_Service {
             return response;
         }
         // Here you would typically hash the password before saving
-        const hashedPassword = await (0, hashPassword_1.hashPassword)(userData.password);
-        userData.password = hashedPassword;
+        // const hashedPassword = await hashPassword(userData.password);
+        // userData.password = hashedPassword;
         // For simplicity, we'll save it as is for now.
         try {
             console.log(userData.email, typeof userData.email);
@@ -65,7 +66,9 @@ class Auth_Service {
             newUser.lastName = userData.lastName;
             newUser.username = userData.username;
             newUser.email = userData.email;
-            newUser.password = userData.password; // In a real app, hash this!
+            newUser.password = userData.password;
+            newUser.hashPassword();
+            //newUser.password = await hashPassword( userData.password); // In a real app, hash this!
             // await AppDataSource.manager.save(newUser);
             await this.userRepository.save(newUser);
             // return newUser;
@@ -165,16 +168,32 @@ class Auth_Service {
     }
     async loginUser(userData) {
         try {
-            const isemailValid = (0, user_validation_1.validateEmail)(userData.email);
-            //
+            // const isemailValid = validateEmail(userData.email);
             const user = await this.userRepository.findOne({
                 where: {
                     email: userData.email,
-                    username: userData.username
                 }
             });
-            const ispasswordValid = await (0, hashPassword_1.comparePassword)(userData.password, user.password);
-            if (!user || !ispasswordValid) {
+            if (!user) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                };
+                return response;
+            }
+            // const ispasswordValid = await comparePassword(userData.password, user!.password);
+            // if (!user || !ispasswordValid) {
+            //     let response = {
+            //         status_code: 404,
+            //         status: 'failed',
+            //         message: 'User not found',
+            //         data: null
+            //     }
+            //     return response;
+            // }
+            if (!user.checkIfUnencryptedPasswordIsValid(userData.password)) {
                 let response = {
                     status_code: 404,
                     status: 'failed',
@@ -191,12 +210,28 @@ class Auth_Service {
             const tokenService = new token_service_1.TokenService();
             const accessToken = tokenService.generateAccessToken(payload);
             const refreshToken = tokenService.generateRefreshToken(payload);
-            // save the token
-            const hashtoken = await (0, hashPassword_1.hashPassword)(refreshToken);
-            const token = await this.RefreshRepository.save({
-                user_id: user.user_id,
-                token: hashtoken
+            let validateRefreshToken = await refresh_repository_1.RefreshRepository.findOne({
+                where: {
+                    user_id: user.user_id
+                }
             });
+            if (validateRefreshToken) {
+                validateRefreshToken.user_id = user.user_id;
+                validateRefreshToken.user = user;
+                validateRefreshToken.revoked = false;
+                validateRefreshToken.expires_at = new Date(Date.now() + 86400000);
+                validateRefreshToken.tokenHash = refreshToken;
+                await this.RefreshRepository.save(validateRefreshToken);
+            }
+            else {
+                const newRefreshToken = new refresh_entity_1.Refresh_entity();
+                newRefreshToken.user_id = user.user_id;
+                newRefreshToken.user = user;
+                newRefreshToken.revoked = false;
+                newRefreshToken.expires_at = new Date(Date.now() + 86400000);
+                newRefreshToken.tokenHash = refreshToken;
+                await this.RefreshRepository.save(newRefreshToken);
+            }
             let response = {
                 status_code: 200,
                 status: 'success',

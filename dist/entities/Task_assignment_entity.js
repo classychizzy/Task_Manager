@@ -51,5 +51,5 @@ __decorate([
     __metadata("design:type", task_entity_1.Task_entity)
 ], Task_assignment_entity.prototype, "task", void 0);
 exports.Task_assignment_entity = Task_assignment_entity = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: 'task_assignments', schema: 'public' })
 ], Task_assignment_entity);

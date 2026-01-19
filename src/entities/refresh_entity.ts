@@ -2,7 +2,7 @@ import { str } from 'envalid';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { User_entity } from './user_entity';
 
-@Entity()
+@Entity({ name: 'refresh_token', schema: 'public'})
 export class Refresh_entity {
     @PrimaryGeneratedColumn()
     id: number;

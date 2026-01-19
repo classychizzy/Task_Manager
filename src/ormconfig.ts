@@ -31,7 +31,7 @@ const AppDataSource = new DataSource({
   password: password,
   database: database,
   synchronize: true,
-  logging: false,
+  logging: false, //["query", "error"] use this when logging errors related to db mismatch
   entities: [
     process.env.DEPLOYMENT_ENV === 'production' ?
     "dist/entities/*{.js,.ts}"
@@ -40,4 +40,7 @@ const AppDataSource = new DataSource({
   migrations: ["src/migration/*{.ts}"],
 });
 
+
+
+  
 export default AppDataSource;

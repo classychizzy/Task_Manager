@@ -15,3 +15,4 @@ app.listen();
 app.initializeDatabase().then(() => {
     console.log("Database is connected and ready for queries.");
 });
+//console.log('DB:', AppDataSource.options.database)

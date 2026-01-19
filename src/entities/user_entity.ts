@@ -5,11 +5,13 @@ import { Refresh_entity } from './refresh_entity';
 import { Task_assignment_entity } from './Task_assignment_entity';
 import { Task_entity } from './task_entity';
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import { hashPassword } from '../utils/hashPassword';
+import bcrypt from 'bcrypt';
 
 
 
 
-@Entity()
+@Entity({name: 'users', schema: 'public'})
 export class User_entity {
   @PrimaryGeneratedColumn()
   user_id: number;
@@ -31,6 +33,14 @@ export class User_entity {
 
   @Column({type: 'boolean', default: true})
   isActive: boolean;
+
+  hashPassword() {
+    this.password = bcrypt.hashSync(this.password, 8);
+  }
+
+  checkIfUnencryptedPasswordIsValid(unencryptedPassword: string) {
+    return bcrypt.compareSync(unencryptedPassword, this.password);
+  }
 
   @CreateDateColumn()
   created_at: Date;

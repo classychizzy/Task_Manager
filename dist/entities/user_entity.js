@@ -8,15 +8,24 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User_entity = void 0;
 const comments_entity_1 = require("./comments_entity");
 const projects_entity_1 = require("./projects_entity");
-const refresh_entity_1 = require("./refresh_entity");
 const Task_assignment_entity_1 = require("./Task_assignment_entity");
 const task_entity_1 = require("./task_entity");
 const typeorm_1 = require("typeorm");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 let User_entity = class User_entity {
+    hashPassword() {
+        this.password = bcrypt_1.default.hashSync(this.password, 8);
+    }
+    checkIfUnencryptedPasswordIsValid(unencryptedPassword) {
+        return bcrypt_1.default.compareSync(unencryptedPassword, this.password);
+    }
 };
 exports.User_entity = User_entity;
 __decorate([
@@ -71,10 +80,6 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => Task_assignment_entity_1.Task_assignment_entity, (task_assignment) => task_assignment.user),
     __metadata("design:type", Array)
 ], User_entity.prototype, "task_assignments", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => refresh_entity_1.Refresh_entity, (refresh) => refresh.user),
-    __metadata("design:type", Array)
-], User_entity.prototype, "refresh", void 0);
 exports.User_entity = User_entity = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)({ name: 'users', schema: 'public' })
 ], User_entity);
