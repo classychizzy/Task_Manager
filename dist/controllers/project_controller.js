@@ -57,8 +57,9 @@ class Project_Controller {
         return res.json(response);
     }
     async DeleteProject(req, res) {
-        console.log("we start here");
-        const projectId = req.params.id;
+        // console.log("we start here")
+        const projectId = req.params.projectId;
+        // console.log("Project ID:", projectId)
         const userId = req.user.id;
         const result = await this.Project_service.DeleteProject(Number(projectId), userId);
         console.log("GET PROJECT - User ID:", userId, "Project ID:", projectId);
@@ -69,12 +70,27 @@ class Project_Controller {
         };
         return res.json(response);
     }
+    async restoreProject(req, res) {
+        console.log("begin");
+        const projectid = req.params.projectId;
+        console.log("Project ID:", projectid);
+        const userId = req.user.id;
+        const result = await this.Project_service.restoreProject(Number(projectid), userId);
+        console.log(result);
+        let response = {
+            status_code: '200',
+            message: 'Project restored successfully',
+            data: result
+        };
+        return res.json(response);
+    }
     initializeRoutes() {
         this.router.post('/create', this.createProject.bind(this));
         this.router.get('/all', this.getAllProjects.bind(this));
         this.router.get('/:projectId', this.getProjectById.bind(this));
         this.router.put('/:projectId/update', this.UpdateProject.bind(this));
         this.router.delete('/:projectId/delete', this.DeleteProject.bind(this));
+        this.router.put('/:projectId/restore', this.restoreProject.bind(this));
     }
 }
 exports.Project_Controller = Project_Controller;

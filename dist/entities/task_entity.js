@@ -13,6 +13,7 @@ exports.Task_entity = void 0;
 const user_entity_1 = require("./user_entity");
 const comments_entity_1 = require("./comments_entity");
 const projects_entity_1 = require("./projects_entity");
+const TaskStatus_enum_1 = require("../enums/TaskStatus_enum");
 const Task_assignment_entity_1 = require("./Task_assignment_entity");
 const typeorm_1 = require("typeorm");
 let Task_entity = class Task_entity {
@@ -31,8 +32,8 @@ __decorate([
     __metadata("design:type", String)
 ], Task_entity.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
-    __metadata("design:type", Boolean)
+    (0, typeorm_1.Column)({ type: 'enum', enum: TaskStatus_enum_1.TaskStatus, default: TaskStatus_enum_1.TaskStatus.PENDING }),
+    __metadata("design:type", String)
 ], Task_entity.prototype, "status", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
@@ -51,11 +52,20 @@ __decorate([
     __metadata("design:type", Date)
 ], Task_entity.prototype, "updated_at", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', default: 'null', nullable: true }),
+    __metadata("design:type", Object)
+], Task_entity.prototype, "deleted_at", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Task_entity.prototype, "is_deleted", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.tasks),
     __metadata("design:type", user_entity_1.User_entity)
 ], Task_entity.prototype, "User", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => projects_entity_1.Project_entity, (project) => project.tasks),
+    (0, typeorm_1.JoinColumn)({ name: "project_id" }),
     __metadata("design:type", projects_entity_1.Project_entity)
 ], Task_entity.prototype, "project", void 0);
 __decorate([

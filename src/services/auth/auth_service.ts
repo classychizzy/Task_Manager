@@ -3,12 +3,18 @@ import { UserPayload } from "../../types/userpayload";
 import { UserRepository } from "../../repositories/user_repository";
 //import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
+import { Jwt } from "jsonwebtoken";
 import { validateEmail, validatePassword } from '../../validator/user_validation';
 import { hashPassword, comparePassword } from '../../utils/hashPassword';
 import { User_entity } from "../../entities/user_entity";``
 import { TokenService } from "./token_service";
 import { RefreshRepository } from '../../repositories/refresh_repository';
 import { Refresh_entity } from "../../entities/refresh_entity";
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import { Request, Response } from 'express';
+dotenv.config();
+
 
 
 
@@ -336,6 +342,39 @@ export class Auth_Service {
         
     }
 
-    
+    async refreshToken (req: Request, res: Response) {
+        const {refreshToken} = req.body
+
+        if (!refreshToken) {
+
+        let response = {
+            status_code: 400,
+            status: 'failed',
+            message: 'Refresh token is required',
+            data: null
+        }
+
+        return response;
+
+        }
+        // verify the refresh token
+        const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
+
+        //generate access token 
+        const newaccessToken = await this.tokenService.generateAccessToken(decoded as UserPayload);
+
+        let response = {
+            status_code: 200,
+            status: 'success',
+            message: 'Access token generated successfully',
+            data: newaccessToken
+        }
+
+        return response;
+        }
+
+
+
+       
 
     }

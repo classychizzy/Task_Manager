@@ -205,6 +205,50 @@ class Project_service {
         return response;
     }
     async restoreProject(projectId, userId) {
+        console.log("let's begin");
+        try {
+            const restoreProject = await this.ProjectRepository.findOne({
+                where: {
+                    project_id: projectId,
+                    is_deleted: true,
+                    user: {
+                        user_id: userId
+                    }
+                }
+            });
+            console.log(restoreProject);
+            if (!restoreProject) {
+                let response = {
+                    status_code: 404,
+                    message: 'Project not found',
+                    data: null
+                };
+                return response;
+            }
+            restoreProject.is_deleted = false;
+            restoreProject.deleted_at = null;
+            restoreProject.updated_at = new Date();
+            console.log(restoreProject);
+            await this.ProjectRepository.save(restoreProject);
+            let response = {
+                status_code: 200,
+                message: 'Project restored successfully',
+                data: null
+            };
+            return response;
+        }
+        catch (error) {
+            let errorMessage = "unable to restore project";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            let response = {
+                status_code: 500,
+                message: errorMessage,
+                data: null
+            };
+            return response;
+        }
     }
 }
 exports.Project_service = Project_service;

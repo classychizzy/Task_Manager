@@ -1,5 +1,5 @@
 
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { Task_entity } from "./task_entity";
 import { User_entity } from "./user_entity";
 
@@ -9,11 +9,6 @@ export class Task_assignment_entity {
     @PrimaryGeneratedColumn()
     task_assignment_id: number;
 
-    @Column({type: 'int'})
-    task_id: number;
-
-    @Column({type: 'int'})
-    user_id: number;
 
     @Column()
     permission: string;
@@ -27,8 +22,10 @@ export class Task_assignment_entity {
     //relationship
     @ManyToOne(() => User_entity, (user) => user.task_assignments)
     user: User_entity;
+    @JoinColumn({ name: "user_id" })
     
 
     @ManyToOne(() => Task_entity, (task) => task.task_assignments)
+    @JoinColumn({ name: "task_id" })
     task: Task_entity;
 }

@@ -48,6 +48,7 @@ const http = __importStar(require("http"));
 //import { register } from 'module';
 const jwt_auth_1 = require("./middlewares/jwt.auth");
 const project_controller_1 = require("./controllers/project_controller");
+const task_controller_1 = require("./controllers/task_controller");
 class App {
     constructor() {
         this.app = (0, express_1.default)();
@@ -73,6 +74,7 @@ class App {
         this.app.use('/api/v1/auth', new auth_controller_1.Auth_Controller().router);
         //route handler for projects
         this.app.use('/api/v1/projects', jwt_auth_1.authenticateToken, new project_controller_1.Project_Controller().router);
+        this.app.use('/api/v1/tasks', jwt_auth_1.authenticateToken, new task_controller_1.Task_Controller().router);
     }
     listen() {
         http.createServer(this.app).listen(this.port, () => {

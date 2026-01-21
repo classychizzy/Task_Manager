@@ -44,6 +44,14 @@ export class Auth_Controller {
         
     }
 
+    public async refreshToken(req: Request, res: Response) {
+
+        
+        let refresh = await this.authService.refreshToken(req, res);
+        return res.json(refresh);
+        
+    }
+
     
 
     private initializeRoutes() {
@@ -55,7 +63,7 @@ export class Auth_Controller {
             this.registerUser.bind(this)
         );
         this.router.post('/login',
-            //add middleware here
+          
             this.loginUser.bind(this)
            
         );
@@ -64,6 +72,8 @@ export class Auth_Controller {
              this.findUserByEmail.bind(this)
         );
       //
+      
+    
 
     }
 

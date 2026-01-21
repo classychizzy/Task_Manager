@@ -24,7 +24,7 @@ export class Project_entity {
     @Column({type: 'boolean', default: false}) // always set default to false to avoid errors
     is_deleted: boolean;
 
-    @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+    @Column({type: 'timestamp', default: null, nullable: true})
     deleted_at: Date | null;
 
 

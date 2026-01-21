@@ -42,7 +42,7 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Project_entity.prototype, "is_deleted", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }),
+    (0, typeorm_1.Column)({ type: 'timestamp', default: 'null', nullable: true }),
     __metadata("design:type", Object)
 ], Project_entity.prototype, "deleted_at", void 0);
 __decorate([

@@ -11,6 +11,7 @@ import * as http from 'http';
 //import { register } from 'module';
 import { authenticateToken } from './middlewares/jwt.auth';
 import { Project_Controller } from './controllers/project_controller';
+import { Task_Controller } from './controllers/task_controller';
 
 
 
@@ -48,6 +49,9 @@ class App {
                         authenticateToken,
                         new Project_Controller().router,
                     );
+        this.app.use('/api/v1/tasks',
+                    authenticateToken,
+                    new Task_Controller().router)
         
          
     }   

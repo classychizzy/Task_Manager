@@ -5,6 +5,7 @@ import { UserRepository } from '../../repositories/user_repository';
 import { User_entity } from '../../entities/user_entity';
 import { stat } from 'fs';
 import { UpdateProjectDTO } from '../../dto/updateproject_dto';
+import { getPagination } from '../../utils/pagination';
 export class Project_service {
     private ProjectRepository: typeof ProjectRepository;
     private UserRepository: typeof UserRepository;
@@ -50,54 +51,69 @@ export class Project_service {
 
     }
 
-    async getAllProjects(userId: number) {
+    async getAllProjects(userId: number, page?: number, limit?: number) {
+        //implementation of pagination
+        const { skip, take, page: currentPage, limit: pageSize } =
+            getPagination(page, limit);
         try {
 
 
-            const projects = await this.ProjectRepository.find({
+            const [projects, total] = await this.ProjectRepository.findAndCount({
                 where: {
                     is_deleted: false,
 
 
-                     user: {
-                         user_id: userId
-                     }
+                    user: {
+                        user_id: userId
+                    }
                 },
-                relations: ["user", "tasks"]
+                relations: ["user", "tasks"],
+                skip,
+                take,
+                order: {
+                    created_at: 'DESC'
+                }
+
             });
 
-             console.log("Searching for projects with userId:", userId);
-        
-        // First, check what projects exist with just the user filter: i used this to debug
-        // const projectsWithoutDeletedFilter = await this.ProjectRepository
-        //     .createQueryBuilder('project')
-        //     .leftJoinAndSelect('project.user', 'user')
-        //     .leftJoinAndSelect('project.tasks', 'tasks')
-        //     .where('user.user_id = :userId', { userId })
-        //     .getMany();
-        
-        // console.log("PROJECTS WITHOUT DELETED FILTER:", JSON.stringify(projectsWithoutDeletedFilter, null, 2));
-        
-        // Now check what happens when we add is_deleted filter
-        // const projectsWithDeletedFilter = await this.ProjectRepository
-        //     .createQueryBuilder('project')
-        //     .leftJoinAndSelect('project.user', 'user')
-        //     .leftJoinAndSelect('project.tasks', 'tasks')
-        //     .where('user.user_id = :userId', { userId })
-        //     .andWhere('project.is_deleted = :isDeleted', { isDeleted: false })
-        //     .getMany();
-        
-        // console.log("PROJECTS WITH DELETED FILTER (false):", JSON.stringify(projectsWithDeletedFilter, null, 2));
-        
-       
-         
+            console.log("Searching for projects with userId:", userId);
+
+            // First, check what projects exist with just the user filter: i used this to debug
+            // const projectsWithoutDeletedFilter = await this.ProjectRepository
+            //     .createQueryBuilder('project')
+            //     .leftJoinAndSelect('project.user', 'user')
+            //     .leftJoinAndSelect('project.tasks', 'tasks')
+            //     .where('user.user_id = :userId', { userId })
+            //     .getMany();
+
+            // console.log("PROJECTS WITHOUT DELETED FILTER:", JSON.stringify(projectsWithoutDeletedFilter, null, 2));
+
+            // Now check what happens when we add is_deleted filter
+            // const projectsWithDeletedFilter = await this.ProjectRepository
+            //     .createQueryBuilder('project')
+            //     .leftJoinAndSelect('project.user', 'user')
+            //     .leftJoinAndSelect('project.tasks', 'tasks')
+            //     .where('user.user_id = :userId', { userId })
+            //     .andWhere('project.is_deleted = :isDeleted', { isDeleted: false })
+            //     .getMany();
+
+            // console.log("PROJECTS WITH DELETED FILTER (false):", JSON.stringify(projectsWithDeletedFilter, null, 2));
+
+
+
 
 
             let response = {
                 status_code: 200,
                 status: 'success',
                 message: 'Projects retrieved successfully',
-                data: projects
+                data: projects,
+                meta: {
+                    total,
+                    page: currentPage,
+                    limit: pageSize,
+                    totalPages: Math.ceil(total / pageSize),
+                },
             }
             return response;
         } catch (error) {
@@ -250,13 +266,26 @@ export class Project_service {
             return response
 
         }
+
+
+        if (project.is_deleted) {
+            let response = {
+                status_code: 409,
+                status: 'failed',
+                message: 'Project already deleted',
+                data: null
+            }
+            return response
+        }
         // soft delete implementation
         project.deleted_at = new Date();
         project.is_deleted = true;
         project.updated_at = new Date();
 
+
         console.log("deleted project")
         await this.ProjectRepository.save(project);
+
 
         let response = {
             status_code: 200,
@@ -267,9 +296,66 @@ export class Project_service {
         }
         return response;
     }
+    async restoreProject(projectId: number, userId: number) {
+        console.log("let's begin")
+        try {
+            const restoreProject = await this.ProjectRepository.findOne({
+                where: {
+                    project_id: projectId,
+                    is_deleted: true,
+                    user: {
+                        user_id: userId
+                    }
+                }
+            });
 
-async restoreProject(projectId: number, userId: number){
+            console.log(restoreProject)
 
-}
+            if (!restoreProject) {
+                let response = {
+                    status_code: 404,
+                    message: 'Project not found',
+                    data: null
+                }
+                return response
+            }
+
+
+            restoreProject.is_deleted = false;
+            restoreProject.deleted_at = null;
+            restoreProject.updated_at = new Date();
+            console.log(restoreProject)
+
+            await this.ProjectRepository.save(restoreProject);
+
+            let response = {
+                status_code: 200,
+                message: 'Project restored successfully',
+                data: null
+            }
+            return response;
+
+
+        }
+        catch (error) {
+            let errorMessage = "unable to restore project";
+            if (error instanceof Error) {
+
+                errorMessage = error.message;
+            }
+            let response = {
+
+                status_code: 500,
+                message: errorMessage,
+                data: null
+            }
+            return response;
+        }
+
+
+
+    }
+
+
 
 }

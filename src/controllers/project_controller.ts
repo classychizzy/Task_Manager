@@ -1,6 +1,6 @@
 
 import { Router, Request, Response } from 'express';
-import { Project_service } from '../services/projects/project_service';
+import { Project_service } from '../services/project_service'
 import { AuthenticatedRequest } from '../types/express/auth-request';
 
 export class Project_Controller {
@@ -95,6 +95,22 @@ export class Project_Controller {
 
     }
 
+    public async restoreProject(req: AuthenticatedRequest, res: Response) {
+        console.log("begin")
+        const projectid = req.params.projectId;
+        console.log("Project ID:", projectid)
+        const userId = req.user!.id;
+        const result = await this.Project_service.restoreProject(Number(projectid), userId);
+        console.log(result)
+        let response = {
+            status_code: '200',
+            message: 'Project restored successfully',
+            data: result
+        }
+        return res.json(response);
+
+    }
+
 
     private initializeRoutes() {
         this.router.post('/create', this.createProject.bind(this));
@@ -102,6 +118,7 @@ export class Project_Controller {
         this.router.get('/:projectId', this.getProjectById.bind(this));
         this.router.put('/:projectId/update', this.UpdateProject.bind(this));
         this.router.delete('/:projectId/delete', this.DeleteProject.bind(this));
+        this.router.put('/:projectId/restore', this.restoreProject.bind(this));
     
 
     }
