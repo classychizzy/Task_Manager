@@ -16,10 +16,11 @@ export class TaskAssignment_Controller {
         const userId = req.user!.id;
         const taskId = req.body.taskId;
         // Assuming req.body contains the TaskAssignmentDTO structure
-        const assignment = await this.TaskAssignment_Service.assignTask(req.body, taskId, userId);
-        
+        const assignment = await this.TaskAssignment_Service.assignTask(req.body, Number(taskId),  Number(userId));
+        console.log(assignment);
+
         let response = {
-            status_code: '201',
+            status_code: 200,
             message: 'Task assigned successfully',
             data: assignment
         }
@@ -53,7 +54,7 @@ export class TaskAssignment_Controller {
     }
 
     private initializeRoutes() {
-        this.router.post('/assign', this.assignTask.bind(this));
+        this.router.post('/tasks/:taskId/assignments', this.assignTask.bind(this));
         this.router.get('/:taskId', this.getAssignments.bind(this));
         this.router.delete('/:assignmentId/delete', this.DeleteAssignment.bind(this));
     }

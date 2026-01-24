@@ -1,148 +1,282 @@
-//import { Task_assignment_entity } from '../../entities/task_assignment_entity';
 import { Task_assignment_Repository } from '../repositories/task_assignment_repository';
-import { Task_assignmentDTO } from '../dto/task_assignment_dto'
-import { TaskRepository } from '../repositories/task_repository';
-import { UserRepository } from '../repositories/user_repository';
-import { Task_assignment_entity } from '../entities/Task_assignment_entity';
+import { TaskRepository } from "../repositories/task_repository";
+import { UserRepository } from "../repositories/user_repository";
+import { TaskPermission } from "../enums/Taskpermission_enum";
+import { Task_assignment_entity } from "../entities/Task_assignment_entity";
+import { AssignTaskDTO } from "../dto/assign_task_dto";
+import { stat } from 'fs';
+
 
 export class TaskAssignment_Service {
-    private TaskAssignmentRepository: typeof Task_assignment_Repository;
-    private TaskRepository: typeof TaskRepository;
-    private UserRepository: typeof UserRepository;
+    private taskAssignmentRepository: typeof Task_assignment_Repository;
+    private taskRepository: typeof TaskRepository;
+    private userRepository: typeof UserRepository;
 
     constructor() {
-        this.TaskAssignmentRepository = Task_assignment_Repository;
-        this.TaskRepository = TaskRepository;
-        this.UserRepository = UserRepository;
+        this.taskAssignmentRepository = Task_assignment_Repository;
+        this.taskRepository = TaskRepository;
+        this.userRepository = UserRepository;
     }
 
-    async assignTask(assignmentDTO: Task_assignmentDTO, taskId: number, userId: number) {
-        // Verify task exists and belongs to the user (via project) before assigning
-        const task = await this.TaskRepository.findOne({
-            where: {
-                task_id: taskId,
-                is_deleted: false,
-                project: {
-                    user: {
-                        user_id: userId
-                    }
-                }
-            }
-        });
-
-        if (!task) {
-            let response = {
-                status_code: 404,
-                status: 'failed',
-                message: 'Task not found or access denied',
-                data: null
-            }
-            return response;
-        }
-
-        // Verify the user to be assigned exists
-        const assignee = await this.UserRepository.findOne({
-            where: {
-                user_id: userId,
-            }
-        });
-
-        if (!assignee) {
-            let response = {
-                status_code: 404,
-                status: 'failed',
-                message: 'Assignee user not found',
-                data: null
-            }
-            return response;
-        }
-
-        const newAssignment = new Task_assignment_entity();
-        newAssignment.task = task;
-        newAssignment.user = assignee;
-        newAssignment.created_at = new Date();
-        
-        await this.TaskAssignmentRepository.save(newAssignment);
-        return newAssignment;
-    }
-
-    async getAssignmentsByTaskId(taskId: number, userId: number) {
+    async AssignUsertoTask(assignmentData: AssignTaskDTO, taskId: number, requesterId: number) {
         try {
-            const assignments = await this.TaskAssignmentRepository.find({
+            //verify if the task exists
+            const task = await this.taskRepository.findOne({
                 where: {
-                    is_deleted: false,
-                    task: {
-                        task_id: taskId,
-                        project: {
-                            user: {
-                                user_id: userId
-                            }
-                        }
-                    }
+                    task_id: taskId,
+                    is_deleted: false
                 },
-                relations: ["user", "task"]
+                // relations: ["project", "project.user"] // this is a non rbac way of checking ownership
             });
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Assignments retrieved successfully',
-                data: assignments
+            if (!task) {
+                return {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Task not found',
+                    data: null
+                };
             }
-            return response;
 
-        } catch (error) {
-            let errorMessage = "unable to retrieve assignments";
-            if (error instanceof Error) {
-                errorMessage = error.message;
+            // Verify requester is the project owner i.e has the ownership permission
+            const requesterAssignment = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: requesterId },
+                    is_deleted: false,
+                },
+            });
+
+            if (
+                !requesterAssignment ||
+                requesterAssignment.permission !== TaskPermission.OWNER
+            ) {
+                let response = {
+                    status_code: 403,
+                    status: 'failed',
+                    message: 'only owners are permitted to assign tasks',
+                    data: null
+
+
+                }
+                return response;
             }
-            let response = {
+
+            // 3. Find user by email the user here is the asignee i.e the person we wish to assign
+            const assignee = await this.userRepository.findOne({
+                where: { email: assignmentData.email },
+            });
+
+            if (!assignee) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                }
+                return response;
+
+            }
+
+            //check if the task has already been assigned
+            const existingAssignment = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: assignee.user_id },
+                    is_deleted: false
+                }
+            });
+
+            if (existingAssignment && !existingAssignment.is_deleted) {
+                return {
+                    status_code: 409,
+                    status: 'failed',
+                    message: 'User already assigned to this task',
+                    data: null
+                };
+            }
+
+            // let's check if the assignment was soft deleted assignment and restore
+            if (existingAssignment && existingAssignment.is_deleted) {
+                existingAssignment.is_deleted = false;
+                existingAssignment.updated_at = new Date();
+                await this.taskAssignmentRepository.save(existingAssignment);
+
+                let response = {
+                    status_code: 200,
+                    status: 'success',
+                    message: 'User assigned to task successfully',
+                    data: existingAssignment
+                }
+                return response;
+            }
+
+            const newAssignment = new Task_assignment_entity();
+            newAssignment.task = task;
+            newAssignment.user = assignee;
+            newAssignment.permission = assignmentData.permission ?? TaskPermission.VIEW;
+
+            await this.taskAssignmentRepository.save(newAssignment);
+
+            return {
+                status_code: 201,
+                status: 'success',
+                message: 'user has  been assigned to the task successfully',
+                data: newAssignment
+            };
+        } catch (error) {
+            return {
                 status_code: 500,
                 status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
+                message: 'Internal server error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 data: null
-            }
-            return response;
+            };
         }
     }
 
-    async deleteAssignment(assignmentId: number, userId: number) {
-        const assignment = await this.TaskAssignmentRepository.findOne({
+    async UpdatePermission(Permission: TaskPermission,
+        taskId: number, userId: number, requesterId: number) {
+        // verify that the requester is the owner of the task
+        const requester = await this.taskAssignmentRepository.findOne({
             where: {
-                assignment_id: assignmentId,
-                task: {
-                    project: {
-                        user: {
-                            user_id: userId
-                        }
-                    }
-                }
+                task: { task_id: taskId },
+                user: { user_id: requesterId },
+                is_deleted: false
+
+
+            }
+        });
+
+        if (!requester || requester.permission !== TaskPermission.OWNER) {
+            let response = {
+                status_code: 403,
+                message: 'only owner can change permission',
+                data: null
+            }
+            return response
+
+        }
+
+        const assignment = await this.taskAssignmentRepository.findOne({
+            where: {
+                task: { task_id: taskId },
+                user: { user_id: userId },
+                is_deleted: false
             }
         });
 
         if (!assignment) {
             let response = {
                 status_code: 404,
-                status: 'failed',
                 message: 'Assignment not found',
                 data: null
             }
-            return response;
+
         }
-
-        // soft delete implementation
-        assignment.is_deleted = true;
-        assignment.updated_at = new Date();
-
-        await this.TaskAssignmentRepository.save(assignment);
+        assignment!.permission = Permission;
+        assignment!.updated_at = new Date();
+        await this.taskAssignmentRepository.save(assignment!);
 
         let response = {
             status_code: 200,
-            status: 'success',
-            message: 'Assignment deleted successfully',
-            data: null
+            message: 'Permission updated successfully',
+            data: assignment
         }
         return response;
+
+
     }
+
+    async removeUserFromTask(taskId: number, userId: number, requesterId: number) {
+
+        const requester = await this.taskAssignmentRepository.findOne({
+            where: {
+                task: { task_id: taskId },
+                user: { user_id: requesterId },
+                is_deleted: false
+            }
+        });
+        if (!requester || requester.permission !== TaskPermission.OWNER) {
+            let response = {
+                status_code: 403,
+                message: 'only owner can remove user from task',
+                data: null
+            }
+            return response
+        }
+
+        const assignment = await this.taskAssignmentRepository.findOne({
+            where: {
+                task: { task_id: taskId },
+                user: { user_id: userId },
+                is_deleted: false
+            }
+        });
+
+        if (!assignment) {
+            let response = {
+                status_code: 404,
+                message: 'Assignment not found',
+                data: null
+            }
+            return response                             
+            } 
+
+            assignment.is_deleted = true;
+            assignment.updated_at = new Date();
+            await this.taskAssignmentRepository.save(assignment);
+
+    }
+
+    async getTaskAssignments(taskId: number, userId: number) {
+        //check that any assigned user can view
+
+        const hasAccess = await this.taskAssignmentRepository.findOne({
+            where: {
+                task: { task_id: taskId },
+                user: { user_id: userId },
+                is_deleted: false
+            }
+        }); 
+
+        if (!hasAccess) {
+            let response = {
+                status_code: 403,
+                message:'access denied',
+                data: null
+            }
+            return response 
+        }
+
+        const assignments = await this.taskAssignmentRepository.find({
+            where: {
+                task: { task_id: taskId },
+                is_deleted: false
+            },
+            relations: [ "user"]
+        });
+
+        if (!assignments) {
+            let response = {
+                status_code: 404,
+                message: 'No assignments found',
+                data: null
+            }
+            return response
+
+        }
+        let response = {
+            status_code: 200,
+            message: 'Assignments retrieved successfully',
+            data: assignments
+        }
+        return response;
+
+
+    }
+
+    
+
+
 }

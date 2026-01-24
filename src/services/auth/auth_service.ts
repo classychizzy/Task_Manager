@@ -4,7 +4,7 @@ import { UserRepository } from "../../repositories/user_repository";
 //import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
 import { Jwt } from "jsonwebtoken";
-import { validateEmail, validatePassword } from '../../validator/user_validation';
+import { validateEmail} from '../../validator/user_validation';
 import { hashPassword, comparePassword } from '../../utils/hashPassword';
 import { User_entity } from "../../entities/user_entity";``
 import { TokenService } from "./token_service";
@@ -79,7 +79,7 @@ export class Auth_Service {
                 let response = {
                     status_code: 400,
                     status: 'failed',
-                    message: 'Invalid email address',
+                    message: 'Enter a valid email address',
                     data: null
                 }
 

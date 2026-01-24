@@ -10,12 +10,12 @@ export function validateEmail(email: string){
 }
 
 //password validation
-export function validatePassword(password: string){
-    if(password.length >= 10){
-        return true;
-    }
-    return false;
-}
+// export function validatePassword(password: string){
+//     if(password.length >= 10){
+//         return true;
+//     }
+//     return false;
+// }
 
 /**const emailRegex: RegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 export function validateEmailRegex(email: string): boolean {
