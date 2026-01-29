@@ -1,15 +1,18 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Auth_Service = void 0;
 const user_repository_1 = require("../../repositories/user_repository");
-//import { STATUS_CODES } from "http";
-//import { IsEmail } from 'class-validator';
 const user_validation_1 = require("../../validator/user_validation");
 const user_entity_1 = require("../../entities/user_entity");
 ``;
 const token_service_1 = require("./token_service");
 const refresh_repository_1 = require("../../repositories/refresh_repository");
 const refresh_entity_1 = require("../../entities/refresh_entity");
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 //handles all user and authentication issues
 //create a service class where you will write your queries and logics
 class Auth_Service {
@@ -54,7 +57,7 @@ class Auth_Service {
                 let response = {
                     status_code: 400,
                     status: 'failed',
-                    message: 'Invalid email address',
+                    message: 'Enter a valid email address',
                     data: null
                 };
                 return response;
@@ -259,6 +262,29 @@ class Auth_Service {
             };
             return response;
         }
+    }
+    async refreshToken(req, res) {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            let response = {
+                status_code: 400,
+                status: 'failed',
+                message: 'Refresh token is required',
+                data: null
+            };
+            return response;
+        }
+        // verify the refresh token
+        const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
+        //generate access token 
+        const newaccessToken = await this.tokenService.generateAccessToken(decoded);
+        let response = {
+            status_code: 200,
+            status: 'success',
+            message: 'Access token generated successfully',
+            data: newaccessToken
+        };
+        return response;
     }
 }
 exports.Auth_Service = Auth_Service;

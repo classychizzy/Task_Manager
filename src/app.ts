@@ -12,6 +12,7 @@ import * as http from 'http';
 import { authenticateToken } from './middlewares/jwt.auth';
 import { Project_Controller } from './controllers/project_controller';
 import { Task_Controller } from './controllers/task_controller';
+import { TaskAssignment_Controller } from './controllers/task_assignment_controller';
 
 
 
@@ -52,6 +53,10 @@ class App {
         this.app.use('/api/v1/tasks',
                     authenticateToken,
                     new Task_Controller().router)
+    
+        this.app.use('/api/v1/taskassignments',  
+                    authenticateToken,
+                    new TaskAssignment_Controller().router)
         
          
     }   

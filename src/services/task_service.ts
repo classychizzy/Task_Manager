@@ -1,13 +1,16 @@
 import { TaskRepository } from '../repositories/task_repository';
-import { TaskDTO} from '../dto/task_dto';
+import { TaskDTO } from '../dto/task_dto';
 import { ProjectRepository } from '../repositories/project_repository';
 import { Task_entity } from '../entities/task_entity';
 import { stat } from 'fs';
 import { create } from 'domain';
+import { TaskPermission } from '../enums/Taskpermission_enum';
+import { Task_assignment_Repository } from '../repositories/task_assignment_repository';
 
-export class Task_Service {
+    export class Task_Service {
     private TaskRepository: typeof TaskRepository;
     private ProjectRepository: typeof ProjectRepository;
+    Task_assignment_Repository: any;
 
     constructor() {
         this.TaskRepository = TaskRepository;
@@ -23,7 +26,8 @@ export class Task_Service {
                     user_id: userId
                 },
                 is_deleted: false
-            }
+            },
+            relations: ["user"]
         });
 
         if (!project) {
@@ -32,20 +36,30 @@ export class Task_Service {
                 status: 'failed',
                 message: 'Project not found',
                 data: null
-            
+
             }
             return response;
         }
+
 
         const newTask = new Task_entity();
         newTask.title = createTaskDTO.title;
         newTask.description = createTaskDTO.description;
         newTask.dueDate = new Date(createTaskDTO.dueDate);
         // Default status to pending if not provided, or handle as per your DTO
-        newTask.status = createTaskDTO.status || 'pending'; 
+        newTask.status = createTaskDTO.status || 'pending';
         newTask.project = project;
 
         await this.TaskRepository.save(newTask);
+
+        const ownerAssignment = this.Task_assignment_Repository.create({
+            task:newTask,
+            user: project.user,
+            permission: TaskPermission.OWNER,
+        })
+
+        await this.Task_assignment_Repository.save(ownerAssignment);
+
         return newTask;
     }
 
@@ -209,7 +223,7 @@ export class Task_Service {
         }
 
         // soft delete implementation
-       // task.deleted_at = new Date();
+        // task.deleted_at = new Date();
         task.is_deleted = true;
         task.updated_at = new Date();
 
@@ -236,8 +250,8 @@ export class Task_Service {
                     }
                 }
             }
-        })   
-        
+        })
+
         if (!restoreTask) {
             let response = {
                 status_code: 404,

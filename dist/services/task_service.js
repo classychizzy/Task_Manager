@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Task_Service = void 0;
-const task_repository_1 = require("../../repositories/task_repository");
-const project_repository_1 = require("../../repositories/project_repository");
-const task_entity_1 = require("../../entities/task_entity");
+const task_repository_1 = require("../repositories/task_repository");
+const project_repository_1 = require("../repositories/project_repository");
+const task_entity_1 = require("../entities/task_entity");
 class Task_Service {
     constructor() {
         this.TaskRepository = task_repository_1.TaskRepository;
@@ -32,7 +32,7 @@ class Task_Service {
         const newTask = new task_entity_1.Task_entity();
         newTask.title = createTaskDTO.title;
         newTask.description = createTaskDTO.description;
-        newTask.dueDate = createTaskDTO.dueDate;
+        newTask.dueDate = new Date(createTaskDTO.dueDate);
         // Default status to pending if not provided, or handle as per your DTO
         newTask.status = createTaskDTO.status || 'pending';
         newTask.project = project;
@@ -153,7 +153,7 @@ class Task_Service {
             task.status = updateData.status;
         }
         if (updateData.dueDate) {
-            task.dueDate = updateData.dueDate;
+            task.dueDate = new Date(updateData.dueDate);
         }
         task.updated_at = new Date();
         await this.TaskRepository.save(task);
@@ -226,7 +226,7 @@ class Task_Service {
         let response = {
             status_code: 200,
             message: 'Task restored successfully',
-            data: null
+            data: restoreTask
         };
         return response;
     }

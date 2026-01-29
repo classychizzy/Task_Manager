@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Project_Controller = void 0;
 const express_1 = require("express");
-const project_service_1 = require("../services/projects/project_service");
+const project_service_1 = require("../services/project_service");
 class Project_Controller {
     constructor() {
         this.router = (0, express_1.Router)();

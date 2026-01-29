@@ -1,146 +1,107 @@
-import { TaskAssignment_Service } from "../services/task_assignments_service";
-import { Router, Response } from 'express';
-import { AuthenticatedRequest } from "../types/express/auth-request";
-import { stat } from "fs";
-
-
-export class TaskAssignment_Controller {
-    public router: Router;
-    private taskAssignmentService: TaskAssignment_Service;
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TaskAssignment_Controller = void 0;
+const task_assignments_service_1 = require("../services/task_assignments_service");
+const express_1 = require("express");
+class TaskAssignment_Controller {
     constructor() {
-        this.router = Router();
-        this.taskAssignmentService = new TaskAssignment_Service();
+        this.router = (0, express_1.Router)();
+        this.taskAssignmentService = new task_assignments_service_1.TaskAssignment_Service();
         this.initializeRoutes();
     }
-
-    public async AssignUsertoTask(req: AuthenticatedRequest, res: Response) {
+    async AssignUsertoTask(req, res) {
         const taskId = req.params.taskId;
-        const userId = req.user!.id;
+        const userId = req.user.id;
         const result = await this.taskAssignmentService.AssignUsertoTask(req.body, Number(taskId), userId);
         let response = {
             status_code: '201',
             message: 'User assigned to task successfully',
             data: result
-        }
+        };
         return res.json(response);
     }
-
-    public async UpdatePermission(req: AuthenticatedRequest, res: Response) {
+    async UpdatePermission(req, res) {
         const taskId = req.params.taskId;
-        const requesterId = req.user!.id;
+        const requesterId = req.user.id;
         const permission = req.body.permission;
         const userId = req.body.userId;
-        const result = await this.taskAssignmentService.UpdatePermission(permission,
-            Number(taskId), Number(userId), requesterId);
+        const result = await this.taskAssignmentService.UpdatePermission(permission, Number(taskId), Number(userId), requesterId);
         let response = {
             status_code: '201',
             message: 'User permission updated successfully',
             data: result
-
-        }
+        };
         return res.json(response);
-
     }
-
-    public async getUserTaskPermission(req: AuthenticatedRequest, res: Response) {
+    async getUserTaskPermission(req, res) {
         let taskid = req.params.taskId;
-        let userid = req.user!.id;
+        let userid = req.user.id;
         const result = await this.taskAssignmentService.getUserTaskPermission(Number(taskid), userid);
         let response = {
             status_code: '201',
             message: 'User permission retrieved successfully',
             data: result
-
-        }
-        return
-
+        };
+        return;
     }
-
-    public async removeUserFromTask(req: AuthenticatedRequest, res: Response) {
+    async removeUserFromTask(req, res) {
         const taskId = req.params.taskId;
-        const requesterId = req.user!.id;
+        const requesterId = req.user.id;
         const userId = req.body.userId;
-        const result = await this.taskAssignmentService.removeUserFromTask(Number(taskId),
-            Number(userId), requesterId);
+        const result = await this.taskAssignmentService.removeUserFromTask(Number(taskId), Number(userId), requesterId);
         let response = {
             status_code: '201',
             message: 'User removed from task successfully',
             data: result
-        }
-
+        };
         return res.json(response);
-
-
     }
-
-    public async getTaskAssignments(req: AuthenticatedRequest, res: Response) {
+    async getTaskAssignments(req, res) {
         const taskId = req.params.taskId;
-        const userId = req.user!.id;
+        const userId = req.user.id;
         const result = await this.taskAssignmentService.getTaskAssignments(Number(taskId), userId);
         let response = {
             status_code: '201',
             message: 'Assignments retrieved successfully',
             data: result
-        }
+        };
         return res.json(response);
-
-
     }
-
-    public async getUserassignedtasks(req: AuthenticatedRequest, res: Response) {
+    async getUserassignedtasks(req, res) {
         const taskId = req.params.taskId;
-        const userId = req.user!.id;
+        const userId = req.user.id;
         const result = await this.taskAssignmentService.getUserassignedtasks(userId);
-
         let response = {
             status_code: '201',
             message: 'Tasks retrieved successfully',
             data: result
-        }
+        };
         return res.json(response);
-
-
     }
-
-    public async bulkAssignUsers(req: AuthenticatedRequest, res: Response) {
+    async bulkAssignUsers(req, res) {
         const taskId = req.params.taskId;
-        const requesterId = req.user!.id;
+        const requesterId = req.user.id;
         const result = await this.taskAssignmentService.bulkAssignUsers(req.body, Number(taskId), requesterId);
-
         let response = {
             status_code: '201',
             message: 'Users assigned to task successfully',
             data: result
-
-        }
+        };
         return res.json(response);
-
-
     }
-
-    public async TransferOwnership(req: AuthenticatedRequest, res: Response) {
+    async TransferOwnership(req, res) {
         const taskId = req.params.taskId;
-        console.log(req.user!.id, taskId)
-        const presentOwnerId = req.user!.id;
+        const presentOwnerId = req.user.id;
         const newOwnerId = req.body.newOwnerId;
-        const result = await this.taskAssignmentService.TransferOwnership(newOwnerId, Number(taskId),
-            presentOwnerId, newOwnerId);
-
+        const result = await this.taskAssignmentService.TransferOwnership(newOwnerId, Number(taskId), presentOwnerId, newOwnerId);
         let response = {
             status_code: '201',
             message: 'Ownership transferred successfully',
             data: result
-        }
-        console.log("controller hits end")
+        };
         return res.json(response);
-
-
     }
-
-
-
-    private initializeRoutes() {
+    initializeRoutes() {
         this.router.post('/assign/:taskId', this.AssignUsertoTask.bind(this));
         this.router.put('/update/:taskId', this.UpdatePermission.bind(this));
         this.router.get('/permission/:taskId', this.getUserTaskPermission.bind(this));
@@ -149,13 +110,6 @@ export class TaskAssignment_Controller {
         this.router.get('/assignedtasks', this.getUserassignedtasks.bind(this));
         this.router.post('/bulkassign/:taskId', this.bulkAssignUsers.bind(this));
         this.router.put('/transfer/:taskId', this.TransferOwnership.bind(this));
-
-    
-
-
-
-
-
     }
-
 }
+exports.TaskAssignment_Controller = TaskAssignment_Controller;

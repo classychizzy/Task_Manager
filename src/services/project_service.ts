@@ -1,11 +1,10 @@
-import { ProjectRepository } from '../../repositories/project_repository';
-import { CreateProjectDTO } from '../../dto/create_project_dto';
-import { Project_entity } from '../../entities/projects_entity';
-import { UserRepository } from '../../repositories/user_repository';
-import { User_entity } from '../../entities/user_entity';
-import { stat } from 'fs';
-import { UpdateProjectDTO } from '../../dto/updateproject_dto';
-import { getPagination } from '../../utils/pagination';
+import { ProjectRepository } from '../repositories/project_repository'
+import { CreateProjectDTO } from '../dto/create_project_dto'
+import { Project_entity } from '../entities/projects_entity'
+import { UserRepository } from '../repositories/user_repository'
+import { User_entity } from '../entities/user_entity';
+import { UpdateProjectDTO } from '../dto/updateproject_dto'
+import { getPagination } from '../utils/pagination';
 export class Project_service {
     private ProjectRepository: typeof ProjectRepository;
     private UserRepository: typeof UserRepository;

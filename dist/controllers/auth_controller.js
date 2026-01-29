@@ -26,6 +26,10 @@ class Auth_Controller {
         let user = await this.authService.findUserByEmail(userData);
         return res.json(user);
     }
+    async refreshToken(req, res) {
+        let refresh = await this.authService.refreshToken(req, res);
+        return res.json(refresh);
+    }
     initializeRoutes() {
         this.router.get('/welcome', (req, res) => {
             res.status(200).send("Welcome to Task Manager");
@@ -33,9 +37,7 @@ class Auth_Controller {
         this.router.post('/register', 
         //add middleware here
         this.registerUser.bind(this));
-        this.router.post('/login', 
-        //add middleware here
-        this.loginUser.bind(this));
+        this.router.post('/login', this.loginUser.bind(this));
         this.router.post('/user', 
         //add middleware here
         this.findUserByEmail.bind(this));

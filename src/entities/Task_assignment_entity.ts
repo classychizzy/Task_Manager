@@ -13,6 +13,15 @@ export class Task_assignment_entity {
     @Column({ enum: TaskPermission, default: TaskPermission.VIEW})
     permission: TaskPermission;
 
+    
+    @Column()
+    user_id: number; //foreign key supports the many users being assigned to a task and being represented in a table
+
+    @Column()
+    task_id: number; //foreign key supports the many users assigned to a task 
+    // and the task is user is assigned to being represented in the task assignment table
+
+
     @Column({default: false, nullable: true})
     is_deleted: boolean;
 
@@ -24,12 +33,12 @@ export class Task_assignment_entity {
     updated_at: Date
 
     //relationship
-    @ManyToOne(() => User_entity, (user) => user.task_assignments)
-    user: User_entity;
-    @JoinColumn({ name: "user_id" })
+    @ManyToOne(() => User_entity, (user) => user.task_assignments, {nullable: false})
+    @JoinColumn({ name: "user_id" , })
+     user: User_entity;
     
 
-    @ManyToOne(() => Task_entity, (task) => task.task_assignments)
+    @ManyToOne(() => Task_entity, (task) => task.task_assignments, {nullable: false})
     @JoinColumn({ name: "task_id" })
     task: Task_entity;
 }

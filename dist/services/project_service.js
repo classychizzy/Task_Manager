@@ -4,6 +4,7 @@ exports.Project_service = void 0;
 const project_repository_1 = require("../../repositories/project_repository");
 const projects_entity_1 = require("../../entities/projects_entity");
 const user_repository_1 = require("../../repositories/user_repository");
+const pagination_1 = require("../../utils/pagination");
 class Project_service {
     constructor() {
         this.ProjectRepository = project_repository_1.ProjectRepository;
@@ -35,16 +36,23 @@ class Project_service {
         await this.ProjectRepository.save(newProject);
         return newProject;
     }
-    async getAllProjects(userId) {
+    async getAllProjects(userId, page, limit) {
+        //implementation of pagination
+        const { skip, take, page: currentPage, limit: pageSize } = (0, pagination_1.getPagination)(page, limit);
         try {
-            const projects = await this.ProjectRepository.find({
+            const [projects, total] = await this.ProjectRepository.findAndCount({
                 where: {
                     is_deleted: false,
                     user: {
                         user_id: userId
                     }
                 },
-                relations: ["user", "tasks"]
+                relations: ["user", "tasks"],
+                skip,
+                take,
+                order: {
+                    created_at: 'DESC'
+                }
             });
             console.log("Searching for projects with userId:", userId);
             // First, check what projects exist with just the user filter: i used this to debug
@@ -68,7 +76,13 @@ class Project_service {
                 status_code: 200,
                 status: 'success',
                 message: 'Projects retrieved successfully',
-                data: projects
+                data: projects,
+                meta: {
+                    total,
+                    page: currentPage,
+                    limit: pageSize,
+                    totalPages: Math.ceil(total / pageSize),
+                },
             };
             return response;
         }
@@ -186,6 +200,15 @@ class Project_service {
                 status_code: 404,
                 status: 'failed',
                 message: 'Project not found',
+                data: null
+            };
+            return response;
+        }
+        if (project.is_deleted) {
+            let response = {
+                status_code: 409,
+                status: 'failed',
+                message: 'Project already deleted',
                 data: null
             };
             return response;

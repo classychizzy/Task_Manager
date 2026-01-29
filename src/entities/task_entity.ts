@@ -46,8 +46,10 @@ export class Task_entity {
     
 
     // relationships
-    @ManyToOne(() => User_entity, (user) => user.tasks)
+    @ManyToOne(() => User_entity, (user) => user.tasks, { nullable: false})
+    @JoinColumn({ name: "user_id" })
     User: User_entity;
+
 
     @ManyToOne(() => Project_entity, (project) => project.tasks)
     @JoinColumn({ name: "project_id" })

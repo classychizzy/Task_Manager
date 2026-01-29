@@ -52,7 +52,7 @@ __decorate([
     __metadata("design:type", Date)
 ], Task_entity.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', default: 'null', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'timestamp', default: null, nullable: true }),
     __metadata("design:type", Object)
 ], Task_entity.prototype, "deleted_at", void 0);
 __decorate([

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Task_Controller = void 0;
 const express_1 = require("express");
-const task_service_1 = require("../services/tasks/task_service");
+const task_service_1 = require("../services/task_service");
 class Task_Controller {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -89,6 +89,7 @@ class Task_Controller {
         this.router.get('/:taskId', this.getTaskById.bind(this));
         this.router.put('/:taskId/update', this.UpdateTask.bind(this));
         this.router.delete('/:taskId/delete', this.DeleteTask.bind(this));
+        this.router.put('/:taskId/restore', this.restoreTask.bind(this));
     }
 }
 exports.Task_Controller = Task_Controller;
