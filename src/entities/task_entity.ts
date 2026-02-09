@@ -60,6 +60,7 @@ export class Task_entity {
 
     @OneToMany(() => Comment_Entity, (comment) => comment.task)
     comments: Comment_Entity[];
+    user_id: number;
   
 
 }

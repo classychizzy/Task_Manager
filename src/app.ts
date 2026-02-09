@@ -13,6 +13,7 @@ import { authenticateToken } from './middlewares/jwt.auth';
 import { Project_Controller } from './controllers/project_controller';
 import { Task_Controller } from './controllers/task_controller';
 import { TaskAssignment_Controller } from './controllers/task_assignment_controller';
+import { Comment_Controller } from './controllers/comment_controller';
 
 
 
@@ -37,29 +38,35 @@ class App {
         this.app.use(express.urlencoded({ extended: true }));
     }
 
-    
+
     private initializeControllers() {
         this.app.use("/welcome", async function (req: Request, res: Response) {
             res.status(200).send("Welcome to Task Manager");
         });
         console.log('Initializing controllers...');
         //base route for all initialized routes in the controller
-         this.app.use('/api/v1/auth', new Auth_Controller().router);
-         //route handler for projects
-         this.app.use( '/api/v1/projects',
-                        authenticateToken,
-                        new Project_Controller().router,
-                    );
+        this.app.use('/api/v1/auth', new Auth_Controller().router);
+        //route handler for projects
+        this.app.use('/api/v1/projects',
+            authenticateToken,
+            new Project_Controller().router,
+        );
         this.app.use('/api/v1/tasks',
-                    authenticateToken,
-                    new Task_Controller().router)
-    
-        this.app.use('/api/v1/taskassignments',  
-                    authenticateToken,
-                    new TaskAssignment_Controller().router)
-        
-         
-    }   
+            authenticateToken,
+            new Task_Controller().router)
+
+        this.app.use('/api/v1/taskassignments',
+            authenticateToken,
+            new TaskAssignment_Controller().router)
+
+        this.app.use(
+            '/api/v1',
+            authenticateToken,
+            new Comment_Controller().router
+        );
+
+
+    }
 
     public listen() {
         http.createServer(this.app).listen(this.port, () => {

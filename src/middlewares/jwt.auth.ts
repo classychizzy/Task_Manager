@@ -1,26 +1,34 @@
 import jwt from "jsonwebtoken"
-import {Request, Response, NextFunction} from "express"
+import { Request, Response, NextFunction } from "express"
 import { UserPayload } from "../types/userpayload"
 import { AuthenticatedRequest } from "../types/express/auth-request"
 
 
 
 
-export function authenticateToken(req:AuthenticatedRequest, res: Response, next: NextFunction){
-    const authheader = req.headers['authorization']
-    const token = authheader && authheader.split(' ')[1]
-    if (!token ) {
-        let response = {
-            status_code: 401,
-            status: 'failed',
-            message: 'missing token',
-            data: null
-        
-        }
-        return response
-    
-    }  
-    
+export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const authheader = req.headers['authorization']
+
+  // // Debug logging
+  // console.log('Raw Authorization Header:', JSON.stringify(authheader));
+  // console.log('Authorization Header Length:', authheader?.length);
+
+  const token = authheader && authheader.split(' ')[1]
+
+  // console.log('Extracted Token:', JSON.stringify(token));
+
+  if (!token) {
+    let response = {
+      status_code: 401,
+      status: 'failed',
+      message: 'missing token',
+      data: null
+
+    }
+    return res.status(401).json(response);
+
+  }
+
   jwt.verify(token, process.env.JWT_ACCESS_SECRET as string, (err, decoded) => {
     if (err) {
       console.log(err);
@@ -33,7 +41,7 @@ export function authenticateToken(req:AuthenticatedRequest, res: Response, next:
 
     req.user = decoded as UserPayload; // ← THIS is what makes runtime work
     next();
-    })
+  })
 
-   
+
 }

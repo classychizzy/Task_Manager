@@ -11,28 +11,32 @@ import bcrypt from 'bcrypt';
 
 
 
-@Entity({name: 'users', schema: 'public'})
+@Entity({ name: 'users', schema: 'public' })
 export class User_entity {
   @PrimaryGeneratedColumn()
   user_id: number;
 
-  @Column({type: 'varchar', length: 100})
+  @Column({ type: 'varchar', length: 100 })
   firstName: string;
 
-  @Column({type: 'varchar', length: 100})
+  @Column({ type: 'varchar', length: 100 })
   lastName: string;
 
-  @Column({type: 'varchar', length: 50})
+  @Column({ type: 'varchar', length: 50 })
   username: string;
 
-  @Column({type: 'varchar', length: 255, unique: true})
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({type: 'varchar', length: 255})
+  @Column({ type: 'varchar', length: 255 })
   password: string;
 
-  @Column({type: 'boolean', default: true})
+  @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  //soft delete
+  @Column({ default: false })
+  is_deleted: boolean;
 
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, 8);
@@ -45,7 +49,7 @@ export class User_entity {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP'})
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updated_at: Date;
 
   //relationships

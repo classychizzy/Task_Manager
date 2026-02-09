@@ -7,7 +7,11 @@ exports.authenticateToken = authenticateToken;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 function authenticateToken(req, res, next) {
     const authheader = req.headers['authorization'];
+    // // Debug logging
+    // console.log('Raw Authorization Header:', JSON.stringify(authheader));
+    // console.log('Authorization Header Length:', authheader?.length);
     const token = authheader && authheader.split(' ')[1];
+    // console.log('Extracted Token:', JSON.stringify(token));
     if (!token) {
         let response = {
             status_code: 401,
@@ -15,7 +19,7 @@ function authenticateToken(req, res, next) {
             message: 'missing token',
             data: null
         };
-        return response;
+        return res.status(401).json(response);
     }
     jsonwebtoken_1.default.verify(token, process.env.JWT_ACCESS_SECRET, (err, decoded) => {
         if (err) {

@@ -26,6 +26,14 @@ __decorate([
     __metadata("design:type", String)
 ], Task_assignment_entity.prototype, "permission", void 0);
 __decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Task_assignment_entity.prototype, "user_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Task_assignment_entity.prototype, "task_id", void 0);
+__decorate([
     (0, typeorm_1.Column)({ default: false, nullable: true }),
     __metadata("design:type", Boolean)
 ], Task_assignment_entity.prototype, "is_deleted", void 0);
@@ -40,12 +48,12 @@ __decorate([
     )
 ], Task_assignment_entity.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.task_assignments),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.task_assignments, { nullable: false }),
+    (0, typeorm_1.JoinColumn)({ name: "user_id", }),
     __metadata("design:type", user_entity_1.User_entity)
 ], Task_assignment_entity.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.JoinColumn)({ name: "user_id" }),
-    (0, typeorm_1.ManyToOne)(() => task_entity_1.Task_entity, (task) => task.task_assignments),
+    (0, typeorm_1.ManyToOne)(() => task_entity_1.Task_entity, (task) => task.task_assignments, { nullable: false }),
     (0, typeorm_1.JoinColumn)({ name: "task_id" }),
     __metadata("design:type", task_entity_1.Task_entity)
 ], Task_assignment_entity.prototype, "task", void 0);

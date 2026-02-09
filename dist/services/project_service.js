@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Project_service = void 0;
-const project_repository_1 = require("../../repositories/project_repository");
-const projects_entity_1 = require("../../entities/projects_entity");
-const user_repository_1 = require("../../repositories/user_repository");
-const pagination_1 = require("../../utils/pagination");
+const project_repository_1 = require("../repositories/project_repository");
+const projects_entity_1 = require("../entities/projects_entity");
+const user_repository_1 = require("../repositories/user_repository");
+const pagination_1 = require("../utils/pagination");
 class Project_service {
     constructor() {
         this.ProjectRepository = project_repository_1.ProjectRepository;

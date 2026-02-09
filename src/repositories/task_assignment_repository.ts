@@ -1,4 +1,4 @@
-import { Repository } from "typeorm/browser";
+import { Repository } from "typeorm";
 import AppDataSource from "../ormconfig";
 import { Task_assignment_entity } from "../entities/Task_assignment_entity";
 

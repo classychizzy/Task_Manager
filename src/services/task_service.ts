@@ -4,17 +4,19 @@ import { ProjectRepository } from '../repositories/project_repository';
 import { Task_entity } from '../entities/task_entity';
 import { stat } from 'fs';
 import { create } from 'domain';
+import { parseFlexibleDate, isValidDateString } from '../utils/dateparser'
 import { TaskPermission } from '../enums/Taskpermission_enum';
 import { Task_assignment_Repository } from '../repositories/task_assignment_repository';
 
-    export class Task_Service {
+export class Task_Service {
     private TaskRepository: typeof TaskRepository;
     private ProjectRepository: typeof ProjectRepository;
-    Task_assignment_Repository: any;
+    private Task_assignment_Repository: typeof Task_assignment_Repository;
 
     constructor() {
         this.TaskRepository = TaskRepository;
         this.ProjectRepository = ProjectRepository;
+        this.Task_assignment_Repository = Task_assignment_Repository;
     }
 
     async createTask(createTaskDTO: TaskDTO, projectId: number, userId: number) {
@@ -22,10 +24,8 @@ import { Task_assignment_Repository } from '../repositories/task_assignment_repo
         const project = await this.ProjectRepository.findOne({
             where: {
                 project_id: projectId,
-                user: {
-                    user_id: userId
-                },
-                is_deleted: false
+                user: { user_id: userId },
+                is_deleted: false,
             },
             relations: ["user"]
         });
@@ -41,19 +41,52 @@ import { Task_assignment_Repository } from '../repositories/task_assignment_repo
             return response;
         }
 
+        // Ensure project has a user
+        if (!project.user) {
+            let response = {
+                status_code: 500,
+                status: 'failed',
+                message: 'Project user not found',
+                data: null
+            }
+            return response;
+        }
+
+        let dueDate: Date | null = null;
+        if (createTaskDTO.dueDate) {
+            dueDate = parseFlexibleDate(createTaskDTO.dueDate);
+
+            if (!dueDate) {
+                return {
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Invalid date format. Accepted formats: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY',
+                    data: null
+                };
+            }
+        }
+
+
+
 
         const newTask = new Task_entity();
         newTask.title = createTaskDTO.title;
         newTask.description = createTaskDTO.description;
-        newTask.dueDate = new Date(createTaskDTO.dueDate);
+        if (dueDate) {
+            newTask.dueDate = dueDate;
+        }
         // Default status to pending if not provided, or handle as per your DTO
         newTask.status = createTaskDTO.status || 'pending';
         newTask.project = project;
+        newTask.User = project.user;
+        newTask.user_id = project.user.user_id;
+
+
 
         await this.TaskRepository.save(newTask);
 
         const ownerAssignment = this.Task_assignment_Repository.create({
-            task:newTask,
+            task: newTask,
             user: project.user,
             permission: TaskPermission.OWNER,
         })
@@ -184,7 +217,10 @@ import { Task_assignment_Repository } from '../repositories/task_assignment_repo
             task.status = updateData.status;
         }
         if (updateData.dueDate) {
-            task.dueDate = new Date(updateData.dueDate);
+            const parsedDate = parseFlexibleDate(updateData.dueDate);
+            if (parsedDate) {
+                task.dueDate = parsedDate;
+            }
         }
 
         task.updated_at = new Date();

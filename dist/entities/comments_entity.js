@@ -38,10 +38,12 @@ __decorate([
 ], Comment_Entity.prototype, "updated_at", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.comments),
+    (0, typeorm_1.JoinColumn)({ name: "user_id" }),
     __metadata("design:type", user_entity_1.User_entity)
 ], Comment_Entity.prototype, "user", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => task_entity_1.Task_entity, (task) => task.comments),
+    (0, typeorm_1.JoinColumn)({ name: "task_id" }),
     __metadata("design:type", task_entity_1.Task_entity)
 ], Comment_Entity.prototype, "task", void 0);
 exports.Comment_Entity = Comment_Entity = __decorate([

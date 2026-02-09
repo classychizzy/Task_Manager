@@ -60,7 +60,8 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Task_entity.prototype, "is_deleted", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.tasks),
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User_entity, (user) => user.tasks, { nullable: false }),
+    (0, typeorm_1.JoinColumn)({ name: "user_id" }),
     __metadata("design:type", user_entity_1.User_entity)
 ], Task_entity.prototype, "User", void 0);
 __decorate([
