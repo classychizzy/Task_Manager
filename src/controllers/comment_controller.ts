@@ -44,9 +44,19 @@ export class Comment_Controller {
         return res.status(result.status_code).json(result);
     }
 
+    public async updateComment(req: AuthenticatedRequest, res: Response) {
+        const commentId = Number(req.params.commentId);
+        const userId = req.user!.id;
+        const { content, priority_level } = req.body;
+
+        const result = await this.commentService.updateComment(commentId, userId, content, priority_level);
+        return res.status(result.status_code).json(result);
+    }
+
     private initializeRoutes() {
         this.router.post('/comments/:taskId', this.createComment.bind(this));
         this.router.get('/comments/:taskId', this.getCommentsForTask.bind(this));
         this.router.delete('/comments/:commentId', this.deleteComment.bind(this));
+        this.router.put('/comments/:commentId', this.updateComment.bind(this));
     }
 }

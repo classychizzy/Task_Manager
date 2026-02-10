@@ -78,10 +78,16 @@ export class Comment_Service {
         }
     }
 
+
+
+
     async deleteComment(commentId: number, requesterId: number) {
         try {
             const comment = await this.commentRepository.findOne({
-                where: { comment_id: commentId },
+                where: {
+                    comment_id: commentId,
+                    user: { user_id: requesterId }
+                },
                 relations: ["user"]
             });
 
@@ -89,7 +95,7 @@ export class Comment_Service {
                 return { status_code: 404, message: 'Comment not found', data: null };
             }
 
-            if (comment.user.user_id !== requesterId) {
+            if (!requesterId) {
                 return { status_code: 403, message: 'You can only delete your own comments', data: null };
             }
 
@@ -99,6 +105,44 @@ export class Comment_Service {
                 status_code: 200,
                 message: 'Comment deleted successfully',
                 data: null
+            };
+        } catch (error) {
+            return {
+                status_code: 500,
+                message: 'Internal server error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
+                data: null
+            };
+        }
+    }
+
+    async updateComment(commentId: number, userId: number, content?: string, priorityLevel?: string) {
+        try {
+            const comment = await this.commentRepository.findOne({
+                where: {
+                    comment_id: commentId,
+                    user: { user_id: userId }
+                },
+                relations: ["user"]
+            });
+
+            if (!comment) {
+                return { status_code: 404, message: 'Comment not found', data: null };
+            }
+
+            if (!comment.user.user_id) {
+                return { status_code: 403, message: 'You can only update your own comments', data: null };
+            }
+
+            if (content) comment.content = content;
+            if (priorityLevel) comment.priority_level = priorityLevel;
+
+            await this.commentRepository.save(comment);
+
+            return {
+                status_code: 200,
+                message: 'Comment updated successfully',
+                data: comment
             };
         } catch (error) {
             return {
