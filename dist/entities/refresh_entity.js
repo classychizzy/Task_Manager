@@ -32,9 +32,9 @@ __decorate([
     __metadata("design:type", Date)
 ], Refresh_entity.prototype, "expires_at", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], Refresh_entity.prototype, "revoked", void 0);
+    (0, typeorm_1.Column)({ type: 'timestamptz', nullable: true }),
+    __metadata("design:type", Object)
+], Refresh_entity.prototype, "revoked_at", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

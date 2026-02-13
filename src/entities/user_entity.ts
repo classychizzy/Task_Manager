@@ -38,6 +38,10 @@ export class User_entity {
   @Column({ default: false })
   is_deleted: boolean;
 
+  @Column() // time and zone
+  updated_at: Date;
+
+
   hashPassword() {
     this.password = bcrypt.hashSync(this.password, 8);
   }
@@ -49,8 +53,6 @@ export class User_entity {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-  updated_at: Date;
 
   //relationships
   @OneToMany(() => Project_entity, (project) => project.user)

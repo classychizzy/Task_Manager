@@ -511,24 +511,51 @@ class TaskAssignment_Service {
                     user: { user_id: presentOwnerId },
                     is_deleted: false,
                     permission: Taskpermission_enum_1.TaskPermission.OWNER
-                }
+                },
+                relations: ['user']
             });
             if (!presentOwner) {
                 return { status_code: 403, message: 'You are not the owner of this task', data: null };
             }
-            const newOwner = await this.taskAssignmentRepository.findOne({
+            //verify if the request user is the same as the present owner
+            if (presentOwner.user.user_id !== userId) {
+                return { status_code: 403, message: 'You are not authorized to transfer ownership of this task', data: null };
+            }
+            //check if new owner exists in task assignment
+            let newOwner = await this.taskAssignmentRepository.findOne({
                 where: {
                     task: { task_id: taskId },
                     user: { user_id: newOwnerId },
                     is_deleted: false
                 },
+                relations: ['user']
             });
             if (!newOwner) {
-                return { status_code: 404, message: 'New owner not found', data: null };
+                //verify if the new owner is the same as the present owner
+                const userExists = await this.userRepository.findOne({ where: { user_id: newOwnerId } });
+                if (!userExists) {
+                    return { status_code: 404, message: 'New owner not found', data: null };
+                }
+                // Create new assignment
+                newOwner = this.taskAssignmentRepository.create({
+                    task: { task_id: taskId },
+                    user: { user_id: newOwnerId },
+                    permission: Taskpermission_enum_1.TaskPermission.OWNER,
+                    is_deleted: false
+                });
+            }
+            else {
+                // Update existing assignment to OWNER
+                newOwner.permission = Taskpermission_enum_1.TaskPermission.OWNER;
             }
             presentOwner.permission = Taskpermission_enum_1.TaskPermission.EDIT;
-            newOwner.permission = Taskpermission_enum_1.TaskPermission.OWNER;
             await this.taskAssignmentRepository.save([presentOwner, newOwner]);
+            // Update the task owner (creator) field
+            const task = await this.taskRepository.findOne({ where: { task_id: taskId } });
+            if (task) {
+                task.user_id = newOwnerId; // Update the task's user relationship
+                await this.taskRepository.save(task);
+            }
             return {
                 status_code: 200,
                 message: 'Ownership transferred successfully',

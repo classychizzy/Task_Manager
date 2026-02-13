@@ -12,6 +12,7 @@ const token_service_1 = require("./token_service");
 const refresh_repository_1 = require("../../repositories/refresh_repository");
 const refresh_entity_1 = require("../../entities/refresh_entity");
 const dotenv_1 = __importDefault(require("dotenv"));
+const typeorm_1 = require("typeorm");
 dotenv_1.default.config();
 //handles all user and authentication issues
 //create a service class where you will write your queries and logics
@@ -221,7 +222,7 @@ class Auth_Service {
             if (validateRefreshToken) {
                 validateRefreshToken.user_id = user.user_id;
                 validateRefreshToken.user = user;
-                validateRefreshToken.revoked = false;
+                validateRefreshToken.revoked_at = null;
                 validateRefreshToken.expires_at = new Date(Date.now() + 86400000);
                 validateRefreshToken.tokenHash = refreshToken;
                 await this.RefreshRepository.save(validateRefreshToken);
@@ -230,7 +231,7 @@ class Auth_Service {
                 const newRefreshToken = new refresh_entity_1.Refresh_entity();
                 newRefreshToken.user_id = user.user_id;
                 newRefreshToken.user = user;
-                newRefreshToken.revoked = false;
+                newRefreshToken.revoked_at = null;
                 newRefreshToken.expires_at = new Date(Date.now() + 86400000);
                 newRefreshToken.tokenHash = refreshToken;
                 await this.RefreshRepository.save(newRefreshToken);
@@ -285,6 +286,100 @@ class Auth_Service {
             data: newaccessToken
         };
         return response;
+    }
+    async LogoutUser(userId, refreshToken) {
+        try {
+            const token = await this.RefreshRepository.findOne({
+                where: {
+                    user_id: userId,
+                    tokenHash: refreshToken,
+                    revoked_at: (0, typeorm_1.IsNull)()
+                },
+            });
+            if (!token) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Refresh token not found',
+                    data: null
+                };
+                return response;
+            }
+            token.revoked_at = new Date();
+            await this.RefreshRepository.save(token);
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'User logged out successfully',
+                data: null
+            };
+            return response;
+        }
+        catch (error) {
+            let errorMessage = "An unknown error occurred during logout.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            let response = {
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            };
+            return response;
+        }
+    }
+    async DeleteUser(userId) {
+        try {
+            const user = await this.userRepository.findOne({
+                where: {
+                    user_id: userId
+                },
+            });
+            const token = await this.RefreshRepository.findOne({
+                where: {
+                    user_id: userId,
+                    revoked_at: (0, typeorm_1.IsNull)()
+                },
+            });
+            if (!user) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                };
+                return response;
+            }
+            user.is_deleted = true;
+            await this.userRepository.save(user);
+            if (token) {
+                token.revoked_at = new Date();
+                await this.RefreshRepository.save(token);
+            }
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'User deleted successfully',
+                data: null
+            };
+            return response;
+        }
+        catch (error) {
+            let errorMessage = "An unknown error occurred during user deletion.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            let response = {
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            };
+            return response;
+        }
     }
 }
 exports.Auth_Service = Auth_Service;

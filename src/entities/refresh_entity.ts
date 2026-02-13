@@ -2,7 +2,7 @@ import { str } from 'envalid';
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
 import { User_entity } from './user_entity';
 
-@Entity({ name: 'refresh_token', schema: 'public'})
+@Entity({ name: 'refresh_token', schema: 'public' })
 export class Refresh_entity {
     @PrimaryGeneratedColumn()
     id: number;
@@ -16,8 +16,11 @@ export class Refresh_entity {
     @Column()
     expires_at: Date;
 
-    @Column({ default: true })
-    revoked: boolean;
+    // @Column({ default: true })
+    // revoked: boolean;
+
+    @Column({ type: 'timestamptz', nullable: true })
+    revoked_at: Date | null;
 
     @CreateDateColumn()
     created_at: Date;

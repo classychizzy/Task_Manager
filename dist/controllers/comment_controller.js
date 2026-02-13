@@ -34,10 +34,18 @@ class Comment_Controller {
         const result = await this.commentService.deleteComment(commentId, requesterId);
         return res.status(result.status_code).json(result);
     }
+    async updateComment(req, res) {
+        const commentId = Number(req.params.commentId);
+        const userId = req.user.id;
+        const { content, priority_level } = req.body;
+        const result = await this.commentService.updateComment(commentId, userId, content, priority_level);
+        return res.status(result.status_code).json(result);
+    }
     initializeRoutes() {
         this.router.post('/comments/:taskId', this.createComment.bind(this));
         this.router.get('/comments/:taskId', this.getCommentsForTask.bind(this));
         this.router.delete('/comments/:commentId', this.deleteComment.bind(this));
+        this.router.put('/comments/:commentId', this.updateComment.bind(this));
     }
 }
 exports.Comment_Controller = Comment_Controller;

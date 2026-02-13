@@ -4,6 +4,8 @@ import { LoginDto } from "../dto/login_dto";
 import { Auth_Service } from "../services/auth/auth_service";
 import * as express from 'express';
 import { STATUS_CODES } from "http";
+import { AuthenticatedRequest } from "../types/express/auth-request";
+import { authenticateToken } from "../middlewares/jwt.auth";
 
 export class Auth_Controller {
     //set up user service here
@@ -28,31 +30,49 @@ export class Auth_Controller {
         console.log(userData);
         const user = await this.authService.loginUser(userData);
         return res.json(user);
-        
-        
+
+
         //return res.json("await this.authService.loginUser(req.body)");
 
     }
 
     public async findUserByEmail(req: Request, res: Response) {
-        
+
         const userData = req.body as UserDTO;
         console.log(userData);
-        
+
         let user = await this.authService.findUserByEmail(userData);
         return res.json(user);
-        
+
     }
 
     public async refreshToken(req: Request, res: Response) {
+        const refreshtoken = req.body.refreshToken;
 
-        
-        let refresh = await this.authService.refreshToken(req, res);
+        let refresh = await this.authService.refreshToken(refreshtoken);
+
         return res.json(refresh);
-        
+
     }
 
-    
+    public async LogoutUser(req: AuthenticatedRequest, res: Response) {
+        const userId = req.user!.id;
+        const { refreshToken } = req.body;
+
+        let logout = await this.authService.LogoutUser(Number(userId), refreshToken);
+        return res.json(logout);
+    }
+
+
+    public async DeleteUser(req: AuthenticatedRequest, res: Response) {
+        const userId = req.user!.id;
+        let logout = await this.authService.DeleteUser(Number(userId));
+        return res.json(logout);
+    }
+
+
+
+
 
     private initializeRoutes() {
         this.router.get('/welcome', (req: Request, res: Response) => {
@@ -63,18 +83,31 @@ export class Auth_Controller {
             this.registerUser.bind(this)
         );
         this.router.post('/login',
-          
+
             this.loginUser.bind(this)
-           
+
         );
         this.router.post('/user',
             //add middleware here
-             this.findUserByEmail.bind(this)
+            this.findUserByEmail.bind(this)
         );
-      //
-      
-    
+        this.router.post('/refresh',
+            //add middleware here
+            this.refreshToken.bind(this)
+        );
+        this.router.post('/logout', authenticateToken,
+            //add middleware here
+            this.LogoutUser.bind(this)
+        );
+        this.router.delete('/delete/me', authenticateToken,
+            //add middleware here
+            this.DeleteUser.bind(this)
+        );
+        //
+
+
 
     }
+
 
 }

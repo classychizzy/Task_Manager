@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 //import * as dotenv dotenv';
 
 
- dotenv.config({path: ['.env.local', '.env']});
+dotenv.config({ path: ['.env.local', '.env'] });
 // console.log(`Hello ${process.env.HELLO}`);
 
 
@@ -18,9 +18,9 @@ const password = isProduction ? process.env.POSTGRES_PASS_LIVE : process.env.POS
 const database = isProduction ? process.env.POSTGRES_DB_LIVE : process.env.POSTGRES_DB;
 
 if (!host || !port || !username || !password || !database) {
-   console.log({host, port, username, password, database});
+  console.log({ host, port, username, password, database });
   throw new Error('One or more required environment variables for the database are not set.');
- 
+
 }
 
 const AppDataSource = new DataSource({
@@ -34,13 +34,13 @@ const AppDataSource = new DataSource({
   logging: false, //["query", "error"] use this when logging errors related to db mismatch
   entities: [
     process.env.DEPLOYMENT_ENV === 'production' ?
-    "dist/entities/*{.js,.ts}"
-    :"src/entities/*{.js,.ts}",
+      "dist/entities/*{.js,.ts}"
+      : "src/entities/*{.js,.ts}",
   ],
   migrations: ["src/migration/*{.ts}"],
 });
 
 
 
-  
+
 export default AppDataSource;

@@ -4,15 +4,16 @@ import { UserRepository } from "../../repositories/user_repository";
 //import { STATUS_CODES } from "http";
 //import { IsEmail } from 'class-validator';
 import { Jwt } from "jsonwebtoken";
-import { validateEmail} from '../../validator/user_validation';
+import { validateEmail } from '../../validator/user_validation';
 import { hashPassword, comparePassword } from '../../utils/hashPassword';
-import { User_entity } from "../../entities/user_entity";``
+import { User_entity } from "../../entities/user_entity"; ``
 import { TokenService } from "./token_service";
 import { RefreshRepository } from '../../repositories/refresh_repository';
 import { Refresh_entity } from "../../entities/refresh_entity";
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
+import { IsNull } from "typeorm";
 dotenv.config();
 
 
@@ -178,7 +179,7 @@ export class Auth_Service {
                 }
 
             );
-            
+
 
             if (!user) {
 
@@ -230,15 +231,15 @@ export class Auth_Service {
     async loginUser(userData: UserDTO) {
         try {
             // const isemailValid = validateEmail(userData.email);
-            
-           
+
+
             const user = await this.userRepository.findOne({
                 where: {
                     email: userData.email,
                 }
             });
 
-            if(!user){
+            if (!user) {
                 let response = {
                     status_code: 404,
                     status: 'failed',
@@ -247,7 +248,7 @@ export class Auth_Service {
                 }
                 return response;
             }
-            
+
 
             // const ispasswordValid = await comparePassword(userData.password, user!.password);
             // if (!user || !ispasswordValid) {
@@ -275,7 +276,7 @@ export class Auth_Service {
                 email: user.email,
                 username: user.username,
             }
-           
+
             const tokenService = new TokenService();
             const accessToken = tokenService.generateAccessToken(payload);
             const refreshToken = tokenService.generateRefreshToken(payload);
@@ -286,44 +287,45 @@ export class Auth_Service {
                 }
             });
 
-            if(validateRefreshToken){
+            if (validateRefreshToken) {
                 validateRefreshToken.user_id = user.user_id;
                 validateRefreshToken.user = user;
-                validateRefreshToken.revoked = false;
+                validateRefreshToken.revoked_at = null;
                 validateRefreshToken.expires_at = new Date(Date.now() + 86400000);
                 validateRefreshToken.tokenHash = refreshToken;
                 await this.RefreshRepository.save(validateRefreshToken);
-            }else{
+            } else {
 
                 const newRefreshToken = new Refresh_entity();
                 newRefreshToken.user_id = user.user_id;
                 newRefreshToken.user = user;
-                newRefreshToken.revoked = false;
+                newRefreshToken.revoked_at = null;
                 newRefreshToken.expires_at = new Date(Date.now() + 86400000);
                 newRefreshToken.tokenHash = refreshToken;
                 await this.RefreshRepository.save(newRefreshToken);
 
             }
 
-           let response = {
-            status_code: 200,
-            status: 'success',
-            message: 'User logged in successfully',
-            data: {
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                user: user
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'User logged in successfully',
+                data: {
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    user: user
+                }
             }
-           }
-        
-           return response;
 
-  
+            return response;
+
+
 
         }
         catch (error) {
             let errorMessage = "An unknown error occurred during login.";
-            if (error instanceof Error) { errorMessage = error.message;
+            if (error instanceof Error) {
+                errorMessage = error.message;
             }
 
             let response = {
@@ -339,42 +341,236 @@ export class Auth_Service {
         }
 
 
-        
-    }
-
-    async refreshToken (req: Request, res: Response) {
-        const {refreshToken} = req.body
-
-        if (!refreshToken) {
-
-        let response = {
-            status_code: 400,
-            status: 'failed',
-            message: 'Refresh token is required',
-            data: null
-        }
-
-        return response;
-
-        }
-        // verify the refresh token
-        const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
-
-        //generate access token 
-        const newaccessToken = await this.tokenService.generateAccessToken(decoded as UserPayload);
-
-        let response = {
-            status_code: 200,
-            status: 'success',
-            message: 'Access token generated successfully',
-            data: newaccessToken
-        }
-
-        return response;
-        }
-
-
-
-       
 
     }
+
+    async refreshToken(refreshtoken: string) {
+
+        try {
+            if (!refreshtoken || typeof refreshtoken !== "string") {
+                let response = {
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Refresh token is required',
+                    data: null
+                }
+                return response;
+            }
+
+            const token = await this.RefreshRepository.findOne({
+                where: {
+                    tokenHash: refreshtoken,
+                    revoked_at: IsNull()
+                },
+                relations: ['user']
+            });
+
+            if (!token) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Refresh token not found',
+                    data: null
+                }
+                return response;
+            }
+            // check if token is expired
+            if (token.expires_at < new Date()) {
+                let response = {
+                    status_code: 401,
+                    status: 'failed',
+                    message: 'Refresh token expired',
+                    data: null
+                }
+                return response;
+            }
+
+            //check if user exists an is active
+            const user = await this.userRepository.findOne({
+                where: {
+                    user_id: token.user_id,
+                    is_deleted: false,
+                    isActive: true
+                }
+            });
+
+            if (!user) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                }
+                return response;
+            }
+
+            //generate new access token
+            const payload: UserPayload = {
+                id: user.user_id,
+                email: user.email,
+                username: user.username,
+            }
+
+            //generate new tokens
+            const tokenService = new TokenService();
+            const accessToken = tokenService.generateAccessToken(payload);
+            const refreshToken = tokenService.generateRefreshToken(payload);
+            //update the refresh token
+            token.tokenHash = refreshToken;
+            token.expires_at = new Date(Date.now() + 86400000);
+            await this.RefreshRepository.save(token);
+
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'Refresh token generated successfully',
+                data: {
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    user: user
+                }
+            }
+
+            return response;
+
+
+
+
+
+
+        }
+        catch (error) {
+            let errorMessage = "An unknown error occurred during refresh token.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            let response = {
+                // It's better to use a proper error status code
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            }
+
+            return response;
+        }
+    }
+
+    async LogoutUser(userId: number, refreshToken: string) {
+        try {
+            const token = await this.RefreshRepository.findOne({
+                where: {
+                    user_id: userId,
+                    tokenHash: refreshToken,
+                    revoked_at: IsNull()
+                },
+            });
+
+            if (!token) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Refresh token not found',
+                    data: null
+                }
+                return response;
+            }
+
+            token.revoked_at = new Date();
+            await this.RefreshRepository.save(token);
+
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'User logged out successfully',
+                data: null
+            }
+
+            return response;
+
+        } catch (error) {
+            let errorMessage = "An unknown error occurred during logout.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            let response = {
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            }
+
+            return response;
+        }
+
+    }
+
+    async DeleteUser(userId: number) {
+        try {
+            const user = await this.userRepository.findOne({
+                where: {
+                    user_id: userId
+                },
+            });
+
+            const token = await this.RefreshRepository.findOne({
+                where: {
+                    user_id: userId,
+                    revoked_at: IsNull()
+                },
+            });
+
+            if (!user) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                }
+                return response;
+            }
+
+            user.is_deleted = true;
+            await this.userRepository.save(user);
+
+            if (token) {
+                token.revoked_at = new Date();
+                await this.RefreshRepository.save(token);
+            }
+
+            let response = {
+                status_code: 200,
+                status: 'success',
+                message: 'User deleted successfully',
+                data: null
+            }
+
+            return response;
+
+        } catch (error) {
+            let errorMessage = "An unknown error occurred during user deletion.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            let response = {
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
+                data: null
+            }
+
+            return response;
+        }
+    }
+
+
+
+
+
+}
