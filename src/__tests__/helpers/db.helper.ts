@@ -31,8 +31,8 @@ export class TestDbHelper {
      * Clear user-related data
      */
     static async clearUserData() {
-        await RefreshRepository.delete({});
-        await UserRepository.delete({});
+        await AppDataSource.query(`TRUNCATE TABLE "refresh_token" RESTART IDENTITY CASCADE;`);
+        await AppDataSource.query(`TRUNCATE TABLE "users" RESTART IDENTITY CASCADE;`);
     }
 }
 

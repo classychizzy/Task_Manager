@@ -105,11 +105,13 @@ export class Auth_Service {
             await this.userRepository.save(newUser);
             // return newUser;
 
+            const { password, ...userWithoutPassword } = newUser;
+
             let response = {
                 status_code: 200,
                 status: 'success',
                 message: 'User registered successfully',
-                data: newUser
+                data: userWithoutPassword
             }
 
             return response;

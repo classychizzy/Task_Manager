@@ -1,18 +1,22 @@
 import request from 'supertest';
+import express from 'express';
 import App from '../../app';
+import AppDataSource from '../../ormconfig';
 import { TestDbHelper, generateTestUser } from '../helpers/db.helper';
 
 describe('Auth Integration Tests', () => {
     let app: App;
-    let server: any;
+    let server: express.Application;
 
     beforeAll(async () => {
         // Create app instance
         app = new App();
         server = app.app;
 
-        // Initialize database
-        await app.initializeDatabase();
+        // Initialize database if not already done by setup.ts
+        if (!AppDataSource.isInitialized) {
+            await app.initializeDatabase();
+        }
     });
 
     beforeEach(async () => {

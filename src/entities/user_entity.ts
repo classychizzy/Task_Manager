@@ -4,7 +4,7 @@ import { Project_entity } from './projects_entity';
 import { Refresh_entity } from './refresh_entity';
 import { Task_assignment_entity } from './Task_assignment_entity';
 import { Task_entity } from './task_entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { hashPassword } from '../utils/hashPassword';
 import bcrypt from 'bcrypt';
 
@@ -38,7 +38,7 @@ export class User_entity {
   @Column({ default: false })
   is_deleted: boolean;
 
-  @Column() // time and zone
+  @UpdateDateColumn()
   updated_at: Date;
 
 

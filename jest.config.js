@@ -1,3 +1,5 @@
+require('dotenv').config({ path: '.env.test' });
+
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
@@ -12,6 +14,6 @@ module.exports = {
     ],
     coverageDirectory: 'coverage',
     verbose: true,
-    testTimeout: 30000,
+    testTimeout: 30000, // 30 seconds
     setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
 };
