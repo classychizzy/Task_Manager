@@ -28,18 +28,16 @@ export class Task_Controller {
     public async getAllTasks(req: AuthenticatedRequest, res: Response) {
         const userId = req.user!.id;
         const projectId = req.params.projectId;
-        const task = await this.Task_Service.getAllTasks(Number(projectId), userId);
-        console.log("Auth user", req.user)
+        const { page, limit } = req.query;
 
-        let response = {
-            status_code: '200',
-            message: 'Tasks retrieved successfully',
-            data: task
+        const taskResponse = await this.Task_Service.getAllTasks(
+            Number(projectId),
+            userId,
+            page ? Number(page) : undefined,
+            limit ? Number(limit) : undefined
+        );
 
-        }
-        return res.json(response);
-
-
+        return res.json(taskResponse);
     }
 
     public async getTaskById(req: AuthenticatedRequest, res: Response) {
@@ -59,7 +57,7 @@ export class Task_Controller {
         }
         //  console.log("=== CONTROLLER END ===");
         return res.json(response);
-        
+
     }
 
     public async UpdateTask(req: AuthenticatedRequest, res: Response) {
@@ -117,8 +115,8 @@ export class Task_Controller {
         this.router.put('/:taskId/update', this.UpdateTask.bind(this));
         this.router.delete('/:taskId/delete', this.DeleteTask.bind(this));
         this.router.put('/:taskId/restore', this.restoreTask.bind(this));
-    
 
-    
+
+
     }
 }

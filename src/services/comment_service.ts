@@ -3,6 +3,7 @@ import { CommentRepository } from "../repositories/comment_repository";
 import { TaskRepository } from "../repositories/task_repository";
 import { UserRepository } from "../repositories/user_repository";
 import { Comment_Entity } from "../entities/comments_entity";
+import { getPagination } from "../utils/pagination";
 
 export class Comment_Service {
     private commentRepository: typeof CommentRepository;
@@ -50,23 +51,32 @@ export class Comment_Service {
         }
     }
 
-    async getCommentsForTask(taskId: number) {
+    async getCommentsForTask(taskId: number, page?: number, limit?: number) {
+        const { skip, take, page: currentPage, limit: pageSize } = getPagination(page, limit);
         try {
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
                 return { status_code: 404, message: 'Task not found', data: null };
             }
 
-            const comments = await this.commentRepository.find({
+            const [comments, total] = await this.commentRepository.findAndCount({
                 where: { task: { task_id: taskId } },
                 relations: ["user"],
+                skip,
+                take,
                 order: { created_at: "DESC" }
             });
 
             return {
                 status_code: 200,
                 message: 'Comments retrieved successfully',
-                data: comments
+                data: comments,
+                meta: {
+                    total,
+                    page: currentPage,
+                    limit: pageSize,
+                    totalPages: Math.ceil(total / pageSize),
+                },
             };
         } catch (error) {
             return {

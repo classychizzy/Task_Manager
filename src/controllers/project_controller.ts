@@ -27,18 +27,15 @@ export class Project_Controller {
 
     public async getAllProjects(req: AuthenticatedRequest, res: Response) {
         const userid = req.user!.id;
-        const project = await this.Project_service.getAllProjects(userid);
-        console.log("Auth user", req.user)
+        const { page, limit } = req.query;
 
-        let response = {
-            status_code: '200',
-            message: 'Projects retrieved successfully',
-            data: project
+        const projectResponse = await this.Project_service.getAllProjects(
+            userid,
+            page ? Number(page) : undefined,
+            limit ? Number(limit) : undefined
+        );
 
-        }
-        return res.json(response);
-
-
+        return res.json(projectResponse);
     }
 
     public async getProjectById(req: AuthenticatedRequest, res: Response) {
@@ -56,9 +53,9 @@ export class Project_Controller {
 
 
         }
-         console.log("=== CONTROLLER END ===");
+        console.log("=== CONTROLLER END ===");
         return res.json(response);
-        
+
     }
 
     public async UpdateProject(req: AuthenticatedRequest, res: Response) {
@@ -119,7 +116,7 @@ export class Project_Controller {
         this.router.put('/:projectId/update', this.UpdateProject.bind(this));
         this.router.delete('/:projectId/delete', this.DeleteProject.bind(this));
         this.router.put('/:projectId/restore', this.restoreProject.bind(this));
-    
+
 
     }
 

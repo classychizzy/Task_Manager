@@ -32,7 +32,13 @@ export class Comment_Controller {
 
     public async getCommentsForTask(req: AuthenticatedRequest, res: Response) {
         const taskId = Number(req.params.taskId);
-        const result = await this.commentService.getCommentsForTask(taskId);
+        const { page, limit } = req.query;
+
+        const result = await this.commentService.getCommentsForTask(
+            taskId,
+            page ? Number(page) : undefined,
+            limit ? Number(limit) : undefined
+        );
         return res.status(result.status_code).json(result);
     }
 

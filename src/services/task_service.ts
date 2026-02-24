@@ -7,6 +7,7 @@ import { create } from 'domain';
 import { parseFlexibleDate, isValidDateString } from '../utils/dateparser'
 import { TaskPermission } from '../enums/Taskpermission_enum';
 import { Task_assignment_Repository } from '../repositories/task_assignment_repository';
+import { getPagination } from '../utils/pagination';
 
 export class Task_Service {
     private TaskRepository: typeof TaskRepository;
@@ -96,9 +97,10 @@ export class Task_Service {
         return newTask;
     }
 
-    async getAllTasks(projectId: number, userId: number) {
+    async getAllTasks(projectId: number, userId: number, page?: number, limit?: number) {
+        const { skip, take, page: currentPage, limit: pageSize } = getPagination(page, limit);
         try {
-            const tasks = await this.TaskRepository.find({
+            const [tasks, total] = await this.TaskRepository.findAndCount({
                 where: {
                     is_deleted: false,
                     project: {
@@ -108,14 +110,25 @@ export class Task_Service {
                         }
                     }
                 },
-                relations: ["project"]
+                relations: ["project"],
+                skip,
+                take,
+                order: {
+                    created_at: 'DESC'
+                }
             });
 
             let response = {
                 status_code: 200,
                 status: 'success',
                 message: 'Tasks retrieved successfully',
-                data: tasks
+                data: tasks,
+                meta: {
+                    total,
+                    page: currentPage,
+                    limit: pageSize,
+                    totalPages: Math.ceil(total / pageSize),
+                },
             }
             return response;
 
