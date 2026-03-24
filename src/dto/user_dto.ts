@@ -1,6 +1,6 @@
-import { IsEmail, isBoolean, length, IsString  } from "class-validator";
+import { IsEmail, isBoolean, length, IsString } from "class-validator";
 //create user entity dto
-export interface UserDTO{
+export interface UserDTO {
 
     user_id?: number;
     firstName: string;

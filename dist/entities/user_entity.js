@@ -61,12 +61,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User_entity.prototype, "is_deleted", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamptz' }) // time and zone
-    ,
+    (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], User_entity.prototype, "updated_at", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)({ type: 'timestamptz' }),
+    (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], User_entity.prototype, "created_at", void 0);
 __decorate([

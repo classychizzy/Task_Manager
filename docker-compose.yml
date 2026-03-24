@@ -1,61 +1,82 @@
 version: "3"
 services:
-  postgres:
-    container_name: postgres
+  app:
+    build: .
+    container_name: task-manager-app
+    ports:
+    - "3000:3000"
+    volumes:
+      - app_data:/data/app
+    env_file:
+      - docker.env
+    depends_on:
+      - postgres-db
+    restart: unless-stopped
+    networks:
+      - task-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres-db:
+    container_name: postgres-db
     image: postgres:latest
     ports:
-    - "5432:5432"
+      - "5432:5432"
     volumes:
-    - ./data/postgres:/data/postgres
+      - postgres_data:/var/lib/postgresql/data
     env_file:
-    - docker.env
+      - docker.env
     networks:
-    - postgres
+      - task-network
  
   pgadmin:
-    links:
-    - postgres:postgres
     container_name: pgadmin
     image: dpage/pgadmin4
     ports:
-    - "8080:80"
+      - "8080:80"
     volumes:
-    - .data/pgadmin:/root/.pgadmin
+      - pgadmin_data:/var/lib/pgadmin
     env_file:
-    - docker.env
+      - docker.env
+    depends_on:
+      - postgres-db
     networks:
-    - postgres
+      - task-network
 
   # test database
   postgres_test:
     container_name: postgres_test
     image: postgres:latest
     ports:
-    - "5433:5432"
-    volumes:
-    - ./data/postgres_test:/data/postgres_test
+      - "5433:5432"
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: task_manager_test
     networks:
-    - postgres
+      - task-network
 
   pgadmin_test:
-    links:
-    - postgres_test:postgres_test
     container_name: pgadmin_test
     image: dpage/pgadmin4
     ports:
-    - "8081:80"
-    volumes:
-    - ./data/pgadmin_test:/root/.pgadmin
+      - "8081:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres_test
     networks:
-    - postgres
+      - task-network
 
 networks:
-  postgres:
+  task-network:
     driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  app_data:

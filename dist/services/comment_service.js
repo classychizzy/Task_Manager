@@ -5,6 +5,8 @@ const comment_repository_1 = require("../repositories/comment_repository");
 const task_repository_1 = require("../repositories/task_repository");
 const user_repository_1 = require("../repositories/user_repository");
 const comments_entity_1 = require("../entities/comments_entity");
+const pagination_1 = require("../utils/pagination");
+const logger_1 = require("../lib/logger");
 class Comment_Service {
     constructor() {
         this.commentRepository = comment_repository_1.CommentRepository;
@@ -34,6 +36,7 @@ class Comment_Service {
             };
         }
         catch (error) {
+            logger_1.logger.error({ err: error, taskId, userId }, 'Error creating comment');
             return {
                 status_code: 500,
                 message: 'Internal server error',
@@ -42,24 +45,34 @@ class Comment_Service {
             };
         }
     }
-    async getCommentsForTask(taskId) {
+    async getCommentsForTask(taskId, page, limit) {
+        const { skip, take, page: currentPage, limit: pageSize } = (0, pagination_1.getPagination)(page, limit);
         try {
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
                 return { status_code: 404, message: 'Task not found', data: null };
             }
-            const comments = await this.commentRepository.find({
+            const [comments, total] = await this.commentRepository.findAndCount({
                 where: { task: { task_id: taskId } },
                 relations: ["user"],
+                skip,
+                take,
                 order: { created_at: "DESC" }
             });
             return {
                 status_code: 200,
                 message: 'Comments retrieved successfully',
-                data: comments
+                data: comments,
+                meta: {
+                    total,
+                    page: currentPage,
+                    limit: pageSize,
+                    totalPages: Math.ceil(total / pageSize),
+                },
             };
         }
         catch (error) {
+            logger_1.logger.error({ err: error, taskId }, 'Error retrieving comments for task');
             return {
                 status_code: 500,
                 message: 'Internal server error',
@@ -91,6 +104,7 @@ class Comment_Service {
             };
         }
         catch (error) {
+            logger_1.logger.error({ err: error, commentId, requesterId }, 'Error deleting comment');
             return {
                 status_code: 500,
                 message: 'Internal server error',
@@ -126,6 +140,7 @@ class Comment_Service {
             };
         }
         catch (error) {
+            logger_1.logger.error({ err: error, commentId, userId }, 'Error updating comment');
             return {
                 status_code: 500,
                 message: 'Internal server error',

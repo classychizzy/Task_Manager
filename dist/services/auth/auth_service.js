@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Auth_Service = void 0;
 const user_repository_1 = require("../../repositories/user_repository");
 const user_validation_1 = require("../../validator/user_validation");
+//import { hashPassword, comparePassword } from '../../utils/hashPassword';
 const user_entity_1 = require("../../entities/user_entity");
 ``;
 const token_service_1 = require("./token_service");
@@ -13,6 +14,7 @@ const refresh_repository_1 = require("../../repositories/refresh_repository");
 const refresh_entity_1 = require("../../entities/refresh_entity");
 const dotenv_1 = __importDefault(require("dotenv"));
 const typeorm_1 = require("typeorm");
+const logger_1 = require("../../lib/logger");
 dotenv_1.default.config();
 //handles all user and authentication issues
 //create a service class where you will write your queries and logics
@@ -51,9 +53,9 @@ class Auth_Service {
         // userData.password = hashedPassword;
         // For simplicity, we'll save it as is for now.
         try {
-            console.log(userData.email, typeof userData.email);
+            logger_1.logger.debug({ email: userData.email }, 'registerUser called');
             let IsEmailValid = (0, user_validation_1.validateEmail)(userData.email);
-            console.log(IsEmailValid);
+            logger_1.logger.debug({ IsEmailValid: IsEmailValid, email: userData.email }, 'Email validation result');
             if (!IsEmailValid) {
                 let response = {
                     status_code: 400,
@@ -71,23 +73,25 @@ class Auth_Service {
             newUser.username = userData.username;
             newUser.email = userData.email;
             newUser.password = userData.password;
-            newUser.hashPassword();
+            //newUser.hashPassword();
+            logger_1.logger.info({ email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName, username: newUser.username }, 'User created successfully');
             //newUser.password = await hashPassword( userData.password); // In a real app, hash this!
             // await AppDataSource.manager.save(newUser);
             await this.userRepository.save(newUser);
             // return newUser;
+            const { password, ...userWithoutPassword } = newUser;
             let response = {
                 status_code: 200,
                 status: 'success',
                 message: 'User registered successfully',
-                data: newUser
+                data: userWithoutPassword
             };
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error }, 'Error during user registration');
             let errorMessage = "An unknown error occurred during registration.";
             if (error instanceof Error) {
-                // Now TypeScript knows `error` has a `message` property
                 errorMessage = error.message;
             }
             let response = {
@@ -102,7 +106,7 @@ class Auth_Service {
         }
     }
     async findUserByEmail(userData) {
-        console.log(userData.email);
+        logger_1.logger.debug({ email: userData.email }, 'findUserByEmail called');
         try {
             if (!userData?.email) {
                 return {
@@ -135,6 +139,7 @@ class Auth_Service {
                     user_id: "DESC"
                 }
             });
+            logger_1.logger.debug({ userId: user?.user_id, email: user?.email }, 'User lookup result');
             if (!user) {
                 let response = {
                     status_code: 404,
@@ -154,9 +159,9 @@ class Auth_Service {
             // return await AppDataSource.manager.findOne(User_entity, { where: { email: user.email } });
         }
         catch (error) {
+            logger_1.logger.error({ err: error }, 'Error during findUserByEmail');
             let errorMessage = "An unknown error occurred during registration.";
             if (error instanceof Error) {
-                // Now TypeScript knows `error` has a `message` property
                 errorMessage = error.message;
             }
             let response = {
@@ -178,6 +183,7 @@ class Auth_Service {
                     email: userData.email,
                 }
             });
+            logger_1.logger.debug({ userId: user?.user_id, email: user?.email }, 'User fetched for login');
             if (!user) {
                 let response = {
                     status_code: 404,
@@ -211,9 +217,10 @@ class Auth_Service {
                 email: user.email,
                 username: user.username,
             };
-            const tokenService = new token_service_1.TokenService();
-            const accessToken = tokenService.generateAccessToken(payload);
-            const refreshToken = tokenService.generateRefreshToken(payload);
+            //const tokenService = new TokenService();
+            const accessToken = this.tokenService.generateAccessToken(payload);
+            const refreshToken = this.tokenService.generateRefreshToken(payload);
+            logger_1.logger.info({ userId: user.user_id }, 'Access token generated');
             let validateRefreshToken = await refresh_repository_1.RefreshRepository.findOne({
                 where: {
                     user_id: user.user_id
@@ -249,6 +256,7 @@ class Auth_Service {
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error }, 'Error during user login');
             let errorMessage = "An unknown error occurred during login.";
             if (error instanceof Error) {
                 errorMessage = error.message;
@@ -264,28 +272,105 @@ class Auth_Service {
             return response;
         }
     }
-    async refreshToken(req, res) {
-        const { refreshToken } = req.body;
-        if (!refreshToken) {
+    async refreshToken(refreshtoken) {
+        try {
+            if (!refreshtoken || typeof refreshtoken !== "string") {
+                let response = {
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Refresh token is required',
+                    data: null
+                };
+                return response;
+            }
+            const token = await this.RefreshRepository.findOne({
+                where: {
+                    tokenHash: refreshtoken,
+                    revoked_at: (0, typeorm_1.IsNull)()
+                },
+                relations: ['user']
+            });
+            logger_1.logger.debug({ userId: token?.user_id, expiresAt: token?.expires_at }, 'Refresh token found');
+            if (!token) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Refresh token not found',
+                    data: null
+                };
+                return response;
+            }
+            // check if token is expired
+            if (token.expires_at < new Date()) {
+                let response = {
+                    status_code: 401,
+                    status: 'failed',
+                    message: 'Refresh token expired',
+                    data: null
+                };
+                return response;
+            }
+            //check if user exists an is active
+            const user = await this.userRepository.findOne({
+                where: {
+                    user_id: token.user_id,
+                    is_deleted: false,
+                    isActive: true
+                }
+            });
+            logger_1.logger.info({ user: user }, 'user is active');
+            if (!user) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'User not found',
+                    data: null
+                };
+                return response;
+            }
+            //generate new access token
+            const payload = {
+                id: user.user_id,
+                email: user.email,
+                username: user.username,
+            };
+            //generate new tokens
+            //const tokenService = new TokenService();
+            const accessToken = this.tokenService.generateAccessToken(payload);
+            const refreshToken = this.tokenService.generateRefreshToken(payload);
+            //update the refresh token
+            token.tokenHash = refreshToken;
+            token.expires_at = new Date(Date.now() + 86400000);
+            logger_1.logger.info({ userId: token.user_id }, 'Refresh token rotated successfully');
+            await this.RefreshRepository.save(token);
             let response = {
-                status_code: 400,
+                status_code: 200,
+                status: 'success',
+                message: 'Refresh token generated successfully',
+                data: {
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    user: user
+                }
+            };
+            return response;
+        }
+        catch (error) {
+            logger_1.logger.error({ err: error }, 'Error during token refresh');
+            let errorMessage = "An unknown error occurred during refresh token.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            let response = {
+                // It's better to use a proper error status code
+                status_code: 500,
                 status: 'failed',
-                message: 'Refresh token is required',
+                message: 'Internal server error.',
+                errorMessage: errorMessage,
                 data: null
             };
             return response;
         }
-        // verify the refresh token
-        const decoded = await this.tokenService.verifyRefreshToken(refreshToken);
-        //generate access token 
-        const newaccessToken = await this.tokenService.generateAccessToken(decoded);
-        let response = {
-            status_code: 200,
-            status: 'success',
-            message: 'Access token generated successfully',
-            data: newaccessToken
-        };
-        return response;
     }
     async LogoutUser(userId, refreshToken) {
         try {
@@ -296,6 +381,7 @@ class Auth_Service {
                     revoked_at: (0, typeorm_1.IsNull)()
                 },
             });
+            logger_1.logger.debug({ userId: token?.user_id }, 'Token found for logout');
             if (!token) {
                 let response = {
                     status_code: 404,
@@ -306,6 +392,7 @@ class Auth_Service {
                 return response;
             }
             token.revoked_at = new Date();
+            logger_1.logger.info({ token: token.revoked_at }, 'logout completed and token was revoked');
             await this.RefreshRepository.save(token);
             let response = {
                 status_code: 200,
@@ -316,6 +403,7 @@ class Auth_Service {
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error }, 'Error during user logout');
             let errorMessage = "An unknown error occurred during logout.";
             if (error instanceof Error) {
                 errorMessage = error.message;
@@ -343,6 +431,8 @@ class Auth_Service {
                     revoked_at: (0, typeorm_1.IsNull)()
                 },
             });
+            logger_1.logger.debug({ userId: user?.user_id }, 'User fetched for deletion');
+            logger_1.logger.debug({ userId: token?.user_id }, 'Active token found for user');
             if (!user) {
                 let response = {
                     status_code: 404,
@@ -353,9 +443,11 @@ class Auth_Service {
                 return response;
             }
             user.is_deleted = true;
+            logger_1.logger.info({ user: user.is_deleted }, 'user is deleted');
             await this.userRepository.save(user);
             if (token) {
                 token.revoked_at = new Date();
+                logger_1.logger.info({ token: token.revoked_at }, 'token is deleted');
                 await this.RefreshRepository.save(token);
             }
             let response = {
@@ -367,6 +459,7 @@ class Auth_Service {
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error }, 'Error during user deletion');
             let errorMessage = "An unknown error occurred during user deletion.";
             if (error instanceof Error) {
                 errorMessage = error.message;

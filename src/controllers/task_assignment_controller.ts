@@ -1,7 +1,7 @@
 import { TaskAssignment_Service } from "../services/task_assignments_service";
 import { Router, Response } from 'express';
 import { AuthenticatedRequest } from "../types/express/auth-request";
-import { stat } from "fs";
+import { logger } from "../lib/logger";
 
 
 export class TaskAssignment_Controller {
@@ -15,132 +15,178 @@ export class TaskAssignment_Controller {
     }
 
     public async AssignUsertoTask(req: AuthenticatedRequest, res: Response) {
-        const taskId = req.params.taskId;
-        const userId = req.user!.id;
-        const result = await this.taskAssignmentService.AssignUsertoTask(req.body, Number(taskId), userId);
+        try {
+            const taskId = req.params.taskId;
+            const userId = req.user!.id;
+            logger.debug({ taskId, userId }, 'AssignUsertoTask called');
+            const result = await this.taskAssignmentService.AssignUsertoTask(req.body, Number(taskId), userId);
 
-        return res.status(result.status_code).json(result);
+            return res.status(result.status_code).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in AssignUsertoTask');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async UpdatePermission(req: AuthenticatedRequest, res: Response) {
-        const taskId = req.params.taskId;
-        const userId = req.params.userId; // Get userId from URL params
-        const requesterId = req.user!.id;
-        const permission = req.body?.permission;
+        try {
+            const taskId = req.params.taskId;
+            const userId = req.params.userId; // Get userId from URL params
+            const requesterId = req.user!.id;
+            const permission = req.body?.permission;
 
-        // Validate required fields
-        if (!permission) {
-            return res.status(400).json({
-                status_code: 400,
-                status: 'failed',
-                message: 'Permission is required',
-                data: null
-            });
+            logger.debug({ taskId, userId, requesterId, permission }, 'UpdatePermission called');
+
+            // Validate required fields
+            if (!permission) {
+                return res.status(400).json({
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Permission is required',
+                    data: null
+                });
+            }
+
+            const result = await this.taskAssignmentService.UpdatePermission(permission,
+                Number(taskId), Number(userId), requesterId);
+            return res.status(result.status_code).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in UpdatePermission');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
-
-        const result = await this.taskAssignmentService.UpdatePermission(permission,
-            Number(taskId), Number(userId), requesterId);
-        return res.status(result.status_code).json(result);
     }
 
     public async getUserTaskPermission(req: AuthenticatedRequest, res: Response) {
-        let taskid = req.params.taskId;
-        let userid = req.user!.id;
-        const result = await this.taskAssignmentService.getUserTaskPermission(Number(taskid), userid);
-        let response = {
-            status_code: '201',
-            message: 'User permission retrieved successfully',
-            data: result
-
+        try {
+            let taskid = req.params.taskId;
+            let userid = req.user!.id;
+            logger.debug({ taskid, userid }, 'getUserTaskPermission called');
+            const result = await this.taskAssignmentService.getUserTaskPermission(Number(taskid), userid);
+            let response = {
+                status_code: '200',
+                message: 'User permission retrieved successfully',
+                data: result
+            }
+            return res.json(response);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in getUserTaskPermission');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
-        return res.json(response);
-
     }
 
     public async removeUserFromTask(req: AuthenticatedRequest, res: Response) {
-        const taskId = req.params.taskId;
-        const requesterId = req.user!.id; //id of the user i.e ownerremoving the user
-        const userId = req.body.userId; //id of the user to be removed
-        // console.log('Request body:', req.body);
-        // console.log('userId value:', req.body.userId);
-        // console.log('userId parsed:', Number(req.body.userId));
-        const result = await this.taskAssignmentService.removeUserFromTask(Number(taskId),
-            Number(userId), requesterId);
-        let response = {
-            status_code: '201',
-            message: 'User removed from task successfully',
-            data: result
+        try {
+            const taskId = req.params.taskId;
+            const requesterId = req.user!.id; //id of the user i.e ownerremoving the user
+            const userId = req.body.userId; //id of the user to be removed
+            logger.debug({ taskId, requesterId, userId }, 'removeUserFromTask called');
+
+            const result = await this.taskAssignmentService.removeUserFromTask(Number(taskId),
+                Number(userId), requesterId);
+            let response = {
+                status_code: '200',
+                message: 'User removed from task successfully',
+                data: result
+            }
+
+            return res.json(response);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in removeUserFromTask');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
-
-        return res.json(response);
-
-
     }
 
     public async getTaskAssignments(req: AuthenticatedRequest, res: Response) {
-        const taskId = req.params.taskId;
-        const requesterId = req.user!.id;
-        const result = await this.taskAssignmentService.getTaskAssignments(Number(taskId), requesterId);
-        return res.status(result.status_code).json(result);
+        try {
+            const taskId = req.params.taskId;
+            const requesterId = req.user!.id;
+            logger.debug({ taskId, requesterId }, 'getTaskAssignments called');
+            const result = await this.taskAssignmentService.getTaskAssignments(Number(taskId), requesterId);
+            return res.status(result.status_code).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in getTaskAssignments');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async getUserassignedtasks(req: AuthenticatedRequest, res: Response) {
-        const userId = req.user!.id; // Current user's own tasks
-        const result = await this.taskAssignmentService.getUserassignedtasks(userId);
-        return res.status(result.status_code).json(result);
+        try {
+            const userId = req.user!.id; // Current user's own tasks
+            logger.debug({ userId }, 'getUserassignedtasks called');
+            const result = await this.taskAssignmentService.getUserassignedtasks(userId);
+            return res.status(result.status_code).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in getUserassignedtasks');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async getAssignmentsForOtherUser(req: AuthenticatedRequest, res: Response) {
-        //retest this endpoint
-        const requesterId = req.user!.id;
-        const targetUserId = req.params.userId;
-        console.log(targetUserId);
-        console.log(requesterId);
+        try {
+            //retest this endpoint
+            const requesterId = req.user!.id;
+            const targetUserId = req.params.userId;
+            logger.debug({ requesterId, targetUserId }, 'getAssignmentsForOtherUser called');
 
-        if (!targetUserId) {
-            return res.status(400).json({
-                status_code: 400,
-                status: 'failed',
-                message: 'Target User ID is required',
-                data: null
-            });
+            if (!targetUserId) {
+                return res.status(400).json({
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Target User ID is required',
+                    data: null
+                });
+            }
+
+            const result = await this.taskAssignmentService.getAssignmentsForOtherUser(Number(targetUserId), requesterId);
+            return res.status(result.status_code).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in getAssignmentsForOtherUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
-
-        const result = await this.taskAssignmentService.getAssignmentsForOtherUser(Number(targetUserId), requesterId);
-        return res.status(result.status_code).json(result);
     }
 
     public async bulkAssignUsers(req: AuthenticatedRequest, res: Response) {
+        try {
+            const taskId = req.params.taskId;
+            const requesterId = req.user!.id;
 
+            const assignments = req.body.assignments
+            logger.debug({ taskId, requesterId, assignmentCount: assignments?.length }, 'bulkAssignUsers called');
 
-        const taskId = req.params.taskId;
-        const requesterId = req.user!.id;
+            if (!Array.isArray(assignments)) {
+                return res.status(400).json({
+                    status_code: 400,
+                    status: 'failed',
+                    message: 'Invalid request format. "assignments" must be an array.',
+                    data: null
+                });
+            }
 
-        const assignments = req.body.assignments
+            const result = await this.taskAssignmentService.bulkAssignUsers(
+                assignments, Number(taskId), requesterId);
 
-        if (!Array.isArray(assignments)) {
-            return res.status(400).json({
-                status_code: 400,
-                status: 'failed',
-                message: 'Invalid request format. "assignments" must be an array.',
-                data: null
-            });
+            return res.status(result.status_code || 200).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in bulkAssignUsers');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
-
-        const result = await this.taskAssignmentService.bulkAssignUsers(
-            assignments, Number(taskId), requesterId);
-
-        return res.status(result.status_code || 200).json(result);
-
     }
 
     public async TransferOwnership(req: AuthenticatedRequest, res: Response) {
-        const taskId = req.params.taskId;
-        const presentOwnerId = req.user!.id;
-        const newOwnerId = req.body.newOwnerId;
+        try {
+            const taskId = req.params.taskId;
+            const requestUserId = req.user!.id; // The user making the request
+            const presentOwnerId = req.body.presentOwnerId; // Usually the same as requestUserId
+            const newOwnerId = req.body.newOwnerId;
 
-        const result = await this.taskAssignmentService.TransferOwnership(newOwnerId, Number(taskId), presentOwnerId, newOwnerId);
-        return res.status(result.status_code || 200).json(result);
+            logger.info({ taskId, requestUserId, presentOwnerId, newOwnerId }, 'TransferOwnership called');
+
+            const result = await this.taskAssignmentService.TransferOwnership(requestUserId, Number(taskId), presentOwnerId, newOwnerId);
+            return res.status(result.status_code || 200).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in TransferOwnership');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     private initializeRoutes() {

@@ -1,7 +1,6 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { UserPayload } from '../../types/userpayload';
-//import { User_entity } from '../../entities/user_entity';
-import { str } from 'envalid';
+import { logger } from '../../lib/logger';
 
 
 export class TokenService {
@@ -69,7 +68,7 @@ export class TokenService {
         try {
             return jwt.verify(token, this.AccessSecret) as jwt.JwtPayload;
         } catch (error) {
-            console.error('Token verification failed:', error);
+            logger.error({ err: error }, 'Access token verification failed');
             return null;
         }
     }
@@ -78,7 +77,7 @@ export class TokenService {
         try {
             return jwt.verify(token, this.RefreshSecret) as jwt.JwtPayload;
         } catch (error) {
-            console.error('Token verification failed:', error);
+            logger.error({ err: error }, 'Refresh token verification failed');
             return null;
         }
     }

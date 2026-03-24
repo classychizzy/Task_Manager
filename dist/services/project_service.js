@@ -5,6 +5,7 @@ const project_repository_1 = require("../repositories/project_repository");
 const projects_entity_1 = require("../entities/projects_entity");
 const user_repository_1 = require("../repositories/user_repository");
 const pagination_1 = require("../utils/pagination");
+const logger_1 = require("../lib/logger");
 class Project_service {
     constructor() {
         this.ProjectRepository = project_repository_1.ProjectRepository;
@@ -20,7 +21,7 @@ class Project_service {
             throw new Error('User not found');
         }
         const newProject = new projects_entity_1.Project_entity();
-        console.log(newProject);
+        logger_1.logger.info({ projectId: newProject.project_id }, 'New project instance created');
         /* this also works
         const project = await this.ProjectRepository.findOne({
              where: {
@@ -32,7 +33,7 @@ class Project_service {
         newProject.name = CreateProjectDTO.name;
         newProject.description = CreateProjectDTO.description;
         newProject.user = user;
-        console.log(newProject);
+        logger_1.logger.info({ name: newProject.name, userId: user.user_id }, 'Project entity populated');
         await this.ProjectRepository.save(newProject);
         return newProject;
     }
@@ -54,7 +55,7 @@ class Project_service {
                     created_at: 'DESC'
                 }
             });
-            console.log("Searching for projects with userId:", userId);
+            logger_1.logger.info({ userId }, "Searching for projects with userId:");
             // First, check what projects exist with just the user filter: i used this to debug
             // const projectsWithoutDeletedFilter = await this.ProjectRepository
             //     .createQueryBuilder('project')
@@ -87,6 +88,7 @@ class Project_service {
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error, userId }, 'Error retrieving all projects');
             let errorMessage = "unable to retreive projects";
             if (error instanceof Error) {
                 errorMessage = error.message;
@@ -102,8 +104,7 @@ class Project_service {
         }
     }
     async fetchProjectById(projectId, userId) {
-        console.log("=== START fetchProjectById ===");
-        console.log("Project ID:", projectId, "User ID:", userId);
+        logger_1.logger.debug({ projectId, userId }, 'fetchProjectById called');
         try {
             // console.log("About to query database...");
             const project = await this.ProjectRepository.findOne({
@@ -135,6 +136,7 @@ class Project_service {
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error, projectId, userId }, 'Error fetching project by ID');
             let errorMessage = "unable to retreive project";
             if (error instanceof Error) {
                 errorMessage = error.message;
@@ -150,85 +152,107 @@ class Project_service {
         }
     }
     async updateProject(projectId, userId, updateData) {
-        const project = await this.ProjectRepository.findOne({
-            where: {
-                project_id: projectId,
-                is_deleted: false,
-                user: {
-                    user_id: userId
-                }
-            },
-            relations: ["tasks"],
-        });
-        if (!project) {
+        try {
+            const project = await this.ProjectRepository.findOne({
+                where: {
+                    project_id: projectId,
+                    is_deleted: false,
+                    user: {
+                        user_id: userId
+                    }
+                },
+                relations: ["tasks"],
+            });
+            if (!project) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Project not found',
+                    data: null
+                };
+                return response;
+            }
+            if (updateData.name) {
+                project.name = updateData.name;
+            }
+            if (updateData.description) {
+                project.description = updateData.description;
+            }
+            project.updated_at = new Date();
+            await this.ProjectRepository.save(project);
             let response = {
-                status_code: 404,
-                status: 'failed',
-                message: 'Project not found',
-                data: null
+                status_code: 200,
+                status: 'success',
+                message: 'Project updated successfully',
+                data: project
             };
             return response;
         }
-        if (updateData.name) {
-            project.name = updateData.name;
+        catch (error) {
+            logger_1.logger.error({ err: error, projectId, userId }, 'Error updating project');
+            return {
+                status_code: 500,
+                status: 'failed',
+                message: 'Internal server error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
+                data: null
+            };
         }
-        if (updateData.description) {
-            project.description = updateData.description;
-        }
-        project.updated_at = new Date();
-        await this.ProjectRepository.save(project);
-        let response = {
-            status_code: 200,
-            status: 'success',
-            message: 'Project updated successfully',
-            data: project
-        };
-        return response;
     }
     async DeleteProject(projectId, userId) {
-        console.log("let's begin");
-        const project = await this.ProjectRepository.findOne({
-            where: {
-                project_id: projectId,
-                user: {
-                    user_id: userId
-                }
-            },
-        });
-        if (!project) {
+        try {
+            const project = await this.ProjectRepository.findOne({
+                where: {
+                    project_id: projectId,
+                    user: {
+                        user_id: userId
+                    }
+                },
+            });
+            if (!project) {
+                let response = {
+                    status_code: 404,
+                    status: 'failed',
+                    message: 'Project not found',
+                    data: null
+                };
+                return response;
+            }
+            if (project.is_deleted) {
+                let response = {
+                    status_code: 409,
+                    status: 'failed',
+                    message: 'Project already deleted',
+                    data: null
+                };
+                return response;
+            }
+            // soft delete implementation
+            project.deleted_at = new Date();
+            project.is_deleted = true;
+            project.updated_at = new Date();
+            logger_1.logger.info({ projectId, userId }, 'Project soft deleted');
+            await this.ProjectRepository.save(project);
             let response = {
-                status_code: 404,
-                status: 'failed',
-                message: 'Project not found',
+                status_code: 200,
+                status: 'success',
+                message: 'Project deleted successfully',
                 data: null
             };
             return response;
         }
-        if (project.is_deleted) {
-            let response = {
-                status_code: 409,
+        catch (error) {
+            logger_1.logger.error({ err: error, projectId, userId }, 'Error deleting project');
+            return {
+                status_code: 500,
                 status: 'failed',
-                message: 'Project already deleted',
+                message: 'Internal server error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 data: null
             };
-            return response;
         }
-        // soft delete implementation
-        project.deleted_at = new Date();
-        project.is_deleted = true;
-        project.updated_at = new Date();
-        console.log("deleted project");
-        await this.ProjectRepository.save(project);
-        let response = {
-            status_code: 200,
-            status: 'success',
-            message: 'Project deleted successfully',
-            data: null
-        };
-        return response;
     }
     async restoreProject(projectId, userId) {
-        console.log("let's begin");
         try {
             const restoreProject = await this.ProjectRepository.findOne({
                 where: {
@@ -239,7 +263,7 @@ class Project_service {
                     }
                 }
             });
-            console.log(restoreProject);
+            logger_1.logger.debug({ projectId }, 'Found project for restoration');
             if (!restoreProject) {
                 let response = {
                     status_code: 404,
@@ -251,7 +275,7 @@ class Project_service {
             restoreProject.is_deleted = false;
             restoreProject.deleted_at = null;
             restoreProject.updated_at = new Date();
-            console.log(restoreProject);
+            logger_1.logger.info({ projectId, userId }, 'Project restored');
             await this.ProjectRepository.save(restoreProject);
             let response = {
                 status_code: 200,
@@ -261,6 +285,7 @@ class Project_service {
             return response;
         }
         catch (error) {
+            logger_1.logger.error({ err: error, projectId, userId }, 'Error restoring project');
             let errorMessage = "unable to restore project";
             if (error instanceof Error) {
                 errorMessage = error.message;

@@ -1,11 +1,9 @@
 import { Router, Request, Response } from "express";
 import { UserDTO } from "../dto/user_dto";
-import { LoginDto } from "../dto/login_dto";
 import { Auth_Service } from "../services/auth/auth_service";
-import * as express from 'express';
-import { STATUS_CODES } from "http";
 import { AuthenticatedRequest } from "../types/express/auth-request";
 import { authenticateToken } from "../middlewares/jwt.auth";
+import { logger } from "../lib/logger";
 
 export class Auth_Controller {
     //set up user service here
@@ -20,54 +18,80 @@ export class Auth_Controller {
     }
 
     public async registerUser(req: Request, res: Response) {
-        const user = await this.authService.registerUser(req.body);
-        return res.json(user);
+        try {
+            const response = await this.authService.registerUser(req.body);
+            if (response.status_code === 200) {
+                logger.info({ userId: response.data?.user_id, email: response.data?.email }, 'User registered successfully');
+            } else {
+                logger.warn({ status_code: response.status_code, message: response.message }, 'User registration failed');
+            }
+            return res.json(response);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in registerUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async loginUser(req: Request, res: Response) {
-
-        const userData = req.body as UserDTO;
-        console.log(userData);
-        const user = await this.authService.loginUser(userData);
-        return res.json(user);
-
-
-        //return res.json("await this.authService.loginUser(req.body)");
-
+        try {
+            const userData = req.body as UserDTO;
+            logger.debug({ email: userData.email }, 'loginUser called');
+            const user = await this.authService.loginUser(userData);
+            return res.json(user);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in loginUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async findUserByEmail(req: Request, res: Response) {
-
-        const userData = req.body as UserDTO;
-        console.log(userData);
-
-        let user = await this.authService.findUserByEmail(userData);
-        return res.json(user);
-
+        try {
+            const userData = req.body as UserDTO;
+            logger.debug({ email: userData.email }, 'findUserByEmail called');
+            let user = await this.authService.findUserByEmail(userData);
+            return res.json(user);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in findUserByEmail');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async refreshToken(req: Request, res: Response) {
-        const refreshtoken = req.body.refreshToken;
-
-        let refresh = await this.authService.refreshToken(refreshtoken);
-
-        return res.json(refresh);
-
+        try {
+            const refreshtoken = req.body.refreshToken;
+            logger.info('refreshToken endpoint called');
+            let refresh = await this.authService.refreshToken(refreshtoken);
+            return res.json(refresh);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in refreshToken');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
     public async LogoutUser(req: AuthenticatedRequest, res: Response) {
-        const userId = req.user!.id;
-        const { refreshToken } = req.body;
-
-        let logout = await this.authService.LogoutUser(Number(userId), refreshToken);
-        return res.json(logout);
+        try {
+            const userId = req.user!.id;
+            const { refreshToken } = req.body;
+            logger.info({ userId }, 'LogoutUser called');
+            let logout = await this.authService.LogoutUser(Number(userId), refreshToken);
+            return res.json(logout);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in LogoutUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
 
     public async DeleteUser(req: AuthenticatedRequest, res: Response) {
-        const userId = req.user!.id;
-        let logout = await this.authService.DeleteUser(Number(userId));
-        return res.json(logout);
+        try {
+            const userId = req.user!.id;
+            logger.info({ userId }, 'DeleteUser called');
+            let Delete = await this.authService.DeleteUser(Number(userId));
+            return res.json(Delete);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in DeleteUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
 
 

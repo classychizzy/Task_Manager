@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Comment_Controller = void 0;
 const comment_service_1 = require("../services/comment_service");
 const express_1 = require("express");
+const logger_1 = require("../lib/logger");
 class Comment_Controller {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -10,36 +11,65 @@ class Comment_Controller {
         this.initializeRoutes();
     }
     async createComment(req, res) {
-        const taskId = Number(req.params.taskId);
-        const userId = req.user.id;
-        const { content, priority_level } = req.body;
-        if (!content || !priority_level) {
-            return res.status(400).json({
-                status_code: 400,
-                message: 'Content and priority level are required',
-                data: null
-            });
+        try {
+            const taskId = Number(req.params.taskId);
+            const userId = req.user.id;
+            const { content, priority_level } = req.body;
+            logger_1.logger.debug({ taskId, userId }, 'createComment called');
+            if (!content || !priority_level) {
+                return res.status(400).json({
+                    status_code: 400,
+                    message: 'Content and priority level are required',
+                    data: null
+                });
+            }
+            const result = await this.commentService.createComment(taskId, userId, content, priority_level);
+            return res.status(result.status_code).json(result);
         }
-        const result = await this.commentService.createComment(taskId, userId, content, priority_level);
-        return res.status(result.status_code).json(result);
+        catch (error) {
+            logger_1.logger.error({ err: error }, 'Unhandled error in createComment');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
     async getCommentsForTask(req, res) {
-        const taskId = Number(req.params.taskId);
-        const result = await this.commentService.getCommentsForTask(taskId);
-        return res.status(result.status_code).json(result);
+        try {
+            const taskId = Number(req.params.taskId);
+            logger_1.logger.debug({ taskId }, 'getCommentsForTask called');
+            const { page, limit } = req.query;
+            const result = await this.commentService.getCommentsForTask(taskId, page ? Number(page) : undefined, limit ? Number(limit) : undefined);
+            return res.status(result.status_code).json(result);
+        }
+        catch (error) {
+            logger_1.logger.error({ err: error }, 'Unhandled error in getCommentsForTask');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
     async deleteComment(req, res) {
-        const commentId = Number(req.params.commentId);
-        const requesterId = req.user.id;
-        const result = await this.commentService.deleteComment(commentId, requesterId);
-        return res.status(result.status_code).json(result);
+        try {
+            const commentId = Number(req.params.commentId);
+            const requesterId = req.user.id;
+            logger_1.logger.debug({ commentId, requesterId }, 'deleteComment called');
+            const result = await this.commentService.deleteComment(commentId, requesterId);
+            return res.status(result.status_code).json(result);
+        }
+        catch (error) {
+            logger_1.logger.error({ err: error }, 'Unhandled error in deleteComment');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
     async updateComment(req, res) {
-        const commentId = Number(req.params.commentId);
-        const userId = req.user.id;
-        const { content, priority_level } = req.body;
-        const result = await this.commentService.updateComment(commentId, userId, content, priority_level);
-        return res.status(result.status_code).json(result);
+        try {
+            const commentId = Number(req.params.commentId);
+            const userId = req.user.id;
+            const { content, priority_level } = req.body;
+            logger_1.logger.debug({ commentId, userId }, 'updateComment called');
+            const result = await this.commentService.updateComment(commentId, userId, content, priority_level);
+            return res.status(result.status_code).json(result);
+        }
+        catch (error) {
+            logger_1.logger.error({ err: error }, 'Unhandled error in updateComment');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
     }
     initializeRoutes() {
         this.router.post('/comments/:taskId', this.createComment.bind(this));

@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TokenService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const logger_1 = require("../../lib/logger");
 class TokenService {
     constructor() {
         if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
@@ -45,7 +46,7 @@ class TokenService {
             return jsonwebtoken_1.default.verify(token, this.AccessSecret);
         }
         catch (error) {
-            console.error('Token verification failed:', error);
+            logger_1.logger.error({ err: error }, 'Access token verification failed');
             return null;
         }
     }
@@ -54,7 +55,7 @@ class TokenService {
             return jsonwebtoken_1.default.verify(token, this.RefreshSecret);
         }
         catch (error) {
-            console.error('Token verification failed:', error);
+            logger_1.logger.error({ err: error }, 'Refresh token verification failed');
             return null;
         }
     }

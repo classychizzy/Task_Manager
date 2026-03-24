@@ -21,6 +21,18 @@ A robust backend RESTful API for managing tasks, projects, and team collaboratio
 - **Task Assignments**: Assign tasks to multiple users to facilitate team collaboration.
 - **Comments System**: Add and manage comments on specific tasks for better communication.
 - **Reliability**: Comprehensive test suite ensuring API stability and security.
+- **Observability**: Structured production-ready logging with rotation and redaction.
+
+## 📊 Observability & Logging
+
+The system implements a production-grade observability stack:
+
+- **Structured Logging**: Powered by [Pino](https://getpino.io/) for high-performance JSON logs that are easy to parse by log aggregators.
+- **Environment-based Levels**: Log levels (debug, info, warn, error) are controlled via the `LOG_LEVEL` environment variable.
+- **Sensitive Data Redaction**: Automatic redaction of sensitive fields (e.g., `password`, `token`) to ensure security compliance.
+- **Containerized Logging**: Pre-configured Docker `json-file` driver for seamless log collection.
+- **Log Rotation**: Built-in rotation to prevent disk exhaustion (configured for 3 files of 10MB each).
+
 
 ## 🛠️ Getting Started
 

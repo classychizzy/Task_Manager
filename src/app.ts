@@ -14,6 +14,7 @@ import { Project_Controller } from './controllers/project_controller';
 import { Task_Controller } from './controllers/task_controller';
 import { TaskAssignment_Controller } from './controllers/task_assignment_controller';
 import { Comment_Controller } from './controllers/comment_controller';
+import { requestLogger } from './middlewares/requestlogger';
 
 
 
@@ -36,6 +37,7 @@ class App {
         this.app.use(helmet());
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+        this.app.use(requestLogger); //request logger middleware
     }
 
 

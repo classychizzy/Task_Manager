@@ -1,9 +1,9 @@
-
 import { CommentRepository } from "../repositories/comment_repository";
 import { TaskRepository } from "../repositories/task_repository";
 import { UserRepository } from "../repositories/user_repository";
 import { Comment_Entity } from "../entities/comments_entity";
 import { getPagination } from "../utils/pagination";
+import { logger } from "../lib/logger";
 
 export class Comment_Service {
     private commentRepository: typeof CommentRepository;
@@ -42,6 +42,7 @@ export class Comment_Service {
                 data: newComment
             };
         } catch (error) {
+            logger.error({ err: error, taskId, userId }, 'Error creating comment');
             return {
                 status_code: 500,
                 message: 'Internal server error',
@@ -79,6 +80,7 @@ export class Comment_Service {
                 },
             };
         } catch (error) {
+            logger.error({ err: error, taskId }, 'Error retrieving comments for task');
             return {
                 status_code: 500,
                 message: 'Internal server error',
@@ -117,6 +119,7 @@ export class Comment_Service {
                 data: null
             };
         } catch (error) {
+            logger.error({ err: error, commentId, requesterId }, 'Error deleting comment');
             return {
                 status_code: 500,
                 message: 'Internal server error',
@@ -155,6 +158,7 @@ export class Comment_Service {
                 data: comment
             };
         } catch (error) {
+            logger.error({ err: error, commentId, userId }, 'Error updating comment');
             return {
                 status_code: 500,
                 message: 'Internal server error',

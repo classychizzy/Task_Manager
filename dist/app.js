@@ -51,6 +51,7 @@ const project_controller_1 = require("./controllers/project_controller");
 const task_controller_1 = require("./controllers/task_controller");
 const task_assignment_controller_1 = require("./controllers/task_assignment_controller");
 const comment_controller_1 = require("./controllers/comment_controller");
+const requestlogger_1 = require("./middlewares/requestlogger");
 class App {
     constructor() {
         this.app = (0, express_1.default)();
@@ -66,6 +67,7 @@ class App {
         this.app.use((0, helmet_1.default)());
         this.app.use(express_1.default.json());
         this.app.use(express_1.default.urlencoded({ extended: true }));
+        this.app.use(requestlogger_1.requestLogger); //request logger middleware
     }
     initializeControllers() {
         this.app.use("/welcome", async function (req, res) {

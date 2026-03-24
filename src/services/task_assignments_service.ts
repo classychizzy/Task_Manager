@@ -5,8 +5,7 @@ import { TaskPermission } from '../enums/Taskpermission_enum';
 import { Task_assignment_entity } from "../entities/Task_assignment_entity";
 import { AssignTaskDTO } from "../dto/assign_task_dto";
 import { serviceResponse } from '../types/serviceResponse';
-import { stat } from 'fs';
-import { IsEmailOptions } from 'validator';
+import { logger } from '../lib/logger';
 
 
 export class TaskAssignment_Service {
@@ -74,7 +73,7 @@ export class TaskAssignment_Service {
             const assignee = await this.userRepository.findOne({
                 where: { email: assignmentData.email },
             });
-            console.log(assignee)
+            logger.debug({ assigneeEmail: assignmentData.email, assigneeFound: !!assignee }, 'Assignee lookup');
             if (!assignee) {
                 let response = {
                     status_code: 404,
@@ -133,6 +132,7 @@ export class TaskAssignment_Service {
                 data: newAssignment
             };
         } catch (error) {
+            logger.error({ err: error, taskId, requesterId, assigneeEmail: assignmentData.email }, 'Error in AssignUsertoTask');
             return {
                 status_code: 500,
                 status: 'failed',
@@ -144,68 +144,77 @@ export class TaskAssignment_Service {
     }
 
     async UpdatePermission(Permission: TaskPermission, taskId: number, userId: number, requesterId: number) {
+        try {
+            logger.debug({ Permission, taskId, userId, requesterId }, 'UpdatePermission called');
 
-        // verify that the requester is the owner of the task
-        const requester = await this.taskAssignmentRepository.findOne({
-            where: {
-                task: { task_id: taskId },
-                user: { user_id: requesterId },
-                is_deleted: false
+            // verify that the requester is the owner of the task
+            const requester = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: requesterId },
+                    is_deleted: false
 
 
+                }
+            });
+
+            // console.log('=== DEBUG UpdatePermission ===');
+            // console.log('requester:', requester);
+            // console.log('requester exists:', !!requester);
+            // if (requester) {
+            //     console.log('requester.permission:', requester.permission);
+            //     console.log('TaskPermission.OWNER:', TaskPermission.OWNER);
+            //     console.log('Are they equal?:', requester.permission === TaskPermission.OWNER);
+            //     console.log('Type of requester.permission:', typeof requester.permission);
+            //     console.log('Type of TaskPermission.OWNER:', typeof TaskPermission.OWNER);
+            // }
+            // console.log('=== END DEBUG ===');
+
+            if (!requester || requester.permission !== TaskPermission.OWNER) {
+                let response = {
+                    status_code: 403,
+                    message: 'only owner can change permission',
+                    data: null
+                }
+                return response;
             }
-        });
 
-        // console.log('=== DEBUG UpdatePermission ===');
-        // console.log('requester:', requester);
-        // console.log('requester exists:', !!requester);
-        // if (requester) {
-        //     console.log('requester.permission:', requester.permission);
-        //     console.log('TaskPermission.OWNER:', TaskPermission.OWNER);
-        //     console.log('Are they equal?:', requester.permission === TaskPermission.OWNER);
-        //     console.log('Type of requester.permission:', typeof requester.permission);
-        //     console.log('Type of TaskPermission.OWNER:', typeof TaskPermission.OWNER);
-        // }
-        // console.log('=== END DEBUG ===');
+            const assignment = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false
+                }
+            });
 
-        if (!requester || requester.permission !== TaskPermission.OWNER) {
+            if (!assignment) {
+                let response = {
+                    status_code: 404,
+                    message: 'Assignment not found',
+                    data: null
+                }
+                return response;
+            }
+
+            assignment.permission = Permission;
+            assignment.updated_at = new Date();
+            await this.taskAssignmentRepository.save(assignment);
+
             let response = {
-                status_code: 403,
-                message: 'only owner can change permission',
-                data: null
+                status_code: 200,
+                message: 'Permission updated successfully',
+                data: assignment
             }
             return response;
-        }
-
-        const assignment = await this.taskAssignmentRepository.findOne({
-            where: {
-                task: { task_id: taskId },
-                user: { user_id: userId },
-                is_deleted: false
-            }
-        });
-
-        if (!assignment) {
-            let response = {
-                status_code: 404,
-                message: 'Assignment not found',
+        } catch (error) {
+            logger.error({ err: error, taskId, userId, requesterId }, 'Error in UpdatePermission');
+            return {
+                status_code: 500,
+                message: 'Internal server error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 data: null
-            }
-            return response;
+            };
         }
-
-        assignment.permission = Permission;
-        assignment.updated_at = new Date();
-        await this.taskAssignmentRepository.save(assignment);
-
-        let response = {
-            status_code: 200,
-            message: 'Permission updated successfully',
-            data: assignment
-        }
-        return response;
-
-
     }
 
     async getUserTaskPermission(taskId: number, userId: number) {
@@ -247,6 +256,7 @@ export class TaskAssignment_Service {
 
 
         } catch (error) {
+            logger.error({ err: error, taskId, userId }, 'Error in getUserTaskPermission');
             let message = "unable to retrieve task";
             if (error instanceof Error) {
                 message = error.message;
@@ -262,58 +272,69 @@ export class TaskAssignment_Service {
     }
 
     async removeUserFromTask(taskId: number, userId: number, requesterId: number) {
-
-        const requester = await this.taskAssignmentRepository.findOne({
-            where: {
-                task: { task_id: taskId },
-                user: { user_id: requesterId },
-                is_deleted: false
+        try {
+            logger.debug({ taskId, userId, requesterId }, 'removeUserFromTask called');
+            const requester = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: requesterId },
+                    is_deleted: false
+                }
+            });
+            if (!requester || requester.permission !== TaskPermission.OWNER) {
+                let response = {
+                    status_code: 403,
+                    message: 'only owner can remove user from task',
+                    data: null
+                }
+                return response
             }
-        });
-        if (!requester || requester.permission !== TaskPermission.OWNER) {
-            let response = {
-                status_code: 403,
-                message: 'only owner can remove user from task',
+            //owner protection logic
+
+            else if (userId === requesterId) {
+                let response = {
+                    status_code: 403,
+                    message: 'You cannot remove yourself from the task',
+                    data: null
+                }
+                return response
+            }
+
+            const assignment = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false
+                }
+            });
+
+            if (!assignment) {
+                let response = {
+                    status_code: 404,
+                    message: 'Assignment not found',
+                    data: null
+                }
+                return response
+            }
+
+            assignment.is_deleted = true;
+            assignment.updated_at = new Date();
+            await this.taskAssignmentRepository.save(assignment);
+            logger.info({ taskId, userId, requesterId }, 'User removed from task');
+            return {
+                status_code: 200,
+                message: 'User removed from task successfully',
+                data: assignment
+            };
+        } catch (error) {
+            logger.error({ err: error, taskId, userId, requesterId }, 'Error in removeUserFromTask');
+            return {
+                status_code: 500,
+                message: 'Internal server error',
+                errorMessage: error instanceof Error ? error.message : 'Unknown error',
                 data: null
-            }
-            return response
+            };
         }
-        //owner protection logic
-
-        else if (userId === requesterId) {
-            let response = {
-                status_code: 403,
-                message: 'You cannot remove yourself from the task',
-                data: null
-            }
-            return response
-        }
-
-        const assignment = await this.taskAssignmentRepository.findOne({
-            where: {
-                task: { task_id: taskId },
-                user: { user_id: userId },
-                is_deleted: false
-            }
-        });
-
-        if (!assignment) {
-            let response = {
-                status_code: 404,
-                message: 'Assignment not found',
-                data: null
-            }
-            return response
-        }
-
-        assignment.is_deleted = true;
-        assignment.updated_at = new Date();
-        await this.taskAssignmentRepository.save(assignment);
-        return {
-            status_code: 200,
-            message: 'User removed from task successfully',
-            data: assignment
-        };
     }
 
 
@@ -358,6 +379,7 @@ export class TaskAssignment_Service {
             };
             return response;
         } catch (error) {
+            logger.error({ err: error, taskId, requesterId }, 'Error fetching task assignments');
             let response = {
                 status_code: 500,
                 status: 'failed',
@@ -384,6 +406,7 @@ export class TaskAssignment_Service {
             };
             return response;
         } catch (error) {
+            logger.error({ err: error, userId }, 'Error fetching user assignments');
             let response = {
                 status_code: 500,
                 status: 'failed',
@@ -403,7 +426,7 @@ export class TaskAssignment_Service {
                 relations: ["task", "task.project"]
             });
 
-            console.log(targetAssignments);
+            logger.debug({ targetUserId, assignmentCount: targetAssignments.length }, 'Target user assignments lookup');
             if (targetAssignments.length === 0) {
                 let response = {
                     status_code: 404,
@@ -427,7 +450,7 @@ export class TaskAssignment_Service {
                 if (isOwner) filteredAssignments.push(assignment);
             }
 
-            console.log(filteredAssignments);
+            logger.debug({ filteredCount: filteredAssignments.length }, 'Filtered assignments shared with requester');
 
             if (filteredAssignments.length === 0) {
                 return {
@@ -440,6 +463,7 @@ export class TaskAssignment_Service {
 
             return { status_code: 200, status: 'success', message: 'User assignments retrieved', data: filteredAssignments };
         } catch (error) {
+            logger.error({ err: error, targetUserId, requesterId }, 'Error fetching other user assignments');
             return {
                 status_code: 500,
                 status: 'failed',
@@ -468,7 +492,7 @@ export class TaskAssignment_Service {
             const task = await this.taskRepository.findOne({
                 where: { task_id: taskId, is_deleted: false }
             });
-            console.log('Task found:', task);
+            logger.debug({ taskId, taskFound: !!task }, 'Task lookup in bulkAssign');
 
             if (!task) {
                 return {
@@ -487,7 +511,7 @@ export class TaskAssignment_Service {
                     is_deleted: false
                 }
             });
-            console.log('Requester assignment found:', requesterAssignment);
+            logger.debug({ requesterId, hasAssignment: !!requesterAssignment }, 'Requester assignment lookup in bulkAssign');
 
             if (!requesterAssignment || requesterAssignment.permission !== TaskPermission.OWNER) {
                 return {
@@ -536,7 +560,7 @@ export class TaskAssignment_Service {
                             is_deleted: false
                         }
                     });
-                    console.log('Existing assignment found:', existingAssignment);
+                    logger.debug({ email: normalizedEmail, alreadyAssigned: !!existingAssignment }, 'Checking existing assignment in bulkAssign loop');
 
                     if (existingAssignment) {
                         results.skipped.push({
@@ -554,7 +578,7 @@ export class TaskAssignment_Service {
                         permission: assignment.permission,
                         is_deleted: false
                     });
-                    console.log('New assignment created:', newAssignment);
+                    logger.debug({ email: normalizedEmail }, 'New assignment created in bulkAssign loop');
 
                     await this.taskAssignmentRepository.save(newAssignment);
 
@@ -580,7 +604,7 @@ export class TaskAssignment_Service {
             };
 
         } catch (error) {
-            console.error('Error in bulkAssignUsersToTask service:', error);
+            logger.error({ err: error, taskId, requesterId }, 'Error in bulkAssignUsers');
             return {
                 status_code: 500,
                 status: 'failed',
@@ -596,6 +620,7 @@ export class TaskAssignment_Service {
 
     async TransferOwnership(userId: number, taskId: number, presentOwnerId: number, newOwnerId: number) {
         try {
+            logger.info({ taskId, presentOwnerId, newOwnerId }, 'TransferOwnership called');
             const presentOwner = await this.taskAssignmentRepository.findOne({
                 where: {
                     task: { task_id: taskId },
@@ -661,6 +686,7 @@ export class TaskAssignment_Service {
                 data: { presentOwner, newOwner }
             };
         } catch (error) {
+            logger.error({ err: error, taskId, presentOwnerId, newOwnerId }, 'Error in TransferOwnership');
             return {
                 status_code: 500,
                 message: 'Internal server error.',
