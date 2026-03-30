@@ -75,13 +75,21 @@ class App {
             console.log(`Server is running on http://localhost:${this.port}`);
         });
     }
-    public initializeDatabase() {
-        return AppDataSource.initialize().then(() => {
-            console.log('Data Source has been initialized!');
-        }).catch((err: any) => {
-            console.error('Error during Data Source initialization:', err);
-            process.exit(1);
-        });
+    public async initializeDatabase(retries = 5, delay = 5000): Promise<void> {
+        while (retries > 0) {
+            try {
+                await AppDataSource.initialize();
+                console.log('Data Source has been initialized!');
+                return;
+            } catch (err: any) {
+                retries--;
+                console.error(`Error during Data Source initialization. Retries left: ${retries}`, err);
+                if (retries === 0) {
+                    process.exit(1);
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
     }
 }
 

@@ -21,6 +21,7 @@ export class Task_Service {
 
     async createTask(createTaskDTO: TaskDTO, projectId: number, userId: number) {
         try {
+
             // Verify project exists and belongs to the user before creating a task
             const project = await this.ProjectRepository.findOne({
                 where: {
@@ -40,6 +41,8 @@ export class Task_Service {
 
                 }
                 return response;
+
+
             }
 
             // Ensure project has a user
@@ -52,6 +55,25 @@ export class Task_Service {
                 }
                 return response;
             }
+
+            // Check if task already exists in this project
+            const existingTask = await this.TaskRepository.findOne({
+                where: {
+                    title: createTaskDTO.title,
+                    project: { project_id: projectId },
+                    is_deleted: false,
+                },
+            });
+
+            if (existingTask) {
+                return {
+                    status_code: 409,
+                    status: 'failed',
+                    message: `Task with title "${createTaskDTO.title}" already exists in this project`,
+                    data: null
+                };
+            }
+
 
             let dueDate: Date | null = null;
             if (createTaskDTO.dueDate) {

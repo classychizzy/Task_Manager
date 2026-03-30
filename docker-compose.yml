@@ -9,6 +9,26 @@ services:
       - app_data:/data/app
     env_file:
       - docker.env
+    environment:
+      - RUN_CRON=false
+    depends_on:
+      - postgres-db
+    restart: unless-stopped
+    networks:
+      - task-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  
+  worker: 
+    build: .
+    container_name: task-manager-worker
+    env_file:
+      - docker.env
+    environment:
+      - RUN_CRON=true
     depends_on:
       - postgres-db
     restart: unless-stopped

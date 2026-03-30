@@ -35,8 +35,11 @@ export class User_entity {
   isActive: boolean;
 
   //soft delete
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   is_deleted: boolean;
+
+  @Column({ type: 'timestamp', default: null, nullable: true })
+  deleted_at: Date | null;
 
   @UpdateDateColumn()
   updated_at: Date;

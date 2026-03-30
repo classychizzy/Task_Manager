@@ -21,14 +21,28 @@ if (process.env.LOG_FILE) {
 
 export const logger = pino({
     level: process.env.LOG_LEVEL || 'info',
-    redact: [
-        'req.headers.authorization',
-        'res.headers.authorization',
-        'req.body.password',
-        'res.body.password',
-    ],
-    transport: {
-        targets: streams,
+    // this logs everything in the request header, i need something simple 
+    //redact: [
+    //     'req.headers.authorization',
+    //     'res.headers.authorization',
+    //     'req.body.password',
+    //     'res.body.password',
+    // ],
+    serializers: {
+        req: (req) => ({
+            userId: req.user?.id,
+            method: req.method,
+            url: req.url,
+            // nothing else gets through
+        }),
+        res: (res) => ({
+            statusCode: res.statusCode,
+
+        })
     },
+    // pino pretty, this doesn't work well with serializers
+    // transport: {
+    //     targets: streams,
+    // },
 });
 

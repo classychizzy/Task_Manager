@@ -27,6 +27,9 @@ export class Task_entity {
     @Column({type: 'timestamp', nullable: true})
     dueDate: Date;
 
+    @Column({type: 'boolean', default: false})
+    is_notified: boolean;
+
     @Column({type: 'int', default: 1})
     priority_level: number;
 

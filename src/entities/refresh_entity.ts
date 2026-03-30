@@ -10,10 +10,10 @@ export class Refresh_entity {
     @Column({ type: 'int' })
     user_id: number;
 
-    @Column()
+    @Column({ type: 'varchar' })
     tokenHash: string;
 
-    @Column()
+    @Column({ type: 'timestamp' })
     expires_at: Date;
 
     // @Column({ default: true })

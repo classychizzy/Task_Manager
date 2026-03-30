@@ -17,7 +17,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
 
   const token = authheader && authheader.split(' ')[1]
 
-  logger.debug('Extracted Token:' + JSON.stringify(token));
+  logger.debug('Extracted Token');
 
   if (!token) {
     let response = {
@@ -33,7 +33,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
 
   jwt.verify(token, process.env.JWT_ACCESS_SECRET as string, (err, decoded) => {
     if (err) {
-      logger.error('Invalid or expired token:' + JSON.stringify(err));
+      logger.debug('Invalid or expired token:');
       return res.status(403).json({
         status: "failed",
         message: "Invalid or expired token",

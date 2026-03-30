@@ -20,8 +20,17 @@ A robust backend RESTful API for managing tasks, projects, and team collaboratio
 - **Task Management**: Full CRUD operations for tasks within projects, including status tracking and priorities.
 - **Task Assignments**: Assign tasks to multiple users to facilitate team collaboration.
 - **Comments System**: Add and manage comments on specific tasks for better communication.
+- **Automated Background Jobs**: Daily cron jobs to manage task lifecycles (overdue status) and proactive user notifications.
 - **Reliability**: Comprehensive test suite ensuring API stability and security.
-- **Observability**: Structured production-ready logging with rotation and redaction.
+- **Observability**: Structured production-ready logging with Pino.
+
+## ⏰ Automated Background Tasks (Cron Jobs)
+
+The system includes automated background processing powered by `node-cron`:
+
+- **Overdue Task Management**: Every day at midnight, the system automatically identifies tasks that have passed their `dueDate` and updates their status from `pending` to `overdue`.
+- **Proactive Notifications**: Before a task becomes overdue, the system identifies tasks due within the next 24 hours and logs a notification alert to the user.
+- **Reliable Execution**: Uses sequential processing with `for...of` loops to ensure database integrity during bulk updates.
 
 ## 📊 Observability & Logging
 

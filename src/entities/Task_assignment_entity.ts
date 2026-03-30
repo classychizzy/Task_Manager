@@ -14,15 +14,15 @@ export class Task_assignment_entity {
     permission: TaskPermission;
 
 
-    @Column()
+    @Column({ type: 'int' })
     user_id: number; //foreign key supports the many users being assigned to a task and being represented in a table
 
-    @Column()
+    @Column({ type: 'int' })
     task_id: number; //foreign key supports the many users assigned to a task 
     // and the task is user is assigned to being represented in the task assignment table
 
 
-    @Column({ default: false, nullable: true })
+    @Column({ type: 'boolean', default: false, nullable: true })
     is_deleted: boolean;
 
 
