@@ -4,6 +4,7 @@ import { Auth_Service } from "../services/auth/auth_service";
 import { AuthenticatedRequest } from "../types/express/auth-request";
 import { authenticateToken } from "../middlewares/jwt.auth";
 import { logger } from "../lib/logger";
+import { authLimiter } from '../middlewares/ratelimiter'
 
 export class Auth_Controller {
     //set up user service here
@@ -106,7 +107,7 @@ export class Auth_Controller {
             //add middleware here
             this.registerUser.bind(this)
         );
-        this.router.post('/login',
+        this.router.post('/login', authLimiter,
 
             this.loginUser.bind(this)
 

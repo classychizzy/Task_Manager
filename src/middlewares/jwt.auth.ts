@@ -33,7 +33,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
 
   jwt.verify(token, process.env.JWT_ACCESS_SECRET as string, (err, decoded) => {
     if (err) {
-      logger.debug('Invalid or expired token:');
+      logger.error('Invalid or expired token:');
       return res.status(403).json({
         status: "failed",
         message: "Invalid or expired token",

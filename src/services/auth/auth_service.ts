@@ -15,6 +15,8 @@ import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { IsNull } from "typeorm";
 import { logger } from "../../lib/logger";
+import { auditLog } from "../../utils/auditlogs";
+import { AuditAction } from "../../enums/auditActions";
 dotenv.config();
 
 
@@ -101,10 +103,6 @@ export class Auth_Service {
             // call then hashing here
             newUser.hashPassword();
 
-            logger.info(
-                { email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName, username: newUser.username },
-                'User created successfully'
-            );
 
             //newUser.password = await hashPassword( userData.password); // In a real app, hash this!
 
@@ -112,6 +110,18 @@ export class Auth_Service {
 
             await this.userRepository.save(newUser);
             // return newUser;
+
+            auditLog({
+                action: AuditAction.USER_REGISTER,
+                userId: newUser.user_id,
+                resource: "AUTH",
+                resourceId: newUser.user_id.toString(),
+                metadata: {
+                    email: newUser.email,
+                    username: newUser.username
+                }
+            });
+
 
             const { password, ...userWithoutPassword } = newUser;
 
@@ -261,6 +271,16 @@ export class Auth_Service {
                 return response;
             }
 
+            auditLog({
+                action: AuditAction.LOGIN_FAILED_USER_NOT_FOUND,
+                userId: user.user_id,
+                resource: "AUTH",
+                resourceId: user.user_id.toString(),
+                metadata: {
+                    email: user.email,
+                    username: user.username,
+                }
+            });
 
             // const ispasswordValid = await comparePassword(userData.password, user!.password);
             // if (!user || !ispasswordValid) {
@@ -282,6 +302,17 @@ export class Auth_Service {
                 }
                 return response;
             }
+
+            auditLog({
+                action: AuditAction.LOGIN_FAILED_INVALID_PASSWORD,
+                userId: user.user_id,
+                resource: "AUTH",
+                resourceId: user.user_id.toString(),
+                metadata: {
+                    email: user.email,
+                    username: user.username,
+                }
+            });
 
             const payload: UserPayload = {
                 id: user.user_id,
@@ -319,6 +350,18 @@ export class Auth_Service {
 
             }
 
+            auditLog({
+                action: AuditAction.LOGIN_SUCCESS,
+                userId: user.user_id,
+                resource: "AUTH",
+                resourceId: user.user_id.toString(),
+                metadata: {
+                    email: user.email,
+                    username: user.username,
+                }
+            });
+
+            const { password, ...userWithoutPassword } = user;
             let response = {
                 status_code: 200,
                 status: 'success',
@@ -326,7 +369,7 @@ export class Auth_Service {
                 data: {
                     accessToken: accessToken,
                     refreshToken: refreshToken,
-                    user: user
+                    user: userWithoutPassword
                 }
             }
 

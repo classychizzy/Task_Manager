@@ -342,6 +342,7 @@ export class TaskAssignment_Service {
 
 
     async getTaskAssignments(taskId: number, requesterId: number) {
+        // i think this endpoint needs pagination
         try {
             // to check assignment as a user
             const task = await this.taskRepository.findOne({

@@ -8,6 +8,8 @@ import { Auth_Controller } from './controllers/auth_controller';
 import helmet from 'helmet';
 import { Request, Response } from 'express';
 import * as http from 'http';
+import { globalLimiter } from './middlewares/ratelimiter';
+
 //import { register } from 'module';
 import { authenticateToken } from './middlewares/jwt.auth';
 import { Project_Controller } from './controllers/project_controller';
@@ -38,6 +40,7 @@ class App {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(requestLogger); //request logger middleware
+        this.app.use(globalLimiter); //global rate limiter
     }
 
 

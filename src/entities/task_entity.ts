@@ -10,46 +10,46 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColum
 
 
 
-@Entity({name: 'tasks', schema: 'public'})
+@Entity({ name: 'tasks', schema: 'public' })
 export class Task_entity {
     @PrimaryGeneratedColumn()
     task_id: number;
 
-    @Column({type: 'varchar', length: 255})
+    @Column({ type: 'varchar', length: 255 })
     title: string;
 
-    @Column({type: 'text', nullable: true})
+    @Column({ type: 'text', nullable: true })
     description: string;
 
-    @Column({type: 'enum', enum: TaskStatus, default: TaskStatus.PENDING})
+    @Column({ type: 'enum', enum: TaskStatus, default: TaskStatus.PENDING })
     status: TaskStatus;
 
-    @Column({type: 'timestamp', nullable: true})
+    @Column({ type: 'timestamp', nullable: true })
     dueDate: Date;
 
-    @Column({type: 'boolean', default: false})
+    @Column({ type: 'boolean', default: false })
     is_notified: boolean;
 
-    @Column({type: 'int', default: 1})
+    @Column({ type: 'int', default: 1 })
     priority_level: number;
 
-    @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;
 
-    @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP'})
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
 
-    @Column({type: 'timestamp', default: null, nullable: true})
+    @Column({ type: 'timestamp', default: null, nullable: true })
     deleted_at: Date | null;
 
 
-    @Column({type: 'boolean', default: false})
+    @Column({ type: 'boolean', default: false })
     is_deleted: boolean;
 
-    
+
 
     // relationships
-    @ManyToOne(() => User_entity, (user) => user.tasks, { nullable: false})
+    @ManyToOne(() => User_entity, (user) => user.tasks, { nullable: false })
     @JoinColumn({ name: "user_id" })
     User: User_entity;
 
@@ -64,8 +64,7 @@ export class Task_entity {
     @OneToMany(() => Comment_Entity, (comment) => comment.task)
     comments: Comment_Entity[];
     user_id: number;
-  
+
 
 }
 
-    
