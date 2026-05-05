@@ -40,6 +40,10 @@ __decorate([
     __metadata("design:type", Date)
 ], Task_entity.prototype, "dueDate", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Task_entity.prototype, "is_notified", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'int', default: 1 }),
     __metadata("design:type", Number)
 ], Task_entity.prototype, "priority_level", void 0);

@@ -22,19 +22,19 @@ __decorate([
     __metadata("design:type", Number)
 ], Task_assignment_entity.prototype, "task_assignment_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ enum: Taskpermission_enum_1.TaskPermission, default: Taskpermission_enum_1.TaskPermission.VIEW }),
+    (0, typeorm_1.Column)({ type: 'enum', enum: Taskpermission_enum_1.TaskPermission, default: Taskpermission_enum_1.TaskPermission.VIEW }),
     __metadata("design:type", String)
 ], Task_assignment_entity.prototype, "permission", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'int' }),
     __metadata("design:type", Number)
 ], Task_assignment_entity.prototype, "user_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'int' }),
     __metadata("design:type", Number)
 ], Task_assignment_entity.prototype, "task_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false, nullable: true }),
+    (0, typeorm_1.Column)({ type: 'boolean', default: false, nullable: true }),
     __metadata("design:type", Boolean)
 ], Task_assignment_entity.prototype, "is_deleted", void 0);
 __decorate([

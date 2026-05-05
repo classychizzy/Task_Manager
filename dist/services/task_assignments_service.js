@@ -7,6 +7,8 @@ const user_repository_1 = require("../repositories/user_repository");
 const Taskpermission_enum_1 = require("../enums/Taskpermission_enum");
 const Task_assignment_entity_1 = require("../entities/Task_assignment_entity");
 const logger_1 = require("../lib/logger");
+const auditlogs_1 = require("../utils/auditlogs");
+const auditActions_1 = require("../enums/auditActions");
 class TaskAssignment_Service {
     constructor() {
         this.taskAssignmentRepository = task_assignment_repository_1.Task_assignment_Repository;
@@ -31,6 +33,7 @@ class TaskAssignment_Service {
                     data: null
                 };
             }
+            logger_1.logger.debug({ task }, 'task found for assignment');
             // Verify requester is the project owner i.e has the ownership permission
             const requesterAssignment = await this.taskAssignmentRepository.findOne({
                 where: {
@@ -48,6 +51,7 @@ class TaskAssignment_Service {
                 };
                 return response;
             }
+            logger_1.logger.info({ requesterAssignment }, 'requester assignment found');
             if (requesterAssignment.permission !== Taskpermission_enum_1.TaskPermission.OWNER) {
                 let response = {
                     status_code: 403,
@@ -105,6 +109,16 @@ class TaskAssignment_Service {
             newAssignment.user = assignee;
             newAssignment.permission = assignmentData.permission ?? Taskpermission_enum_1.TaskPermission.VIEW;
             await this.taskAssignmentRepository.save(newAssignment);
+            (0, auditlogs_1.auditLog)({
+                action: auditActions_1.AuditAction.TASK_ASSIGNED,
+                resource: "Task_assignment",
+                resourceId: String(newAssignment.task_assignment_id),
+                metadata: {
+                    task_id: taskId,
+                    user_id: assignee.user_id,
+                    permission: assignmentData.permission
+                }
+            });
             return {
                 status_code: 201,
                 status: 'success',
@@ -295,6 +309,7 @@ class TaskAssignment_Service {
         }
     }
     async getTaskAssignments(taskId, requesterId) {
+        // i think this endpoint needs pagination
         try {
             // to check assignment as a user
             const task = await this.taskRepository.findOne({

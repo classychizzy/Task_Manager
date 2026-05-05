@@ -45,6 +45,7 @@ const ormconfig_1 = __importDefault(require("./ormconfig"));
 const auth_controller_1 = require("./controllers/auth_controller");
 const helmet_1 = __importDefault(require("helmet"));
 const http = __importStar(require("http"));
+const ratelimiter_1 = require("./middlewares/ratelimiter");
 //import { register } from 'module';
 const jwt_auth_1 = require("./middlewares/jwt.auth");
 const project_controller_1 = require("./controllers/project_controller");
@@ -68,6 +69,11 @@ class App {
         this.app.use(express_1.default.json());
         this.app.use(express_1.default.urlencoded({ extended: true }));
         this.app.use(requestlogger_1.requestLogger); //request logger middleware
+        this.app.use(ratelimiter_1.globalLimiter); //global rate limiter
+        this.app.use((err, req, res, next) => {
+            console.error(err.stack); // this shows you the real error
+            res.status(500).json({ message: err.message });
+        });
     }
     initializeControllers() {
         this.app.use("/welcome", async function (req, res) {
@@ -80,20 +86,29 @@ class App {
         this.app.use('/api/v1/projects', jwt_auth_1.authenticateToken, new project_controller_1.Project_Controller().router);
         this.app.use('/api/v1/tasks', jwt_auth_1.authenticateToken, new task_controller_1.Task_Controller().router);
         this.app.use('/api/v1/taskassignments', jwt_auth_1.authenticateToken, new task_assignment_controller_1.TaskAssignment_Controller().router);
-        this.app.use('/api/v1', jwt_auth_1.authenticateToken, new comment_controller_1.Comment_Controller().router);
+        this.app.use('/api/v1/comments', jwt_auth_1.authenticateToken, new comment_controller_1.Comment_Controller().router);
     }
     listen() {
         http.createServer(this.app).listen(this.port, () => {
             console.log(`Server is running on http://localhost:${this.port}`);
         });
     }
-    initializeDatabase() {
-        return ormconfig_1.default.initialize().then(() => {
-            console.log('Data Source has been initialized!');
-        }).catch((err) => {
-            console.error('Error during Data Source initialization:', err);
-            process.exit(1);
-        });
+    async initializeDatabase(retries = 5, delay = 5000) {
+        while (retries > 0) {
+            try {
+                await ormconfig_1.default.initialize();
+                console.log('Data Source has been initialized!');
+                return;
+            }
+            catch (err) {
+                retries--;
+                console.error(`Error during Data Source initialization. Retries left: ${retries}`, err);
+                if (retries === 0) {
+                    process.exit(1);
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
     }
 }
 exports.default = App;

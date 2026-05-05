@@ -1,4 +1,4 @@
-import { cleanEnv, str, num } from 'envalid';
+import { cleanEnv, str, num, bool } from 'envalid';
 
 export function validateEnv() {
     cleanEnv(process.env, {
@@ -8,9 +8,10 @@ export function validateEnv() {
         POSTGRES_PORT: num({ default: 5432 }),
         POSTGRES_USER: str(),
         POSTGRES_PASS: str(),
+
         POSTGRES_DB: str(),
 
         // App features
-        RUN_CRON: Boolean({ default: false }),
+        RUN_CRON: bool({ default: false }),
     });
 };

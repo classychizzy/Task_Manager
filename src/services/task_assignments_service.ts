@@ -6,6 +6,8 @@ import { Task_assignment_entity } from "../entities/Task_assignment_entity";
 import { AssignTaskDTO } from "../dto/assign_task_dto";
 import { serviceResponse } from '../types/serviceResponse';
 import { logger } from '../lib/logger';
+import { auditLog } from '../utils/auditlogs';
+import { AuditAction } from '../enums/auditActions';
 
 
 export class TaskAssignment_Service {
@@ -39,6 +41,7 @@ export class TaskAssignment_Service {
                     data: null
                 };
             }
+            logger.debug({ task }, 'task found for assignment')
 
             // Verify requester is the project owner i.e has the ownership permission
             const requesterAssignment = await this.taskAssignmentRepository.findOne({
@@ -49,6 +52,7 @@ export class TaskAssignment_Service {
                 },
             });
 
+
             if (!requesterAssignment) {
                 let response = {
                     status_code: 403,
@@ -58,6 +62,7 @@ export class TaskAssignment_Service {
                 }
                 return response;
             }
+            logger.info({ requesterAssignment }, 'requester assignment found')
 
             if (requesterAssignment.permission !== TaskPermission.OWNER) {
                 let response = {
@@ -109,6 +114,7 @@ export class TaskAssignment_Service {
                 existingAssignment.updated_at = new Date();
                 await this.taskAssignmentRepository.save(existingAssignment);
 
+
                 let response = {
                     status_code: 200,
                     status: 'success',
@@ -124,6 +130,17 @@ export class TaskAssignment_Service {
             newAssignment.permission = assignmentData.permission ?? TaskPermission.VIEW;
 
             await this.taskAssignmentRepository.save(newAssignment);
+
+            auditLog({
+                action: AuditAction.TASK_ASSIGNED,
+                resource: "Task_assignment",
+                resourceId: String(newAssignment.task_assignment_id),
+                metadata: {
+                    task_id: taskId,
+                    user_id: assignee.user_id,
+                    permission: assignmentData.permission
+                }
+            })
 
             return {
                 status_code: 201,

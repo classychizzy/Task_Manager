@@ -6,6 +6,8 @@ import { User_entity } from '../entities/user_entity';
 import { UpdateProjectDTO } from '../dto/updateproject_dto'
 import { getPagination } from '../utils/pagination';
 import { logger } from '../lib/logger';
+import { AuditAction } from '../enums/auditActions';
+import { auditLog } from '../utils/auditlogs';
 export class Project_service {
     private ProjectRepository: typeof ProjectRepository;
     private UserRepository: typeof UserRepository;
@@ -23,15 +25,47 @@ export class Project_service {
             where: {
                 user_id: userid
             }
+
         });
+
+
         if (!user) {
-            throw new Error('User not found');
+            let response = {
+                status_code: 404,
+                status: 'failed',
+                message: 'User not found',
+                data: null
+            }
+            return response
         }
+        logger.info({ user_id: user.user_id }, 'user found')
+
+        //check if project already exists
+        const project = await this.ProjectRepository.findOne({
+            where: {
+                name: CreateProjectDTO.name,
+                description: CreateProjectDTO.description,
+                is_deleted: false
+            },
+            relations: ["user"]
+        });
+
+        if (project) {
+            let response = {
+                status_code: 400,
+                status: 'failed',
+                message: 'Project already exists',
+                data: null
+            }
+            return response
+        }
+
+        logger.debug({ project }, 'project already exists');
 
         const newProject = new Project_entity();
         logger.info({ projectId: newProject.project_id }, 'New project instance created');
         /* this also works
-        const project = await this.ProjectRepository.findOne({
+        const newproject = await this.ProjectRepository.findOne({
              where: {
                  name: CreateProjectDTO.name,
                  description: CreateProjectDTO.description,
@@ -41,9 +75,20 @@ export class Project_service {
         newProject.name = CreateProjectDTO.name;
         newProject.description = CreateProjectDTO.description;
         newProject.user = user;
-        logger.info({ name: newProject.name, userId: user.user_id }, 'Project entity populated');
+        logger.info({ name: newProject.name, userId: user!.user_id }, 'Project entity populated');
 
         await this.ProjectRepository.save(newProject);
+
+        auditLog({
+            action: AuditAction.PROJECT_CREATED,
+            userId: userid,
+            resource: "Project",
+            resourceId: String(newProject.project_id),
+            metadata: {
+                name: newProject.name,
+                description: newProject.description,
+            }
+        })
         return newProject;
 
 
@@ -221,6 +266,8 @@ export class Project_service {
                 return response
             }
 
+            logger.debug({ project }, "project found")
+
             if (updateData.name) {
                 project.name = updateData.name;
             }
@@ -233,6 +280,17 @@ export class Project_service {
             project.updated_at = new Date();
 
             await this.ProjectRepository.save(project);
+
+            auditLog({
+                action: AuditAction.PROJECT_UPDATED,
+                userId: userId,
+                resource: "Project",
+                resourceId: String(projectId),
+                metadata: {
+                    name: project.name,
+                    description: project.description,
+                }
+            })
 
             let response = {
                 status_code: 200,
@@ -259,7 +317,6 @@ export class Project_service {
                 where: {
                     project_id: projectId,
 
-
                     user: {
                         user_id: userId
                     }
@@ -276,6 +333,7 @@ export class Project_service {
                 return response
 
             }
+            logger.debug({ project }, "project found for deletion")
 
 
             if (project.is_deleted) {
@@ -295,6 +353,17 @@ export class Project_service {
 
             logger.info({ projectId, userId }, 'Project soft deleted');
             await this.ProjectRepository.save(project);
+
+            auditLog({
+                action: AuditAction.PROJECT_DELETED,
+                userId: userId,
+                resource: "Project",
+                resourceId: String(projectId),
+                metadata: {
+                    name: project.name,
+                    description: project.description,
+                }
+            })
 
 
             let response = {

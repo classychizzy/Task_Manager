@@ -5,6 +5,7 @@ const express_1 = require("express");
 const auth_service_1 = require("../services/auth/auth_service");
 const jwt_auth_1 = require("../middlewares/jwt.auth");
 const logger_1 = require("../lib/logger");
+const ratelimiter_1 = require("../middlewares/ratelimiter");
 class Auth_Controller {
     constructor() {
         this.authService = new auth_service_1.Auth_Service();
@@ -95,7 +96,7 @@ class Auth_Controller {
         this.router.post('/register', 
         //add middleware here
         this.registerUser.bind(this));
-        this.router.post('/login', this.loginUser.bind(this));
+        this.router.post('/login', ratelimiter_1.authLimiter, this.loginUser.bind(this));
         this.router.post('/user', 
         //add middleware here
         this.findUserByEmail.bind(this));

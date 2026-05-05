@@ -4,13 +4,15 @@ import express from 'express';
 //import bodyParser from 'body-parser';
 import cors from 'cors';
 import AppDataSource from './ormconfig';
-import { Auth_Controller } from './controllers/auth_controller';
+
 import helmet from 'helmet';
+
 import { Request, Response } from 'express';
 import * as http from 'http';
 import { globalLimiter } from './middlewares/ratelimiter';
 
-//import { register } from 'module';
+import { healthController } from './controllers/health_controller';
+import { Auth_Controller } from './controllers/auth_controller';
 import { authenticateToken } from './middlewares/jwt.auth';
 import { Project_Controller } from './controllers/project_controller';
 import { Task_Controller } from './controllers/task_controller';
@@ -41,6 +43,14 @@ class App {
         this.app.use(express.urlencoded({ extended: true }));
         this.app.use(requestLogger); //request logger middleware
         this.app.use(globalLimiter); //global rate limiter
+
+        this.app.use((err: any, req: Request, res: Response, next: any) => {
+            console.error(err.stack) // this shows you the real error
+            res.status(500).json({ message: err.message })
+        })
+
+        this.app.use("/health", healthController);
+
     }
 
 
@@ -65,7 +75,7 @@ class App {
             new TaskAssignment_Controller().router)
 
         this.app.use(
-            '/api/v1',
+            '/api/v1/comments',
             authenticateToken,
             new Comment_Controller().router
         );

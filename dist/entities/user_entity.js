@@ -57,9 +57,13 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User_entity.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false }),
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
     __metadata("design:type", Boolean)
 ], User_entity.prototype, "is_deleted", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', default: null, nullable: true }),
+    __metadata("design:type", Object)
+], User_entity.prototype, "deleted_at", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)

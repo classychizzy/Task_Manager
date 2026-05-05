@@ -9,6 +9,8 @@ const Taskpermission_enum_1 = require("../enums/Taskpermission_enum");
 const task_assignment_repository_1 = require("../repositories/task_assignment_repository");
 const pagination_1 = require("../utils/pagination");
 const logger_1 = require("../lib/logger");
+const auditActions_1 = require("../enums/auditActions");
+const auditlogs_1 = require("../utils/auditlogs");
 class Task_Service {
     constructor() {
         this.TaskRepository = task_repository_1.TaskRepository;
@@ -26,6 +28,7 @@ class Task_Service {
                 },
                 relations: ["user"]
             });
+            logger_1.logger.debug({ project }, 'Project fetched');
             if (!project) {
                 let response = {
                     status_code: 404,
@@ -45,10 +48,29 @@ class Task_Service {
                 };
                 return response;
             }
+            // Check if task already exists in this project
+            const existingTask = await this.TaskRepository.findOne({
+                where: {
+                    title: createTaskDTO.title,
+                    project: { project_id: projectId },
+                    is_deleted: false,
+                },
+            });
+            logger_1.logger.debug({ existingTask }, 'Existing task fetched');
+            if (existingTask) {
+                return {
+                    status_code: 409,
+                    status: 'failed',
+                    message: `Task with title "${createTaskDTO.title}" already exists in this project`,
+                    data: null
+                };
+            }
             let dueDate = null;
             if (createTaskDTO.dueDate) {
                 dueDate = (0, dateparser_1.parseFlexibleDate)(createTaskDTO.dueDate);
+                logger_1.logger.debug({ dueDate }, 'Due date parsed');
                 if (!dueDate) {
+                    logger_1.logger.error({ dueDate: createTaskDTO.dueDate }, 'Invalid date format');
                     return {
                         status_code: 400,
                         status: 'failed',
@@ -68,7 +90,21 @@ class Task_Service {
             newTask.project = project;
             newTask.User = project.user;
             newTask.user_id = project.user.user_id;
+            logger_1.logger.debug({ newTask }, 'New task created');
             await this.TaskRepository.save(newTask);
+            (0, auditlogs_1.auditLog)({
+                action: auditActions_1.AuditAction.TASK_CREATED,
+                userId: userId,
+                resource: "Task",
+                resourceId: String(newTask.task_id),
+                metadata: {
+                    title: newTask.title,
+                    description: newTask.description,
+                    dueDate: newTask.dueDate,
+                    status: newTask.status,
+                    project_id: projectId
+                }
+            });
             const ownerAssignment = this.Task_assignment_Repository.create({
                 task: newTask,
                 user: project.user,
@@ -193,6 +229,7 @@ class Task_Service {
                     }
                 }
             });
+            logger_1.logger.debug({ task }, 'Task fetched');
             if (!task) {
                 let response = {
                     status_code: 404,
@@ -200,16 +237,20 @@ class Task_Service {
                     message: 'Task not found',
                     data: null
                 };
+                logger_1.logger.debug({ response }, 'Task not found');
                 return response;
             }
             if (updateData.title) {
                 task.title = updateData.title;
+                logger_1.logger.debug({ task }, 'Task title updated');
             }
             if (updateData.description) {
                 task.description = updateData.description;
+                logger_1.logger.debug({ task }, 'Task description updated');
             }
             if (updateData.status) {
                 task.status = updateData.status;
+                logger_1.logger.debug({ task }, 'Task status updated');
             }
             if (updateData.dueDate) {
                 const parsedDate = (0, dateparser_1.parseFlexibleDate)(updateData.dueDate);
@@ -220,6 +261,20 @@ class Task_Service {
             task.updated_at = new Date();
             await this.TaskRepository.save(task);
             logger_1.logger.info({ taskId, userId }, 'Task updated successfully');
+            (0, auditlogs_1.auditLog)({
+                action: auditActions_1.AuditAction.TASK_UPDATED,
+                userId: userId,
+                resource: "Task",
+                resourceId: String(task.task_id),
+                metadata: {
+                    updatedFields: {
+                        title: task.title,
+                        description: task.description,
+                        status: task.status,
+                        dueDate: task.dueDate,
+                    }
+                }
+            });
             let response = {
                 status_code: 200,
                 status: 'success',
@@ -251,6 +306,7 @@ class Task_Service {
                     }
                 }
             });
+            logger_1.logger.debug('task found');
             if (!task) {
                 let response = {
                     status_code: 404,

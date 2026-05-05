@@ -15,6 +15,8 @@ const refresh_entity_1 = require("../../entities/refresh_entity");
 const dotenv_1 = __importDefault(require("dotenv"));
 const typeorm_1 = require("typeorm");
 const logger_1 = require("../../lib/logger");
+const auditlogs_1 = require("../../utils/auditlogs");
+const auditActions_1 = require("../../enums/auditActions");
 dotenv_1.default.config();
 //handles all user and authentication issues
 //create a service class where you will write your queries and logics
@@ -73,12 +75,22 @@ class Auth_Service {
             newUser.username = userData.username;
             newUser.email = userData.email;
             newUser.password = userData.password;
-            //newUser.hashPassword();
-            logger_1.logger.info({ email: newUser.email, firstName: newUser.firstName, lastName: newUser.lastName, username: newUser.username }, 'User created successfully');
+            // call then hashing here
+            newUser.hashPassword();
             //newUser.password = await hashPassword( userData.password); // In a real app, hash this!
             // await AppDataSource.manager.save(newUser);
             await this.userRepository.save(newUser);
             // return newUser;
+            (0, auditlogs_1.auditLog)({
+                action: auditActions_1.AuditAction.USER_REGISTER,
+                userId: newUser.user_id,
+                resource: "AUTH",
+                resourceId: newUser.user_id.toString(),
+                metadata: {
+                    email: newUser.email,
+                    username: newUser.username
+                }
+            });
             const { password, ...userWithoutPassword } = newUser;
             let response = {
                 status_code: 200,
@@ -185,6 +197,16 @@ class Auth_Service {
             });
             logger_1.logger.debug({ userId: user?.user_id, email: user?.email }, 'User fetched for login');
             if (!user) {
+                (0, auditlogs_1.auditLog)({
+                    action: auditActions_1.AuditAction.LOGIN_FAILED_USER_NOT_FOUND,
+                    userId: user.user_id,
+                    resource: "AUTH",
+                    resourceId: user.user_id.toString(),
+                    metadata: {
+                        email: user.email,
+                        username: user.username,
+                    }
+                });
                 let response = {
                     status_code: 404,
                     status: 'failed',
@@ -212,6 +234,16 @@ class Auth_Service {
                 };
                 return response;
             }
+            (0, auditlogs_1.auditLog)({
+                action: auditActions_1.AuditAction.LOGIN_FAILED_INVALID_PASSWORD,
+                userId: user.user_id,
+                resource: "AUTH",
+                resourceId: user.user_id.toString(),
+                metadata: {
+                    email: user.email,
+                    username: user.username,
+                }
+            });
             const payload = {
                 id: user.user_id,
                 email: user.email,
@@ -243,6 +275,17 @@ class Auth_Service {
                 newRefreshToken.tokenHash = refreshToken;
                 await this.RefreshRepository.save(newRefreshToken);
             }
+            (0, auditlogs_1.auditLog)({
+                action: auditActions_1.AuditAction.LOGIN_SUCCESS,
+                userId: user.user_id,
+                resource: "AUTH",
+                resourceId: user.user_id.toString(),
+                metadata: {
+                    email: user.email,
+                    username: user.username,
+                }
+            });
+            const { password, ...userWithoutPassword } = user;
             let response = {
                 status_code: 200,
                 status: 'success',
@@ -250,7 +293,7 @@ class Auth_Service {
                 data: {
                     accessToken: accessToken,
                     refreshToken: refreshToken,
-                    user: user
+                    user: userWithoutPassword
                 }
             };
             return response;
@@ -394,6 +437,16 @@ class Auth_Service {
             token.revoked_at = new Date();
             logger_1.logger.info({ token: token.revoked_at }, 'logout completed and token was revoked');
             await this.RefreshRepository.save(token);
+            (0, auditlogs_1.auditLog)({
+                userId: userId,
+                action: auditActions_1.AuditAction.LOGOUT,
+                resource: "User",
+                resourceId: String(userId),
+                metadata: {
+                    email: token?.user?.email,
+                    username: token?.user?.username
+                }
+            });
             let response = {
                 status_code: 200,
                 status: 'success',

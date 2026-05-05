@@ -262,6 +262,18 @@ export class Auth_Service {
             logger.debug({ userId: user?.user_id, email: user?.email }, 'User fetched for login');
 
             if (!user) {
+                auditLog({
+                    action: AuditAction.LOGIN_FAILED_USER_NOT_FOUND,
+                    userId: user!.user_id,
+                    resource: "AUTH",
+                    resourceId: user!.user_id.toString(),
+                    metadata: {
+                        email: user!.email,
+                        username: user!.username,
+                    }
+                });
+
+
                 let response = {
                     status_code: 404,
                     status: 'failed',
@@ -271,16 +283,7 @@ export class Auth_Service {
                 return response;
             }
 
-            auditLog({
-                action: AuditAction.LOGIN_FAILED_USER_NOT_FOUND,
-                userId: user.user_id,
-                resource: "AUTH",
-                resourceId: user.user_id.toString(),
-                metadata: {
-                    email: user.email,
-                    username: user.username,
-                }
-            });
+
 
             // const ispasswordValid = await comparePassword(userData.password, user!.password);
             // if (!user || !ispasswordValid) {
@@ -549,6 +552,17 @@ export class Auth_Service {
 
             logger.info({ token: token.revoked_at }, 'logout completed and token was revoked')
             await this.RefreshRepository.save(token);
+
+            auditLog({
+                userId: userId,
+                action: AuditAction.LOGOUT,
+                resource: "User",
+                resourceId: String(userId),
+                metadata: {
+                    email: token?.user?.email,
+                    username: token?.user?.username
+                }
+            });
 
             let response = {
                 status_code: 200,

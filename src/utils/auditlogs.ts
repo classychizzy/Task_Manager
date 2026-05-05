@@ -1,5 +1,6 @@
 
-import { logger } from "../lib/logger";
+
+import { auditLogger } from "../lib/logger";
 import { AuditAction } from "../enums/auditActions";
 
 export function auditLog({
@@ -14,8 +15,9 @@ export function auditLog({
   resource: string;
   resourceId?: string;
   metadata?: Record<string, any>;
+
 }) {
-  logger.info({
+  auditLogger.info({
     type: "AUDIT",
     action,
     userId,

@@ -12,7 +12,8 @@ services:
     environment:
       - RUN_CRON=false
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - task-network
@@ -30,7 +31,8 @@ services:
     environment:
       - RUN_CRON=true
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - task-network
@@ -43,14 +45,17 @@ services:
   postgres-db:
     container_name: postgres-db
     image: postgres:latest
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - docker.env
     networks:
       - task-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
  
   pgadmin:
     container_name: pgadmin
@@ -70,14 +75,17 @@ services:
   postgres_test:
     container_name: postgres_test
     image: postgres:latest
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: task_manager_test
     networks:
       - task-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin_test:
     container_name: pgadmin_test
@@ -88,7 +96,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     depends_on:
-      - postgres_test
+      postgres_test:
+        condition: service_healthy
     networks:
       - task-network
 

@@ -24,11 +24,11 @@ __decorate([
     __metadata("design:type", Number)
 ], Refresh_entity.prototype, "user_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'varchar' }),
     __metadata("design:type", String)
 ], Refresh_entity.prototype, "tokenHash", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'timestamp' }),
     __metadata("design:type", Date)
 ], Refresh_entity.prototype, "expires_at", void 0);
 __decorate([
