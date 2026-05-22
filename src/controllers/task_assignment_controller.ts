@@ -2,6 +2,8 @@ import { TaskAssignment_Service } from "../services/task_assignments_service";
 import { Router, Response } from 'express';
 import { AuthenticatedRequest } from "../types/express/auth-request";
 import { logger } from "../lib/logger";
+import { validateDto } from "../middlewares/validateDto";
+import { AssignTaskDTO } from "../dto/assign_task_dto";
 
 
 export class TaskAssignment_Controller {
@@ -190,14 +192,14 @@ export class TaskAssignment_Controller {
     }
 
     private initializeRoutes() {
-        this.router.post('/assign/:taskId', this.AssignUsertoTask.bind(this));
-        this.router.put('/update/:taskId/:userId', this.UpdatePermission.bind(this));
+        this.router.post('/assign/:taskId', validateDto(AssignTaskDTO), this.AssignUsertoTask.bind(this));
+        this.router.put('/update/:taskId/:userId', validateDto(AssignTaskDTO), this.UpdatePermission.bind(this));
         this.router.get('/permission/:taskId', this.getUserTaskPermission.bind(this));
         this.router.delete('/remove/:taskId', this.removeUserFromTask.bind(this));
         this.router.get('/assignments/:taskId', this.getTaskAssignments.bind(this));
         this.router.get('/assignedtasks', this.getUserassignedtasks.bind(this));
         this.router.get('/assignments/user/:userId', this.getAssignmentsForOtherUser.bind(this));
-        this.router.post('/bulkassign/:taskId', this.bulkAssignUsers.bind(this));
-        this.router.put('/transfer/:taskId', this.TransferOwnership.bind(this));
+        this.router.post('/bulkassign/:taskId', validateDto(AssignTaskDTO), this.bulkAssignUsers.bind(this));
+        this.router.put('/transfer/:taskId', validateDto(AssignTaskDTO), this.TransferOwnership.bind(this));
     }
 }

@@ -42,11 +42,11 @@ const express_1 = __importDefault(require("express"));
 //import bodyParser from 'body-parser';
 const cors_1 = __importDefault(require("cors"));
 const ormconfig_1 = __importDefault(require("./ormconfig"));
-const auth_controller_1 = require("./controllers/auth_controller");
 const helmet_1 = __importDefault(require("helmet"));
 const http = __importStar(require("http"));
 const ratelimiter_1 = require("./middlewares/ratelimiter");
-//import { register } from 'module';
+const health_controller_1 = require("./controllers/health_controller");
+const auth_controller_1 = require("./controllers/auth_controller");
 const jwt_auth_1 = require("./middlewares/jwt.auth");
 const project_controller_1 = require("./controllers/project_controller");
 const task_controller_1 = require("./controllers/task_controller");
@@ -80,6 +80,7 @@ class App {
             res.status(200).send("Welcome to Task Manager");
         });
         console.log('Initializing controllers...');
+        this.app.use("/api/v1/health", new health_controller_1.HealthController().router);
         //base route for all initialized routes in the controller
         this.app.use('/api/v1/auth', new auth_controller_1.Auth_Controller().router);
         //route handler for projects

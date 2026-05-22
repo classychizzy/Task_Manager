@@ -4,7 +4,7 @@ services:
     build: .
     container_name: task-manager-app
     ports:
-    - "3000:3000"
+      - "3000:3000"
     volumes:
       - app_data:/data/app
     env_file:
@@ -12,8 +12,7 @@ services:
     environment:
       - RUN_CRON=false
     depends_on:
-      postgres-db:
-        condition: service_healthy
+      - postgres-db
     restart: unless-stopped
     networks:
       - task-network
@@ -22,8 +21,8 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-  
-  worker: 
+
+  worker:
     build: .
     container_name: task-manager-worker
     env_file:
@@ -31,8 +30,7 @@ services:
     environment:
       - RUN_CRON=true
     depends_on:
-      postgres-db:
-        condition: service_healthy
+      - postgres-db
     restart: unless-stopped
     networks:
       - task-network
@@ -51,12 +49,7 @@ services:
       - docker.env
     networks:
       - task-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
- 
+
   pgadmin:
     container_name: pgadmin
     image: dpage/pgadmin4
@@ -81,11 +74,6 @@ services:
       POSTGRES_DB: task_manager_test
     networks:
       - task-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   pgadmin_test:
     container_name: pgadmin_test
@@ -96,8 +84,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: admin
     depends_on:
-      postgres_test:
-        condition: service_healthy
+      - postgres_test
     networks:
       - task-network
 

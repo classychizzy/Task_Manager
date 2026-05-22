@@ -61,7 +61,6 @@ class Project_service {
         newProject.name = CreateProjectDTO.name;
         newProject.description = CreateProjectDTO.description;
         newProject.user = user;
-        //newProject.user = user;
         logger_1.logger.info({ name: newProject.name, userId: user.user_id }, 'Project entity populated');
         await this.ProjectRepository.save(newProject);
         (0, auditlogs_1.auditLog)({

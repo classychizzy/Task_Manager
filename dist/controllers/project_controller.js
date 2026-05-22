@@ -3,7 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Project_Controller = void 0;
 const express_1 = require("express");
 const project_service_1 = require("../services/project_service");
+const validateDto_1 = require("../middlewares/validateDto");
 const logger_1 = require("../lib/logger");
+const create_project_dto_1 = require("../dto/create_project_dto");
+const updateproject_dto_1 = require("../dto/updateproject_dto");
 class Project_Controller {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -113,10 +116,10 @@ class Project_Controller {
         }
     }
     initializeRoutes() {
-        this.router.post('/create', this.createProject.bind(this));
+        this.router.post('/create', (0, validateDto_1.validateDto)(create_project_dto_1.CreateProjectDTO), this.createProject.bind(this));
         this.router.get('/all', this.getAllProjects.bind(this));
         this.router.get('/:projectId', this.getProjectById.bind(this));
-        this.router.put('/:projectId/update', this.UpdateProject.bind(this));
+        this.router.put('/:projectId/update', (0, validateDto_1.validateDto)(updateproject_dto_1.UpdateProjectDTO), this.UpdateProject.bind(this));
         this.router.delete('/:projectId/delete', this.DeleteProject.bind(this));
         this.router.put('/:projectId/restore', this.restoreProject.bind(this));
     }

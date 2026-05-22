@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { Project_service } from '../services/project_service'
 import { AuthenticatedRequest } from '../types/express/auth-request';
+import { validateDto } from '../middlewares/validateDto';
 import { logger } from '../lib/logger';
+import { CreateProjectDTO } from '../dto/create_project_dto';
+import { UpdateProjectDTO } from '../dto/updateproject_dto';
 
 export class Project_Controller {
     public router: Router;
@@ -129,10 +132,10 @@ export class Project_Controller {
 
 
     private initializeRoutes() {
-        this.router.post('/create', this.createProject.bind(this));
+        this.router.post('/create', validateDto(CreateProjectDTO), this.createProject.bind(this));
         this.router.get('/all', this.getAllProjects.bind(this));
         this.router.get('/:projectId', this.getProjectById.bind(this));
-        this.router.put('/:projectId/update', this.UpdateProject.bind(this));
+        this.router.put('/:projectId/update', validateDto(UpdateProjectDTO), this.UpdateProject.bind(this));
         this.router.delete('/:projectId/delete', this.DeleteProject.bind(this));
         this.router.put('/:projectId/restore', this.restoreProject.bind(this));
 

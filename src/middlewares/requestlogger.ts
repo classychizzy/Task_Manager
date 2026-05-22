@@ -8,9 +8,9 @@ export const requestLogger = pinoHttp({
     genReqId: function (req) {
         return req.headers["x-request-id"] || require("crypto").randomUUID();
     },
-    customLogLevel: function (res, err) {
-        if (res.statusCode !== undefined && res.statusCode >= 500 || err) return "error";
-        if (res.statusCode !== undefined && res.statusCode >= 400) return "warn";
+    customLogLevel: function (req, res, err) {
+        if (err || (res.statusCode && res.statusCode >= 500)) return "error";
+        if (res.statusCode && res.statusCode >= 400) return "warn";
         return "info";
     },
     customSuccessMessage: function (req, res) {

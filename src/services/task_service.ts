@@ -9,6 +9,7 @@ import { getPagination } from '../utils/pagination';
 import { logger } from '../lib/logger';
 import { AuditAction } from '../enums/auditActions';
 import { auditLog } from '../utils/auditlogs';
+import { successResponse, errorResponse } from '../utils/responsehelper';
 
 export class Task_Service {
     private TaskRepository: typeof TaskRepository;
@@ -37,29 +38,18 @@ export class Task_Service {
             logger.debug({ project }, 'Project fetched');
 
             if (!project) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Project not found',
-                    data: null
-
-                }
-                return response;
+                return errorResponse(404, "project not found");
 
 
             }
+
 
             // Ensure project has a user
             if (!project.user) {
-                let response = {
-                    status_code: 500,
-                    status: 'failed',
-                    message: 'Project user not found',
-                    data: null
-                }
-                return response;
+                return errorResponse(500, "project user not found");
             }
 
+            logger.info({ project }, 'Project fetched successfully');
             // Check if task already exists in this project
             const existingTask = await this.TaskRepository.findOne({
                 where: {
@@ -71,12 +61,8 @@ export class Task_Service {
             logger.debug({ existingTask }, 'Existing task fetched');
 
             if (existingTask) {
-                return {
-                    status_code: 409,
-                    status: 'failed',
-                    message: `Task with title "${createTaskDTO.title}" already exists in this project`,
-                    data: null
-                };
+                return errorResponse(409, "task with this title already exists in this project");
+
             }
 
 
@@ -87,12 +73,7 @@ export class Task_Service {
 
                 if (!dueDate) {
                     logger.error({ dueDate: createTaskDTO.dueDate }, 'Invalid date format');
-                    return {
-                        status_code: 400,
-                        status: 'failed',
-                        message: 'Invalid date format. Accepted formats: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY',
-                        data: null
-                    };
+                    return errorResponse(400, "invalid date format");
                 }
             }
 
@@ -167,34 +148,19 @@ export class Task_Service {
                 }
             });
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Tasks retrieved successfully',
-                data: tasks,
-                meta: {
+
+            return successResponse(200, "tasks retrieved successfully", { tasks, meta: {
                     total,
                     page: currentPage,
                     limit: pageSize,
                     totalPages: Math.ceil(total / pageSize),
-                },
-            }
-            return response;
+                }, });
 
         } catch (error) {
             logger.error({ err: error, userId, projectId }, 'Error retrieving all tasks');
-            let errorMessage = "unable to retrieve tasks";
-            if (error instanceof Error) {
-                errorMessage = error.message;
-            }
-            let response = {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-            return response;
+            
+            
+            return errorResponse(500, "unable to retrieve tasks");
         }
     }
 
@@ -214,37 +180,19 @@ export class Task_Service {
             });
 
             if (!task) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Task not found',
-                    data: null
-                }
-                return response;
+                
+                return errorResponse(404, "task not found");
             }
-
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Task retrieved successfully',
-                data: task
-            }
-            return response;
+            return successResponse(200, "task retrieved successfully", task);
+            
+            
 
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error retrieving task by ID');
-            let errorMessage = "unable to retrieve task";
-            if (error instanceof Error) {
-                errorMessage = error.message;
-            }
-            let response = {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-            return response;
+            
+            
+            return errorResponse(500, "unable to retrieve task");
+           
         }
     }
 
@@ -265,14 +213,8 @@ export class Task_Service {
             logger.debug({ task }, 'Task fetched');
 
             if (!task) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Task not found',
-                    data: null
-                }
-                logger.debug({ response }, 'Task not found');
-                return response;
+                
+               return errorResponse(404, "task not found");
             }
 
 
@@ -318,22 +260,12 @@ export class Task_Service {
                 }
             });
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Task updated successfully',
-                data: task
-            }
-            return response;
+            
+            return successResponse(200, "task updated successfully", task);
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error updating task');
-            return {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, "unable to update task");
+               
         }
     }
 
@@ -352,13 +284,7 @@ export class Task_Service {
 
             logger.debug('task found')
             if (!task) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Task not found',
-                    data: null
-                }
-                return response;
+               return errorResponse(404, "task not found");
             }
 
             // soft delete implementation
@@ -369,22 +295,12 @@ export class Task_Service {
             await this.TaskRepository.save(task);
 
             logger.info({ taskId, userId }, 'Task soft deleted');
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Task deleted successfully',
-                data: null
-            }
-            return response;
+            
+            return successResponse(200, "task deleted successfully", null);
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error deleting task');
-            return {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, "unable to delete task");
+               
         }
     }
 
@@ -404,12 +320,7 @@ export class Task_Service {
             })
 
             if (!restoreTask) {
-                let response = {
-                    status_code: 404,
-                    message: 'Task not found',
-                    data: null
-                }
-                return response
+                return errorResponse(404, "task not found");
 
             }
 
@@ -420,20 +331,11 @@ export class Task_Service {
             await this.TaskRepository.save(restoreTask);
 
             logger.info({ taskId, userId }, 'Task restored');
-            let response = {
-                status_code: 200,
-                message: 'Task restored successfully',
-                data: restoreTask
-            }
-            return response;
+            return successResponse(200, "task restored successfully", restoreTask);
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error restoring task');
-            return {
-                status_code: 500,
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, "unable to restore task");
+                
         }
     }
 }

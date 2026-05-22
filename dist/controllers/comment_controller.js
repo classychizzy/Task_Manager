@@ -4,6 +4,8 @@ exports.Comment_Controller = void 0;
 const comment_service_1 = require("../services/comment_service");
 const express_1 = require("express");
 const logger_1 = require("../lib/logger");
+const validateDto_1 = require("../middlewares/validateDto");
+const comment_dto_1 = require("../dto/comment_dto");
 class Comment_Controller {
     constructor() {
         this.router = (0, express_1.Router)();
@@ -14,16 +16,16 @@ class Comment_Controller {
         try {
             const taskId = Number(req.params.taskId);
             const userId = req.user.id;
-            const { content, priority_level } = req.body;
+            const { content } = req.body;
             logger_1.logger.debug({ taskId, userId }, 'createComment called');
-            if (!content || !priority_level) {
+            if (!content) {
                 return res.status(400).json({
                     status_code: 400,
-                    message: 'Content and priority level are required',
+                    message: 'Content is required',
                     data: null
                 });
             }
-            const result = await this.commentService.createComment(taskId, userId, content, priority_level);
+            const result = await this.commentService.createComment(taskId, userId, content);
             return res.status(result.status_code).json(result);
         }
         catch (error) {
@@ -61,9 +63,9 @@ class Comment_Controller {
         try {
             const commentId = Number(req.params.commentId);
             const userId = req.user.id;
-            const { content, priority_level } = req.body;
+            const { content } = req.body;
             logger_1.logger.debug({ commentId, userId }, 'updateComment called');
-            const result = await this.commentService.updateComment(commentId, userId, content, priority_level);
+            const result = await this.commentService.updateComment(commentId, userId, content);
             return res.status(result.status_code).json(result);
         }
         catch (error) {
@@ -72,7 +74,7 @@ class Comment_Controller {
         }
     }
     initializeRoutes() {
-        this.router.post('/comments/:taskId', this.createComment.bind(this));
+        this.router.post('/comments/:taskId', (0, validateDto_1.validateDto)(comment_dto_1.CommentDTO), this.createComment.bind(this));
         this.router.get('/comments/:taskId', this.getCommentsForTask.bind(this));
         this.router.delete('/comments/:commentId', this.deleteComment.bind(this));
         this.router.put('/comments/:commentId', this.updateComment.bind(this));

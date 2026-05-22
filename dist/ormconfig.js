@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const typeorm_1 = require("typeorm");
 const dotenv = __importStar(require("dotenv"));
+const path_1 = require("path");
 //import * as dotenv dotenv';
 dotenv.config({ path: ['.env.local', '.env'] });
 // console.log(`Hello ${process.env.HELLO}`);
@@ -55,13 +56,9 @@ const AppDataSource = new typeorm_1.DataSource({
     username: username,
     password: password,
     database: database,
-    synchronize: process.env.NODE_ENV === 'test',
+    synchronize: true, // process.env.NODE_ENV === 'test',
     logging: false, //["query", "error"] use this when logging errors related to db mismatch
-    entities: [
-        process.env.DEPLOYMENT_ENV === 'production' ?
-            "dist/entities/*{.js,.ts}"
-            : "src/entities/*{.js,.ts}",
-    ],
-    migrations: ["src/migration/*{.ts}"],
+    entities: [(0, path_1.join)(__dirname, 'entities', '*{.js,.ts}')],
+    migrations: [(0, path_1.join)(__dirname, 'migration', '*{.js,.ts}')],
 });
 exports.default = AppDataSource;

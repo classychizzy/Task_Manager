@@ -17,6 +17,9 @@ import { IsNull } from "typeorm";
 import { logger } from "../../lib/logger";
 import { auditLog } from "../../utils/auditlogs";
 import { AuditAction } from "../../enums/auditActions";
+import { LoginDto } from "../../dto/login_dto";
+import { successResponse, errorResponse } from "../../utils/responsehelper";
+import { UpdateUserDTO } from "../../dto/update_user_dto";
 dotenv.config();
 
 
@@ -56,13 +59,8 @@ export class Auth_Service {
         });
 
         if (existingUser) {
-            let response = {
-                status_code: 400,
-                status: 'failed',
-                message: 'User already exists',
-                data: null
-            }
-            return response;
+            const result = errorResponse(400, 'User already exists');
+            return result;
         }
 
         // Here you would typically hash the password before saving
@@ -80,15 +78,7 @@ export class Auth_Service {
 
 
             if (!IsEmailValid) {
-
-                let response = {
-                    status_code: 400,
-                    status: 'failed',
-                    message: 'Enter a valid email address',
-                    data: null
-                }
-
-                return response;
+                return errorResponse(400, 'Enter a valid email address');
             }
 
             //create an instance of user entity
@@ -125,14 +115,7 @@ export class Auth_Service {
 
             const { password, ...userWithoutPassword } = newUser;
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'User registered successfully',
-                data: userWithoutPassword
-            }
-
-            return response;
+            return successResponse(200, 'User registered successfully', userWithoutPassword);
 
         } catch (error) {
             logger.error({ err: error }, 'Error during user registration');
@@ -142,16 +125,7 @@ export class Auth_Service {
                 errorMessage = error.message;
             }
 
-            let response = {
-                // It's better to use a proper error status code
-                status_code: 500,
-                status: 'failed',
-                message: 'User registration failed. Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-
-            return response;
+            return errorResponse(500, 'User registration failed. Internal server error.', errorMessage);
 
         }
     }
@@ -164,12 +138,7 @@ export class Auth_Service {
         try {
 
             if (!userData?.email) {
-                return {
-                    status_code: 400,
-                    status: 'failed',
-                    message: 'Email is required',
-                    data: null,
-                };
+                return errorResponse(400, 'Email is required');
             }
 
             const user = await this.userRepository.findOne(
@@ -203,14 +172,7 @@ export class Auth_Service {
 
             if (!user) {
 
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'User not found',
-                    data: null
-                }
-
-                return response;
+                return errorResponse(404, 'User not found');
 
             }
 
@@ -233,22 +195,13 @@ export class Auth_Service {
                 errorMessage = error.message;
             }
 
-            let response = {
-                // It's better to use a proper error status code
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-
-            return response;
+            return errorResponse(500, 'Internal server error.', errorMessage);
 
 
         }
     }
 
-    async loginUser(userData: UserDTO) {
+    async loginUser(userData: LoginDto) {
         try {
             // const isemailValid = validateEmail(userData.email);
 
@@ -274,13 +227,7 @@ export class Auth_Service {
                 });
 
 
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'User not found',
-                    data: null
-                }
-                return response;
+                return errorResponse(404, 'User not found');
             }
 
 
@@ -297,13 +244,8 @@ export class Auth_Service {
             // }
 
             if (!user.checkIfUnencryptedPasswordIsValid(userData.password)) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'User not found',
-                    data: null
-                }
-                return response;
+               
+                return errorResponse(404, 'User not found');
             }
 
             auditLog({
@@ -365,19 +307,12 @@ export class Auth_Service {
             });
 
             const { password, ...userWithoutPassword } = user;
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'User logged in successfully',
-                data: {
-                    accessToken: accessToken,
-                    refreshToken: refreshToken,
-                    user: userWithoutPassword
-                }
+            const data = {
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                user: userWithoutPassword
             }
-
-            return response;
-
+            return successResponse(200, 'User logged in successfully', data);
 
 
         }
@@ -389,16 +324,7 @@ export class Auth_Service {
                 errorMessage = error.message;
             }
 
-            let response = {
-                // It's better to use a proper error status code
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-
-            return response;
+            return errorResponse(500, 'Internal server error.', errorMessage);
         }
 
 
@@ -409,13 +335,7 @@ export class Auth_Service {
 
         try {
             if (!refreshtoken || typeof refreshtoken !== "string") {
-                let response = {
-                    status_code: 400,
-                    status: 'failed',
-                    message: 'Refresh token is required',
-                    data: null
-                }
-                return response;
+                return errorResponse(400, 'Refresh token is required');
             }
 
             const token = await this.RefreshRepository.findOne({
@@ -429,23 +349,12 @@ export class Auth_Service {
             logger.debug({ userId: token?.user_id, expiresAt: token?.expires_at }, 'Refresh token found');
 
             if (!token) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Refresh token not found',
-                    data: null
-                }
-                return response;
+               
+                return errorResponse(404, 'Refresh token not found');
             }
             // check if token is expired
             if (token.expires_at < new Date()) {
-                let response = {
-                    status_code: 401,
-                    status: 'failed',
-                    message: 'Refresh token expired',
-                    data: null
-                }
-                return response;
+                return errorResponse(401, 'Refresh token expired');
             }
 
             //check if user exists an is active
@@ -459,13 +368,7 @@ export class Auth_Service {
 
             logger.info({ user: user }, 'user is active')
             if (!user) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'User not found',
-                    data: null
-                }
-                return response;
+                return errorResponse(404, 'User not found');
             }
 
             //generate new access token
@@ -486,18 +389,14 @@ export class Auth_Service {
             logger.info({ userId: token.user_id }, 'Refresh token rotated successfully');
             await this.RefreshRepository.save(token);
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Refresh token generated successfully',
-                data: {
+            const data = {
+               
                     accessToken: accessToken,
                     refreshToken: refreshToken,
                     user: user
-                }
             }
 
-            return response;
+            return successResponse(200, 'Refresh token generated successfully', data);
 
 
 
@@ -513,16 +412,7 @@ export class Auth_Service {
                 errorMessage = error.message;
             }
 
-            let response = {
-                // It's better to use a proper error status code
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-
-            return response;
+            return errorResponse(500, 'Internal server error.', errorMessage);
         }
     }
 
@@ -539,13 +429,7 @@ export class Auth_Service {
             logger.debug({ userId: token?.user_id }, 'Token found for logout');
 
             if (!token) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Refresh token not found',
-                    data: null
-                }
-                return response;
+                return errorResponse(404, 'Refresh token not found');
             }
 
             token.revoked_at = new Date();
@@ -564,14 +448,7 @@ export class Auth_Service {
                 }
             });
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'User logged out successfully',
-                data: null
-            }
-
-            return response;
+            return successResponse(200, 'User logged out successfully', null);
 
         } catch (error) {
             logger.error({ err: error }, 'Error during user logout');
@@ -581,15 +458,7 @@ export class Auth_Service {
                 errorMessage = error.message;
             }
 
-            let response = {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-
-            return response;
+            return errorResponse(500, 'Internal server error.', errorMessage);
         }
 
     }
@@ -613,13 +482,7 @@ export class Auth_Service {
             logger.debug({ userId: token?.user_id }, 'Active token found for user');
 
             if (!user) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'User not found',
-                    data: null
-                }
-                return response;
+                return errorResponse(404, 'User not found');
             }
 
             user.is_deleted = true;
@@ -632,14 +495,7 @@ export class Auth_Service {
                 await this.RefreshRepository.save(token);
             }
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'User deleted successfully',
-                data: null
-            }
-
-            return response;
+            return successResponse(200, 'User deleted successfully', null);
 
         } catch (error) {
             logger.error({ err: error }, 'Error during user deletion');
@@ -649,15 +505,47 @@ export class Auth_Service {
                 errorMessage = error.message;
             }
 
-            let response = {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
+            return errorResponse(500, 'Internal server error.', errorMessage);
+        }
+    }
+
+    //missing update user
+    async UpdateUser(userId: number, data: UpdateUserDTO) {
+        try {
+            const user = await this.userRepository.findOne({
+                where: {
+                    user_id: userId
+                },
+            });
+
+            logger.debug({ userId: user?.user_id }, 'User fetched for update');
+
+            if (!user) {
+                return errorResponse(404, 'User not found');
             }
 
-            return response;
+            user.username = data.username! ?? user.username;
+            user.email = data.email! ?? user.email;
+            user.password = data.password! ?? user.password;
+            user.firstName = data.firstName! ?? user.firstName;
+            user.lastName = data.lastName! ?? user.lastName;
+
+            logger.info({ user: user.user_id }, 'user is updated')
+            await this.userRepository.save(user);
+
+            const {password, ...userWithoutPassword} = user;
+
+            return successResponse(200, 'User updated successfully', userWithoutPassword);
+
+        } catch (error) {
+            logger.error({ err: error }, 'Error during user update');
+
+            let errorMessage = "An unknown error occurred during user update.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            return errorResponse(500, 'Internal server error.', errorMessage);
         }
     }
 

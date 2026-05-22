@@ -13,10 +13,6 @@ export class Comment_Entity {
     @Column({ type: 'text' })
     content: string;
 
-    @Column({ type: 'varchar' })
-    priority_level: string;
-
-
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     created_at: Date;
 

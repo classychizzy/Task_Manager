@@ -9,26 +9,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TaskDTO = void 0;
-const TaskStatus_enum_1 = require("../enums/TaskStatus_enum");
+exports.CommentDTO = void 0;
 const class_validator_1 = require("class-validator");
-class TaskDTO {
+class CommentDTO {
 }
-exports.TaskDTO = TaskDTO;
+exports.CommentDTO = CommentDTO;
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(1, { message: "Comment cannot be empty" }),
     __metadata("design:type", String)
-], TaskDTO.prototype, "title", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(15),
-    __metadata("design:type", String)
-], TaskDTO.prototype, "description", void 0);
-__decorate([
-    (0, class_validator_1.IsDate)(),
-    __metadata("design:type", String)
-], TaskDTO.prototype, "dueDate", void 0);
-__decorate([
-    (0, class_validator_1.IsEnum)(TaskStatus_enum_1.TaskStatus),
-    __metadata("design:type", String)
-], TaskDTO.prototype, "status", void 0);
+], CommentDTO.prototype, "content", void 0);

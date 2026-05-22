@@ -1,59 +1,41 @@
 import pino from 'pino';
 import path from 'path';
-
 import fs from 'fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Ensure logs directory exists before loggers try to write
 const logDirectory = path.join(process.cwd(), "logs");
-fs.mkdirSync(logDirectory, { recursive: true });
+if (!fs.existsSync(logDirectory)) {
+    fs.mkdirSync(logDirectory, { recursive: true });
+}
 
 // General application log file
 const applogfile = path.join(logDirectory, "app.log");
 // Audit log - security related events (who did what and when)
 const auditlogfile = path.join(logDirectory, "audit.log");
 
-//general app logger
+const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev';
+
+// General Application Logger
 export const logger = pino({
     level: process.env.LOG_LEVEL || 'info',
-
-    transport: process.env.NODE_ENV === 'development' ? {
+    transport: isDev ? {
         targets: [
-            // pretty console output for development
             {
                 target: "pino-pretty",
-                options: {
-                    colorize: true,
-                },
+                options: { colorize: true }
             },
             {
-                target: "pino-rotating-file",
-                options: {
-                    dirname: logDirectory,
-                    filename: "app.log",
-                    maxsize: "10mb", // rotate after 10mb
-                    interval: "1d", // rotate after 1d
-                    compress: true,
-                    maxFiles: 7, // keep 7 days of logs
-
-                }
-            },
-
-        ],
-
-        // ✅ file sink (prod / always)
-    }
-        : {
-            target: "pino/file",
-            level: "info",
-            options: {
-                filename: applogfile,
-                maxsize: "10mb",
-                interval: "1d",
-                compress: true,
-                maxFiles: 7,
-            },
-        },
-
+                target: "pino/file",
+                options: { destination: applogfile, mkdir: true }
+            }
+        ]
+    } : {
+        target: "pino/file",
+        options: { destination: applogfile, mkdir: true }
+    },
     serializers: {
         req: (req) => ({
             userId: req.user?.id,
@@ -62,38 +44,30 @@ export const logger = pino({
         }),
         res: (res) => ({
             statusCode: res.statusCode,
-
         })
     },
 });
 
+// Audit Logger
 export const auditLogger = pino({
     level: process.env.LOG_LEVEL || 'info',
-    transport: process.env.NODE_ENV === 'development' ? {
+    transport: isDev ? {
         targets: [
-            // pretty console output for development
             {
                 target: "pino-pretty",
-                options: {
-                    colorize: true,
-                },
+                options: { colorize: true }
             },
             {
-                target: "pino-rotating-file", options: {
-                    dirname: logDirectory,
-                    filename: "audit.log",
-                    maxsize: "5mb", // rotate after 10mb
-                    interval: "1d", // rotate after 1d
-                    compress: true,
-                    maxFiles: 14, // keep 14 days of logs
-                }
-            },
-        ],
+                target: "pino/file",
+                options: { destination: auditlogfile, mkdir: true }
+            }
+        ]
+    } : {
+        target: "pino/file",
+        options: { destination: auditlogfile, mkdir: true }
     }
-        : {
-            target: "pino/file",
-            level: "info",
-            options: { destination: auditlogfile, mkdir: true },
-        },
 });
 
+// Force file creation on startup
+logger.info("Logger system initialized");
+auditLogger.info("Audit system initialized");

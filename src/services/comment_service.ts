@@ -2,8 +2,10 @@ import { CommentRepository } from "../repositories/comment_repository";
 import { TaskRepository } from "../repositories/task_repository";
 import { UserRepository } from "../repositories/user_repository";
 import { Comment_Entity } from "../entities/comments_entity";
+import { CommentDTO } from "../dto/comment_dto";
 import { getPagination } from "../utils/pagination";
 import { logger } from "../lib/logger";
+import { errorResponse, successResponse } from "../utils/responsehelper";
 
 export class Comment_Service {
     private commentRepository: typeof CommentRepository;
@@ -16,39 +18,32 @@ export class Comment_Service {
         this.userRepository = UserRepository;
     }
 
-    async createComment(taskId: number, userId: number, content: string, priorityLevel: string) {
+    async createComment(taskId: number, userId: number, commentDTO: CommentDTO) {
         try {
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
-                return { status_code: 404, message: 'Task not found', data: null };
+                return errorResponse(404, 'Task not found');
             }
+            logger.debug({ task }, "Task fetched");
 
             const user = await this.userRepository.findOne({ where: { user_id: userId, is_deleted: false } });
             if (!user) {
-                return { status_code: 404, message: 'User not found', data: null };
+                return errorResponse(404, 'User not found');
             }
+            logger.info({ user }, "User fetched");
 
             const newComment = new Comment_Entity();
-            newComment.content = content;
-            newComment.priority_level = priorityLevel;
+            newComment.content = commentDTO.content;
             newComment.task = task;
             newComment.user = user;
 
             await this.commentRepository.save(newComment);
 
-            return {
-                status_code: 201,
-                message: 'Comment created successfully',
-                data: newComment
-            };
+            return successResponse(201, 'Comment created successfully', newComment);
+
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error creating comment');
-            return {
-                status_code: 500,
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, 'Internal server error');
         }
     }
 
@@ -57,8 +52,9 @@ export class Comment_Service {
         try {
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
-                return { status_code: 404, message: 'Task not found', data: null };
+                return errorResponse(404, 'Task not found');
             }
+            logger.info({ task }, "Task fetched");
 
             const [comments, total] = await this.commentRepository.findAndCount({
                 where: { task: { task_id: taskId } },
@@ -68,25 +64,17 @@ export class Comment_Service {
                 order: { created_at: "DESC" }
             });
 
-            return {
-                status_code: 200,
-                message: 'Comments retrieved successfully',
-                data: comments,
-                meta: {
-                    total,
-                    page: currentPage,
-                    limit: pageSize,
-                    totalPages: Math.ceil(total / pageSize),
-                },
+            const meta = {
+                total,
+                page: currentPage,
+                limit: pageSize,
+                totalPages: Math.ceil(total / pageSize),
             };
+
+            return successResponse(200, 'Comments retrieved successfully', comments, meta);
         } catch (error) {
             logger.error({ err: error, taskId }, 'Error retrieving comments for task');
-            return {
-                status_code: 500,
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, 'Internal server error');
         }
     }
 
@@ -104,32 +92,23 @@ export class Comment_Service {
             });
 
             if (!comment) {
-                return { status_code: 404, message: 'Comment not found', data: null };
+                return errorResponse(404, 'Comment not found');
             }
 
             if (!requesterId) {
-                return { status_code: 403, message: 'You can only delete your own comments', data: null };
+                return errorResponse(403, 'You can only delete your own comments');
             }
 
             await this.commentRepository.remove(comment);
 
-            return {
-                status_code: 200,
-                message: 'Comment deleted successfully',
-                data: null
-            };
+            return successResponse(200, 'Comment deleted successfully', null);
         } catch (error) {
             logger.error({ err: error, commentId, requesterId }, 'Error deleting comment');
-            return {
-                status_code: 500,
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, 'Internal server error');
         }
     }
 
-    async updateComment(commentId: number, userId: number, content?: string, priorityLevel?: string) {
+    async updateComment(commentId: number, userId: number, CommentDTO: CommentDTO) {
         try {
             const comment = await this.commentRepository.findOne({
                 where: {
@@ -140,31 +119,21 @@ export class Comment_Service {
             });
 
             if (!comment) {
-                return { status_code: 404, message: 'Comment not found', data: null };
+                return errorResponse(404, 'Comment not found');
             }
 
             if (!comment.user.user_id) {
-                return { status_code: 403, message: 'You can only update your own comments', data: null };
+                return errorResponse(403, 'You can only update your own comments');
             }
 
-            if (content) comment.content = content;
-            if (priorityLevel) comment.priority_level = priorityLevel;
+            if (CommentDTO.content) comment.content = CommentDTO.content;
 
             await this.commentRepository.save(comment);
 
-            return {
-                status_code: 200,
-                message: 'Comment updated successfully',
-                data: comment
-            };
+            return successResponse(200, 'Comment updated successfully', comment);
         } catch (error) {
             logger.error({ err: error, commentId, userId }, 'Error updating comment');
-            return {
-                status_code: 500,
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            return errorResponse(500, 'Internal server error');
         }
     }
 }

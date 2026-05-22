@@ -1,7 +1,10 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { Task_Service } from '../services/task_service';
 import { AuthenticatedRequest } from '../types/express/auth-request';
 import { logger } from '../lib/logger';
+import { validateDto } from '../middlewares/validateDto';
+import { TaskDTO } from '../dto/task_dto';
+import { STATUS_CODES } from 'http';
 
 export class Task_Controller {
     public router: Router;
@@ -16,11 +19,15 @@ export class Task_Controller {
     public async createTask(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = req.user!.id
-            const projectId = req.body.projectId;
+            const projectId = Number(req.params.projectId);
             logger.debug({ userId, projectId }, 'createTask called');
             const task = await this.Task_Service.createTask(req.body, projectId, userId);
+            if (task && 'status_code' in task) {
+                return res.status(Number(task.status_code)).json(task);
+            }
+
             let response = {
-                status_code: '201',
+                status_code: 201,
                 message: 'Task created successfully',
                 data: task
 
@@ -46,7 +53,17 @@ export class Task_Controller {
                 limit ? Number(limit) : undefined
             );
 
-            return res.json(taskResponse);
+            if (taskResponse && 'status_code' in taskResponse) {
+                return res.status(Number(taskResponse.status_code)).json(taskResponse);
+            }
+
+            let response = {
+                status_code: 200,
+                message: 'Tasks retrieved successfully',
+                data: taskResponse
+            }
+
+            return res.json(response);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getAllTasks');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -60,8 +77,12 @@ export class Task_Controller {
             logger.debug({ userId, taskId }, 'getTaskById called');
             const task = await this.Task_Service.getTaskById(Number(taskId), userId);
 
+            if (task && 'status_code' in task) {
+                return res.status(Number(task.status_code)).json(task);
+            }
+
             let response = {
-                status_code: '200',
+                status_code: 200,
                 message: 'Task retrieved successfully',
                 data: task
             }
@@ -79,8 +100,12 @@ export class Task_Controller {
             logger.debug({ taskId, userId }, 'UpdateTask called');
             const result = await this.Task_Service.updateTask(Number(taskId), userId, req.body);
 
+            if (result && 'status_code' in result) {
+                return res.status(Number(result.status_code)).json(result);
+            }
+
             let response = {
-                status_code: '200',
+                status_code: 200,
                 message: 'Task updated successfully',
                 data: result
             }
@@ -99,8 +124,12 @@ export class Task_Controller {
             logger.debug({ taskId, userId }, 'DeleteTask called');
             const result = await this.Task_Service.deleteTask(Number(taskId), userId);
 
+            if (result && 'status_code' in result) {
+                return res.status(Number(result.status_code)).json(result);
+            }
+
             let response = {
-                status_code: '200',
+                status_code: 200,
                 message: 'Task deleted successfully',
                 data: result
             }
@@ -119,8 +148,12 @@ export class Task_Controller {
             logger.debug({ taskId, userId }, 'restoreTask called');
             const result = await this.Task_Service.restoreTask(Number(taskId), userId);
 
+            if (result && 'status_code' in result) {
+                return res.status(Number(result.status_code)).json(result);
+            }
+
             let response = {
-                status_code: '200',
+                status_code: 200,
                 message: 'Task restored successfully',
                 data: result
             }
@@ -132,10 +165,10 @@ export class Task_Controller {
     }
 
     private initializeRoutes() {
-        this.router.post('/create', this.createTask.bind(this));
+        this.router.post('/create/:projectId', validateDto(TaskDTO), this.createTask.bind(this));
         this.router.get('/all/:projectId', this.getAllTasks.bind(this));
         this.router.get('/:taskId', this.getTaskById.bind(this));
-        this.router.put('/:taskId/update', this.UpdateTask.bind(this));
+        this.router.put('/:taskId/update', validateDto(TaskDTO), this.UpdateTask.bind(this));
         this.router.delete('/:taskId/delete', this.DeleteTask.bind(this));
         this.router.put('/:taskId/restore', this.restoreTask.bind(this));
 

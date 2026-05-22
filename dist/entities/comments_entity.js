@@ -25,10 +25,6 @@ __decorate([
     __metadata("design:type", String)
 ], Comment_Entity.prototype, "content", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'varchar' }),
-    __metadata("design:type", String)
-], Comment_Entity.prototype, "priority_level", void 0);
-__decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' }),
     __metadata("design:type", Date)
 ], Comment_Entity.prototype, "created_at", void 0);

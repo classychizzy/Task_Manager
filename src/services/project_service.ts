@@ -8,6 +8,9 @@ import { getPagination } from '../utils/pagination';
 import { logger } from '../lib/logger';
 import { AuditAction } from '../enums/auditActions';
 import { auditLog } from '../utils/auditlogs';
+import { successResponse, errorResponse} from '../utils/responsehelper';
+
+
 export class Project_service {
     private ProjectRepository: typeof ProjectRepository;
     private UserRepository: typeof UserRepository;
@@ -30,13 +33,8 @@ export class Project_service {
 
 
         if (!user) {
-            let response = {
-                status_code: 404,
-                status: 'failed',
-                message: 'User not found',
-                data: null
-            }
-            return response
+         
+            return errorResponse(404, "User not found");
         }
         logger.info({ user_id: user.user_id }, 'user found')
 
@@ -51,16 +49,11 @@ export class Project_service {
         });
 
         if (project) {
-            let response = {
-                status_code: 400,
-                status: 'failed',
-                message: 'Project already exists',
-                data: null
-            }
-            return response
+           
+            return errorResponse(400, "Project already exists");
         }
 
-        logger.debug({ project }, 'project already exists');
+        logger.info({ project }, 'project already exists');
 
         const newProject = new Project_entity();
         logger.info({ projectId: newProject.project_id }, 'New project instance created');
@@ -145,13 +138,7 @@ export class Project_service {
             // console.log("PROJECTS WITH DELETED FILTER (false):", JSON.stringify(projectsWithDeletedFilter, null, 2));
 
 
-
-
-
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Projects retrieved successfully',
+            return successResponse(200, "Projects retrieved successfully", {
                 data: projects,
                 meta: {
                     total,
@@ -159,22 +146,15 @@ export class Project_service {
                     limit: pageSize,
                     totalPages: Math.ceil(total / pageSize),
                 },
-            }
-            return response;
+            });
         } catch (error) {
             logger.error({ err: error, userId }, 'Error retrieving all projects');
             let errorMessage = "unable to retreive projects";
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
-            let response = {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
-            }
-            return response;
+            return errorResponse(500, errorMessage);
+
 
         }
 
@@ -202,23 +182,13 @@ export class Project_service {
             // console.log("Project found:", project);
 
             if (!project) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Project not found',
-                    data: null
-                }
-                return response
+                return errorResponse(404, "Project not found");
             }
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Project retrieved successfully',
-                data: project
+            return successResponse(200, "Project retrieved successfully", {
+                data: project,
 
-            }
-            return response
+            })
         }
 
         catch (error) {
@@ -227,15 +197,8 @@ export class Project_service {
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
-            let response = {
-                status_code: "500",
-                status: 'failed',
-                message: 'Internal server error.',
-                errorMessage: errorMessage,
-                data: null
 
-            }
-            return response;
+            return errorResponse(500, errorMessage);
 
         }
 
@@ -257,13 +220,8 @@ export class Project_service {
             });
 
             if (!project) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Project not found',
-                    data: null
-                }
-                return response
+
+                return errorResponse(404, "Project not found");
             }
 
             logger.debug({ project }, "project found")
@@ -292,22 +250,18 @@ export class Project_service {
                 }
             })
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Project updated successfully',
-                data: project
-            }
-            return response;
+            return successResponse(200, "Project updated successfully", {
+                data: project,
+            });
+
         } catch (error) {
             logger.error({ err: error, projectId, userId }, 'Error updating project');
-            return {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            let errorMessage = "unable to retreive project";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            return errorResponse(500, errorMessage);
+
         }
     }
 
@@ -324,26 +278,15 @@ export class Project_service {
 
             });
             if (!project) {
-                let response = {
-                    status_code: 404,
-                    status: 'failed',
-                    message: 'Project not found',
-                    data: null
-                }
-                return response
+                return errorResponse(404, "Project not found");
 
             }
             logger.debug({ project }, "project found for deletion")
 
 
             if (project.is_deleted) {
-                let response = {
-                    status_code: 409,
-                    status: 'failed',
-                    message: 'Project already deleted',
-                    data: null
-                }
-                return response
+                return errorResponse(409, "Project already deleted");
+
             }
             // soft delete implementation
             project.deleted_at = new Date();
@@ -366,23 +309,18 @@ export class Project_service {
             })
 
 
-            let response = {
-                status_code: 200,
-                status: 'success',
-                message: 'Project deleted successfully',
-                data: null
+            return successResponse(200, "Project deleted successfully", {
+                data: null,
 
-            }
-            return response;
+            });
         } catch (error) {
             logger.error({ err: error, projectId, userId }, 'Error deleting project');
-            return {
-                status_code: 500,
-                status: 'failed',
-                message: 'Internal server error',
-                errorMessage: error instanceof Error ? error.message : 'Unknown error',
-                data: null
-            };
+            let errorMessage = "unable to retreive project";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            return errorResponse(500, errorMessage);
+
         }
     }
     async restoreProject(projectId: number, userId: number) {
@@ -400,12 +338,8 @@ export class Project_service {
             logger.debug({ projectId }, 'Found project for restoration');
 
             if (!restoreProject) {
-                let response = {
-                    status_code: 404,
-                    message: 'Project not found',
-                    data: null
-                }
-                return response
+                return errorResponse(404, "Project not found");
+
             }
 
 
@@ -416,14 +350,9 @@ export class Project_service {
 
             await this.ProjectRepository.save(restoreProject);
 
-            let response = {
-                status_code: 200,
-                message: 'Project restored successfully',
-                data: null
-            }
-            return response;
-
-
+            return successResponse(200, "Project restored successfully", {
+                data: null,
+            });
         }
         catch (error) {
             logger.error({ err: error, projectId, userId }, 'Error restoring project');
@@ -432,13 +361,9 @@ export class Project_service {
 
                 errorMessage = error.message;
             }
-            let response = {
 
-                status_code: 500,
-                message: errorMessage,
-                data: null
-            }
-            return response;
+            return errorResponse(500, errorMessage);
+
         }
 
 

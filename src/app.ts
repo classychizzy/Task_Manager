@@ -11,7 +11,7 @@ import { Request, Response } from 'express';
 import * as http from 'http';
 import { globalLimiter } from './middlewares/ratelimiter';
 
-import { healthController } from './controllers/health_controller';
+import { HealthController } from './controllers/health_controller';
 import { Auth_Controller } from './controllers/auth_controller';
 import { authenticateToken } from './middlewares/jwt.auth';
 import { Project_Controller } from './controllers/project_controller';
@@ -49,8 +49,6 @@ class App {
             res.status(500).json({ message: err.message })
         })
 
-        this.app.use("/health", healthController);
-
     }
 
 
@@ -59,6 +57,8 @@ class App {
             res.status(200).send("Welcome to Task Manager");
         });
         console.log('Initializing controllers...');
+
+        this.app.use("/api/v1/health", new HealthController().router)
         //base route for all initialized routes in the controller
         this.app.use('/api/v1/auth', new Auth_Controller().router);
         //route handler for projects

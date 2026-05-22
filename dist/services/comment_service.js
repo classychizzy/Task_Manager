@@ -13,19 +13,20 @@ class Comment_Service {
         this.taskRepository = task_repository_1.TaskRepository;
         this.userRepository = user_repository_1.UserRepository;
     }
-    async createComment(taskId, userId, content, priorityLevel) {
+    async createComment(taskId, userId, commentDTO) {
         try {
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
                 return { status_code: 404, message: 'Task not found', data: null };
             }
+            logger_1.logger.debug({ task }, "Task fetched");
             const user = await this.userRepository.findOne({ where: { user_id: userId, is_deleted: false } });
             if (!user) {
                 return { status_code: 404, message: 'User not found', data: null };
             }
+            logger_1.logger.debug({ user }, "User fetched");
             const newComment = new comments_entity_1.Comment_Entity();
-            newComment.content = content;
-            newComment.priority_level = priorityLevel;
+            newComment.content = commentDTO.content;
             newComment.task = task;
             newComment.user = user;
             await this.commentRepository.save(newComment);
@@ -113,7 +114,7 @@ class Comment_Service {
             };
         }
     }
-    async updateComment(commentId, userId, content, priorityLevel) {
+    async updateComment(commentId, userId, CommentDTO) {
         try {
             const comment = await this.commentRepository.findOne({
                 where: {
@@ -128,10 +129,8 @@ class Comment_Service {
             if (!comment.user.user_id) {
                 return { status_code: 403, message: 'You can only update your own comments', data: null };
             }
-            if (content)
-                comment.content = content;
-            if (priorityLevel)
-                comment.priority_level = priorityLevel;
+            if (CommentDTO.content)
+                comment.content = CommentDTO.content;
             await this.commentRepository.save(comment);
             return {
                 status_code: 200,

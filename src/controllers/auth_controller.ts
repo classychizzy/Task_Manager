@@ -1,10 +1,14 @@
 import { Router, Request, Response } from "express";
 import { UserDTO } from "../dto/user_dto";
+import { validateDto } from "../middlewares/validateDto";
 import { Auth_Service } from "../services/auth/auth_service";
 import { AuthenticatedRequest } from "../types/express/auth-request";
 import { authenticateToken } from "../middlewares/jwt.auth";
 import { logger } from "../lib/logger";
 import { authLimiter } from '../middlewares/ratelimiter'
+import { LoginDto } from "../dto/login_dto";
+import { UpdateUserDTO } from "../dto/update_user_dto";
+
 
 export class Auth_Controller {
     //set up user service here
@@ -20,16 +24,11 @@ export class Auth_Controller {
 
     public async registerUser(req: Request, res: Response) {
         try {
-            const response = await this.authService.registerUser(req.body);
-            if (response.status_code === 200) {
-                logger.info({ userId: response.data?.user_id, email: response.data?.email }, 'User registered successfully');
-            } else {
-                logger.warn({ status_code: response.status_code, message: response.message }, 'User registration failed');
-            }
-            return res.json(response);
+            const result = await this.authService.registerUser(req.body);
+            return res.status(result.statusCode).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in registerUser');
-            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+            return res.status(500).json({ statusCode: 500, success: false, message: 'Internal server error' });
         }
     }
 
@@ -95,6 +94,18 @@ export class Auth_Controller {
         }
     }
 
+    public async updateUser(req: AuthenticatedRequest, res: Response) {
+        try {
+            const userId = req.user!.id;
+            logger.info({ userId }, 'updateUser called');
+            let update = await this.authService.UpdateUser(Number(userId), req.body);
+            return res.json(update);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in updateUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
+    }
+
 
 
 
@@ -103,30 +114,31 @@ export class Auth_Controller {
         this.router.get('/welcome', (req: Request, res: Response) => {
             res.status(200).send("Welcome to Task Manager");
         });
-        this.router.post('/register',
-            //add middleware here
+        this.router.post('/register', authLimiter,
+            validateDto(UserDTO),
             this.registerUser.bind(this)
         );
-        this.router.post('/login', authLimiter,
-
+        this.router.post('/login', authLimiter, validateDto(LoginDto),
             this.loginUser.bind(this)
 
         );
         this.router.post('/user',
-            //add middleware here
+            validateDto(UserDTO),
             this.findUserByEmail.bind(this)
         );
-        this.router.post('/refresh',
-            //add middleware here
+        this.router.post('/refresh', authLimiter,
             this.refreshToken.bind(this)
         );
         this.router.post('/logout', authenticateToken,
-            //add middleware here
             this.LogoutUser.bind(this)
         );
         this.router.delete('/delete/me', authenticateToken,
-            //add middleware here
+            validateDto(UserDTO),
             this.DeleteUser.bind(this)
+        );
+        this.router.put('/update/me', authenticateToken,
+            validateDto(UpdateUserDTO),
+            this.updateUser.bind(this)
         );
         //
 
