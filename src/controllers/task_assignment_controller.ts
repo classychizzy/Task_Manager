@@ -23,7 +23,7 @@ export class TaskAssignment_Controller {
             logger.debug({ taskId, userId }, 'AssignUsertoTask called');
             const result = await this.taskAssignmentService.AssignUsertoTask(req.body, Number(taskId), userId);
 
-            return res.status(result.status_code).json(result);
+            return res.status(result.statusCode).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in AssignUsertoTask');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -51,9 +51,9 @@ export class TaskAssignment_Controller {
 
             const result = await this.taskAssignmentService.UpdatePermission(permission,
                 Number(taskId), Number(userId), requesterId);
-            return res.status(result.status_code).json(result);
+            return res.status(result.).json(result);
         } catch (error) {
-            logger.error({ err: error }, 'Unhandled error in UpdatePermission');
+            logger.error({ err: error }, 'Unstatus_codehandled error in UpdatePermission');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
     }
