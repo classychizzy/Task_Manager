@@ -69,3 +69,4 @@
 {"level":30,"time":1779460946657,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","msg":"Audit system initialized"}
 {"level":30,"time":1779461591417,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","type":"AUDIT","action":"LOGIN_FAILED_INVALID_PASSWORD","userId":14,"resource":"AUTH","resourceId":"14","metadata":{"email":"rlejean0@360.cn","username":"cindymum"},"timestamp":"2026-05-22T14:53:11.417Z"}
 {"level":30,"time":1779461591474,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","type":"AUDIT","action":"LOGIN_SUCCESS","userId":14,"resource":"AUTH","resourceId":"14","metadata":{"email":"rlejean0@360.cn","username":"cindymum"},"timestamp":"2026-05-22T14:53:11.474Z"}
+{"level":30,"time":1779976196907,"pid":2212,"hostname":"MacBookPro","msg":"Audit system initialized"}
