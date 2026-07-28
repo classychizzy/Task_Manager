@@ -1,6 +1,27 @@
 # Task Manager API
 
-A robust backend RESTful API for managing tasks, projects, and team collaborations.
+# Task Manager API
+
+A production-style backend built with TypeScript, Express, PostgreSQL, and TypeORM that demonstrates secure authentication, role-based authorization, task collaboration, audit logging, background processing, and production-ready API design.
+
+Designed to simulate the architecture and security practices used in modern SaaS applications.
+
+## Architecture
+
+The project follows a layered architecture:
+
+Controllers
+↓
+
+Services
+↓
+
+Repositories
+↓
+
+PostgreSQL
+
+Business logic is isolated in the service layer, promoting maintainability and testability.
 
 ## 🚀 Technologies Used
 
@@ -15,32 +36,49 @@ A robust backend RESTful API for managing tasks, projects, and team collaboratio
 
 ## ✨ Core Features
 
-- **User Authentication**: Secure user registration and login using JWT for stateless authentication, with support for refresh tokens.
-- **Project Management**: Organize work by creating, updating, and deleting projects.
-- **Task Management**: Full CRUD operations for tasks within projects, including status tracking and priorities.
-- **Task Assignments**: Assign tasks to multiple users to facilitate team collaboration.
-- **Comments System**: Add and manage comments on specific tasks for better communication.
-- **Automated Background Jobs**: Daily cron jobs to manage task lifecycles (overdue status) and proactive user notifications.
-- **Reliability**: Comprehensive test suite ensuring API stability and security.
-- **Observability**: Structured production-ready logging with Pino.
+### User Authentication
+- Secure user registration and login
+- JWT-based authentication
+- Refresh token rotation
+- Password hashing with bcrypt
 
-## ⏰ Automated Background Tasks (Cron Jobs)
+### 🛡️ Authorization & Access Control
+- Role-Based Access Control (RBAC)
+- OWNER, EDIT, and VIEW permissions
+- Horizontal access control through resource ownership validation
+- Secure ownership transfer between collaborators
+- Permission management for shared tasks
+- Soft deletion of task assignments
+- **Project Management**
+- Create, update, archive, and delete projects
+- Organize tasks into projects
+### ✅ Task Management
+- Full CRUD operations
+- Status tracking
+- Priorities
+- Due dates
+- Soft delete support
 
-The system includes automated background processing powered by `node-cron`:
+### 👥 Collaboration
+- Assign tasks to multiple users
+- Bulk task assignment
+- Task comments
+- Permission-based collaboration
 
-- **Overdue Task Management**: Every day at midnight, the system automatically identifies tasks that have passed their `dueDate` and updates their status from `pending` to `overdue`.
-- **Proactive Notifications**: Before a task becomes overdue, the system identifies tasks due within the next 24 hours and logs a notification alert to the user.
-- **Reliable Execution**: Uses sequential processing with `for...of` loops to ensure database integrity during bulk updates.
+### ⏰ Background Processing
+- Automatic overdue task detection
+- Notification scheduling
+- Daily cron jobs
 
-## 📊 Observability & Logging
+### 📊 Observability
+- Structured logging with Pino
+- Audit logging for security-sensitive operations
+- Log rotation
+- Sensitive data redaction
 
-The system implements a production-grade observability stack:
-
-- **Structured Logging**: Powered by [Pino](https://getpino.io/) for high-performance JSON logs that are easy to parse by log aggregators.
-- **Environment-based Levels**: Log levels (debug, info, warn, error) are controlled via the `LOG_LEVEL` environment variable.
-- **Sensitive Data Redaction**: Automatic redaction of sensitive fields (e.g., `password`, `token`) to ensure security compliance.
-- **Containerized Logging**: Pre-configured Docker `json-file` driver for seamless log collection.
-- **Log Rotation**: Built-in rotation to prevent disk exhaustion (configured for 3 files of 10MB each).
+### 🧪 Testing
+- Unit tests with Jest
+- API testing with Supertest
 
 
 ## 🛠️ Getting Started

@@ -122,3 +122,13 @@ All routes are prefixed with `/api/v1` unless stated otherwise.
 | `GET` | `/comments/:taskId` | Retrieve all comments for a task. |
 | `PUT` | `/comments/:commentId` | Edit a previously made comment. |
 | `DELETE` | `/comments/:commentId` | Delete a specific comment. |
+
+v2 implementstion plan
+add redis and ai agent
+work with bullmq - If you add features like:
+
+email notifications when assigned a task
+reminder emails for overdue tasks
+weekly reports
+exporting tasks to PDF
+generating analytics

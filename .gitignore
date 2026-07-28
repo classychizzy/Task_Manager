@@ -4,6 +4,7 @@ docker.env
 .env.test
 .env.dev
 .env.prod
+Documentation.md // personal information
 
 # Scripts and seed files
 src/scripts/*.csv
