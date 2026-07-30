@@ -218,3 +218,25 @@
 {"level":30,"time":1779461633627,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","user":14,"msg":"user is updated"}
 {"level":30,"time":1779461633683,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","req":{"id":"83219607-91c7-496c-87ad-28a382c4b861","method":"PUT","url":"/api/v1/auth/update/me","query":{},"params":{},"headers":{"content-type":"application/json","authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTQsImVtYWlsIjoicmxlamVhbjBAMzYwLmNuIiwidXNlcm5hbWUiOiJjaW5keW11bSIsImlhdCI6MTc3OTQ2MTU5MSwiZXhwIjoxNzc5NDYyMTkxfQ.c61Y3DujpwHkjQaIDzhBaQPlul3pPvZDwXrzSY7O0Fc","user-agent":"PostmanRuntime/7.52.0","accept":"*/*","cache-control":"no-cache","postman-token":"db80f3c1-d998-4e4f-861f-a3f91167e5ae","host":"localhost:9000","accept-encoding":"gzip, deflate, br","connection":"keep-alive","content-length":"38"},"remoteAddress":"::1","remotePort":55429},"user":null,"user":{"id":14,"email":"rlejean0@360.cn","username":"cindymum","iat":1779461591,"exp":1779462191},"res":{"statusCode":200,"headers":{"access-control-allow-origin":"*","content-security-policy":"default-src 'self';base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';img-src 'self' data:;object-src 'none';script-src 'self';script-src-attr 'none';style-src 'self' https: 'unsafe-inline';upgrade-insecure-requests","cross-origin-opener-policy":"same-origin","cross-origin-resource-policy":"same-origin","origin-agent-cluster":"?1","referrer-policy":"no-referrer","strict-transport-security":"max-age=31536000; includeSubDomains","x-content-type-options":"nosniff","x-dns-prefetch-control":"off","x-download-options":"noopen","x-frame-options":"SAMEORIGIN","x-permitted-cross-domain-policies":"none","x-xss-protection":"0","ratelimit-policy":"100;w=900","ratelimit-limit":"100","ratelimit-remaining":"98","ratelimit-reset":"858","content-type":"application/json; charset=utf-8","content-length":"313","etag":"W/\"139-SjpmOhe4ijYqOrnKDPGL/ZX/G9Y\""}},"responseTime":112,"msg":"PUT /update/me completed"}
 {"level":30,"time":1779976196906,"pid":2212,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785336575702,"pid":99621,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785336661765,"pid":344,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785336852688,"pid":1498,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785336996142,"pid":3320,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785336999292,"pid":3320,"hostname":"MacBookPro","msg":"Running cron job to handle task updates and notifications"}
+{"level":30,"time":1785336999304,"pid":3320,"hostname":"MacBookPro","msg":"Updated 0 tasks to overdue"}
+{"level":30,"time":1785336999311,"pid":3320,"hostname":"MacBookPro","msg":"Sent notifications for 0 upcoming tasks"}
+{"level":30,"time":1785337576641,"pid":6164,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785337578786,"pid":6164,"hostname":"MacBookPro","msg":"Running cron job to handle task updates and notifications"}
+{"level":30,"time":1785337609206,"pid":6415,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785337627953,"pid":6624,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785337630234,"pid":6624,"hostname":"MacBookPro","msg":"Running cron job to handle task updates and notifications"}
+{"level":30,"time":1785338069427,"pid":8658,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785338071818,"pid":8658,"hostname":"MacBookPro","msg":"Running cron job to handle task updates and notifications"}
+{"level":30,"time":1785338071835,"pid":8658,"hostname":"MacBookPro","msg":"Updated 0 tasks to overdue"}
+{"level":30,"time":1785338071841,"pid":8658,"hostname":"MacBookPro","msg":"Sent notifications for 0 upcoming tasks"}
+{"level":30,"time":1785338581826,"pid":14777,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785338583914,"pid":14777,"hostname":"MacBookPro","msg":"Running cron job to handle task updates and notifications"}
+{"level":30,"time":1785338616587,"pid":15652,"hostname":"MacBookPro","msg":"Logger system initialized"}
+{"level":30,"time":1785338618490,"pid":15652,"hostname":"MacBookPro","msg":"Running cron job to handle task updates and notifications"}
+{"level":30,"time":1785338618505,"pid":15652,"hostname":"MacBookPro","msg":"Updated 0 tasks to overdue"}
+{"level":30,"time":1785338618510,"pid":15652,"hostname":"MacBookPro","msg":"Sent notifications for 0 upcoming tasks"}

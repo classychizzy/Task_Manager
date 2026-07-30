@@ -123,6 +123,88 @@ All routes are prefixed with `/api/v1` unless stated otherwise.
 | `PUT` | `/comments/:commentId` | Edit a previously made comment. |
 | `DELETE` | `/comments/:commentId` | Delete a specific comment. |
 
+testing phase
+edgecases
+Authentication Phase
+Registration Phase
+
+Input validation
+
+Empty/missing fields, wrong data types
+Invalid email format
+Username/password length limits (too short, too long)
+Weak password rejection (complexity enforced)
+Whitespace-only values (@Matches(/\S/) or trim-then-@IsNotEmpty())
+Leading/trailing whitespace not trimmed (username, email — not password)
+Extra/unexpected fields (whitelist: true + forbidNonWhitelisted: true)
+
+Case sensitivity & normalization
+
+Email case sensitivity — lowercase via @Transform()
+Username case sensitivity
+Unicode/emoji in username
+
+Security
+
+SQL injection payloads — test in username, not email
+XSS payloads — test in username, not email
+Password never returned in response body
+Password never logged
+User enumeration via timing/error message differences
+
+Login Phase
+
+Input validation
+
+Missing fields (email/password)
+Invalid email format
+Empty strings in email/password
+Leading/trailing whitespace in email/password
+Extra fields (if forbidNonWhitelisted)
+
+Credentials validation
+
+Correct password vs. wrong password (exact match)
+Correct email vs. non-existent email (should return 404 consistently)
+Wrong case in email (if email normalized to lowercase)
+Both correct vs. both wrong
+
+Concurrency & race conditions
+
+Simultaneous login attempts with same user
+Login after password reset (should fail)
+Login after account deletion (should fail)
+Rate limiting (if implemented)
+
+Security
+
+Token leakage prevention (no token in error message)
+Timing attacks (consistent timing)
+SQL injection in username/email fields
+XSS in username field
+Password reset & forgot password
+
+Invalid/expired token handling
+Rate limiting on reset endpoint
+Token expiration behavior (15 min vs 24 hours)
+Case sensitivity in email validation
+Race condition between valid & expired tokens
+Security
+
+updateuser
+
+Update Profile
+@IsOptional() on all fields
+Uniqueness re-check on email/username change, excluding own record
+whitelist/forbidNonWhitelisted blocks role, id, createdAt, etc.
+IDOR: user_id never from body — always req.user.id
+Password excluded from this DTO
+
+Security
+
+No tokens leaked in error messages
+Timing attack resistance
+
 v2 implementstion plan
 add redis and ai agent
 work with bullmq - If you add features like:

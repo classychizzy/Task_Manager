@@ -51,7 +51,7 @@ export class TaskAssignment_Controller {
 
             const result = await this.taskAssignmentService.UpdatePermission(permission,
                 Number(taskId), Number(userId), requesterId);
-            return res.status(result.).json(result);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unstatus_codehandled error in UpdatePermission');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -104,7 +104,7 @@ export class TaskAssignment_Controller {
             const requesterId = req.user!.id;
             logger.debug({ taskId, requesterId }, 'getTaskAssignments called');
             const result = await this.taskAssignmentService.getTaskAssignments(Number(taskId), requesterId);
-            return res.status(result.status_code).json(result);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getTaskAssignments');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -116,7 +116,7 @@ export class TaskAssignment_Controller {
             const userId = req.user!.id; // Current user's own tasks
             logger.debug({ userId }, 'getUserassignedtasks called');
             const result = await this.taskAssignmentService.getUserassignedtasks(userId);
-            return res.status(result.status_code).json(result);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getUserassignedtasks');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -140,7 +140,7 @@ export class TaskAssignment_Controller {
             }
 
             const result = await this.taskAssignmentService.getAssignmentsForOtherUser(Number(targetUserId), requesterId);
-            return res.status(result.status_code).json(result);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getAssignmentsForOtherUser');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -167,7 +167,7 @@ export class TaskAssignment_Controller {
             const result = await this.taskAssignmentService.bulkAssignUsers(
                 assignments, Number(taskId), requesterId);
 
-            return res.status(result.status_code || 200).json(result);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in bulkAssignUsers');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -184,7 +184,7 @@ export class TaskAssignment_Controller {
             logger.info({ taskId, requestUserId, presentOwnerId, newOwnerId }, 'TransferOwnership called');
 
             const result = await this.taskAssignmentService.TransferOwnership(requestUserId, Number(taskId), presentOwnerId, newOwnerId);
-            return res.status(result.status_code || 200).json(result);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in TransferOwnership');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });

@@ -27,9 +27,9 @@ export class UpdateUserDTO {
     @IsOptional()
     email?: string;
 
-    @IsString()
-    @MinLength(6, { message: "Password must be at least 6 characters long" })
-    @IsOptional()
-    password?: string;
+    //  had to change this it's not secure @IsString()
+    // @MinLength(6, { message: "Password must be at least 6 characters long" })
+    // @IsOptional()
+    // password?: string;
 
 }

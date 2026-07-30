@@ -4,9 +4,10 @@ import { validate } from "class-validator";
 export const validateDto = <T>(DtoClass: ClassConstructor<T>) => {
   return async (req, res, next) => {
     const dto = plainToInstance(DtoClass, req.body, {
-      enableImplicitConversion: true,
+      enableImplicitConversion: false, // false to prevent type coercion and for trim() to work
     });
 
+    //protection against whitelisting
     const errors = await validate(dto as object, {
       whitelist: true,
       forbidNonWhitelisted: true,

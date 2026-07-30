@@ -70,3 +70,13 @@
 {"level":30,"time":1779461591417,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","type":"AUDIT","action":"LOGIN_FAILED_INVALID_PASSWORD","userId":14,"resource":"AUTH","resourceId":"14","metadata":{"email":"rlejean0@360.cn","username":"cindymum"},"timestamp":"2026-05-22T14:53:11.417Z"}
 {"level":30,"time":1779461591474,"pid":53032,"hostname":"Chizobas-MacBook-Pro-2.local","type":"AUDIT","action":"LOGIN_SUCCESS","userId":14,"resource":"AUTH","resourceId":"14","metadata":{"email":"rlejean0@360.cn","username":"cindymum"},"timestamp":"2026-05-22T14:53:11.474Z"}
 {"level":30,"time":1779976196907,"pid":2212,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785336575703,"pid":99621,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785336661765,"pid":344,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785336852689,"pid":1498,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785336996144,"pid":3320,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785337576642,"pid":6164,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785337609206,"pid":6415,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785337627954,"pid":6624,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785338069428,"pid":8658,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785338581826,"pid":14777,"hostname":"MacBookPro","msg":"Audit system initialized"}
+{"level":30,"time":1785338616587,"pid":15652,"hostname":"MacBookPro","msg":"Audit system initialized"}

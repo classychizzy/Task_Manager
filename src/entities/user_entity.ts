@@ -22,7 +22,7 @@ export class User_entity {
   @Column({ type: 'varchar', length: 100 })
   lastName: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, unique: true })
   username: string;
 
   @Column({ type: 'varchar', length: 255, unique: true })
@@ -55,6 +55,12 @@ export class User_entity {
 
   @CreateDateColumn()
   created_at: Date;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  resetPasswordTokenHash: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  resetPasswordTokenExpiresAt: Date | null;
 
 
   //relationships

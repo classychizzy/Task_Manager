@@ -1,13 +1,16 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, json } from "express";
 import { UserDTO } from "../dto/user_dto";
 import { validateDto } from "../middlewares/validateDto";
 import { Auth_Service } from "../services/auth/auth_service";
 import { AuthenticatedRequest } from "../types/express/auth-request";
 import { authenticateToken } from "../middlewares/jwt.auth";
 import { logger } from "../lib/logger";
-import { authLimiter } from '../middlewares/ratelimiter'
+import { strictAuthLimiter, refreshLimiter } from '../middlewares/ratelimiter'
 import { LoginDto } from "../dto/login_dto";
 import { UpdateUserDTO } from "../dto/update_user_dto";
+import { ChangePasswordDTO } from "../dto/changePassword_Dto";
+import { forgotPasswordDto } from "../dto/forgot_password_dto";
+import { ResetPasswordDto, resetPasswordDto } from "../dto/resetPassword_dto";
 
 
 export class Auth_Controller {
@@ -25,7 +28,7 @@ export class Auth_Controller {
     public async registerUser(req: Request, res: Response) {
         try {
             const result = await this.authService.registerUser(req.body);
-            return res.status(result.statusCode).json(result);
+            return res.status(result.statusCode || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in registerUser');
             return res.status(500).json({ statusCode: 500, success: false, message: 'Internal server error' });
@@ -36,8 +39,8 @@ export class Auth_Controller {
         try {
             const userData = req.body as UserDTO;
             logger.debug({ email: userData.email }, 'loginUser called');
-            const user = await this.authService.loginUser(userData);
-            return res.json(user);
+            const result = await this.authService.loginUser(userData);
+            return res.status(result.statusCode || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in loginUser');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -48,8 +51,8 @@ export class Auth_Controller {
         try {
             const userData = req.body as UserDTO;
             logger.debug({ email: userData.email }, 'findUserByEmail called');
-            let user = await this.authService.findUserByEmail(userData);
-            return res.json(user);
+            let result = await this.authService.findUserByEmail(userData);
+            return res.status(200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in findUserByEmail');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -61,7 +64,7 @@ export class Auth_Controller {
             const refreshtoken = req.body.refreshToken;
             logger.info('refreshToken endpoint called');
             let refresh = await this.authService.refreshToken(refreshtoken);
-            return res.json(refresh);
+            return res.status(refresh.statusCode || 200).json(refresh);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in refreshToken');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -74,7 +77,7 @@ export class Auth_Controller {
             const { refreshToken } = req.body;
             logger.info({ userId }, 'LogoutUser called');
             let logout = await this.authService.LogoutUser(Number(userId), refreshToken);
-            return res.json(logout);
+            return res.status(logout.statusCode || 200).json(logout);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in LogoutUser');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -87,7 +90,7 @@ export class Auth_Controller {
             const userId = req.user!.id;
             logger.info({ userId }, 'DeleteUser called');
             let Delete = await this.authService.DeleteUser(Number(userId));
-            return res.json(Delete);
+            return res.status(Delete.statusCode || 200).json(Delete);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in DeleteUser');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -99,9 +102,48 @@ export class Auth_Controller {
             const userId = req.user!.id;
             logger.info({ userId }, 'updateUser called');
             let update = await this.authService.UpdateUser(Number(userId), req.body);
-            return res.json(update);
+            return res.status(update.statusCode || 200).json(update);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in updateUser');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
+    }
+
+    public async changePassword(req: AuthenticatedRequest, res: Response) {
+        try {
+            const userId = req.user!.id;
+            const changePasswordDto = req.body as ChangePasswordDTO;
+            logger.info({ userId }, 'changePassword called');
+            let result = await this.authService.changePassword(Number(userId), req.body);
+            return res.status(result.statusCode || 200).json(result);
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in changePassword');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
+    }
+
+    public async forgotPassword(req: Request, res: Response) {
+        try {
+            const userData = req.body as forgotPasswordDto;
+
+            logger.debug({ email: userData.email }, 'forgotPassword called');
+            let result = await this.authService.forgotPassword(userData);
+            return res.status(result?.statusCode || 200).json({status: 'success',message: 'Forgot password email sent successfully'});
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in forgotPassword');
+            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+        }
+    }
+
+    public async resetPassword(req: Request, res: Response) {
+        try {
+            const userData = req.body as ResetPasswordDto;
+            const token = req.body.token;
+            logger.debug({ token: token }, 'resetPassword called');
+            let result = await this.authService.resetPassword(userData);
+            return res.status(result.statusCode ||200).json({status: 'success',message: 'Password reset successfully'});
+        } catch (error) {
+            logger.error({ err: error }, 'Unhandled error in resetPassword');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
         }
     }
@@ -114,11 +156,11 @@ export class Auth_Controller {
         this.router.get('/welcome', (req: Request, res: Response) => {
             res.status(200).send("Welcome to Task Manager");
         });
-        this.router.post('/register', authLimiter,
+        this.router.post('/register', strictAuthLimiter,
             validateDto(UserDTO),
             this.registerUser.bind(this)
         );
-        this.router.post('/login', authLimiter, validateDto(LoginDto),
+        this.router.post('/login', strictAuthLimiter, validateDto(LoginDto),
             this.loginUser.bind(this)
 
         );
@@ -126,7 +168,7 @@ export class Auth_Controller {
             validateDto(UserDTO),
             this.findUserByEmail.bind(this)
         );
-        this.router.post('/refresh', authLimiter,
+        this.router.post('/refresh', refreshLimiter,
             this.refreshToken.bind(this)
         );
         this.router.post('/logout', authenticateToken,
@@ -140,7 +182,14 @@ export class Auth_Controller {
             validateDto(UpdateUserDTO),
             this.updateUser.bind(this)
         );
-        //
+        this.router.put('/change/password', authenticateToken, strictAuthLimiter,
+            validateDto(ChangePasswordDTO),
+            this.changePassword.bind(this)
+        );
+        this.router.post("/auth/forgot-password", strictAuthLimiter, validateDto(forgotPasswordDto),  
+        this.forgotPassword.bind(this));
+        this.router.post("/auth/reset-password", strictAuthLimiter, validateDto(resetPasswordDto),  
+        this.resetPassword.bind(this));
 
 
 

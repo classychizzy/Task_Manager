@@ -3,6 +3,7 @@ import express from 'express';
 import App from '../../app';
 import AppDataSource from '../../ormconfig';
 import { TestDbHelper, generateTestUser } from '../helpers/db.helper';
+import { sqlInjectionPayloads, xssPayloads } from '../helpers/securitypayload';
 
 describe('Auth Integration Tests', () => {
     let app: App;
@@ -91,6 +92,27 @@ describe('Auth Integration Tests', () => {
             expect(response.body.status_code).toBe(500);
             expect(response.body.status).toBe('failed');
         });
+
+        it.each(sqlInjectionPayloads)('should reject SQL injection attempts with %s', async (payload) => {
+         const response = await request(server)
+    .post('/api/v1/auth/register')
+    .send({ ...generateTestUser(), username: payload })
+    .expect('Content-Type', /json/);
+
+  expect(response.body.status_code).toBe(400);
+  expect(response.body.status).toBe('failed');
+});   
+
+it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
+  const response = await request(server)
+    .post('/api/v1/auth/register')
+    .send({ ...generateTestUser(), username: payload })
+    .expect('Content-Type', /json/);
+
+  expect(response.body.status_code).toBe(400);
+  expect(response.body.status).toBe('failed');
+});   
+                
     });
 
     describe('POST /api/v1/auth/login', () => {
