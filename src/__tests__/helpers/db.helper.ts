@@ -1,6 +1,7 @@
 import AppDataSource from '../../ormconfig';
 import { UserRepository } from '../../repositories/user_repository';
 import { RefreshRepository } from '../../repositories/refresh_repository';
+import { randomUUID } from 'crypto';
 
 /**
  * Test database utilities
@@ -40,6 +41,7 @@ export class TestDbHelper {
  * Generate test user data
  */
 export const generateTestUser = (overrides?: any) => ({
+   // user_id: uuidv4(), primary generated column
     firstName: 'Test',
     lastName: 'User',
     username: `testuser_${Date.now()}`,
@@ -60,3 +62,7 @@ export const generateTestUsers = (count: number) => {
         password: 'TestPassword123!',
     }));
 };
+function uuidv4() {
+  return randomUUID()
+}
+

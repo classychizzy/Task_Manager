@@ -6,6 +6,8 @@ import { logger } from '../lib/logger';
 import { ProjectRepository } from '../repositories/project_repository';
 import { UserRepository } from '../repositories/user_repository';
 
+
+
 export const handleTaskCron = async () => {
     logger.info('Running cron job to handle task updates and notifications');
 
@@ -83,8 +85,12 @@ export const cleanupSoftDeletedRecords = async () => {
     }
 };
 
-// Handle task updates and notifications - Run every day at midnight
-cron.schedule('0 0 * * *', handleTaskCron);
 
-// Clean up soft-deleted records - Run every day at 1 AM
-cron.schedule('0 1 * * *', cleanupSoftDeletedRecords);
+//condition to prevent jobs from interfering with tests
+if (process.env.NODE_ENV !== 'test') {
+    // Handle task updates and notifications - Run every day at midnight
+  cron.schedule('0 0 * * *', handleTaskCron);
+  // Clean up soft-deleted records - Run every day at 1 AM
+  cron.schedule('0 1 * * *', cleanupSoftDeletedRecords);
+}
+

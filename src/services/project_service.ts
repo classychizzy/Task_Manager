@@ -8,7 +8,7 @@ import { getPagination } from '../utils/pagination';
 import { logger } from '../lib/logger';
 import { AuditAction } from '../enums/auditActions';
 import { auditLog } from '../utils/auditlogs';
-import { successResponse, errorResponse} from '../utils/responsehelper';
+import { successResponse, errorResponse } from '../utils/responsehelper';
 
 
 export class Project_service {
@@ -24,66 +24,78 @@ export class Project_service {
     }
 
     async CreateProject(CreateProjectDTO: CreateProjectDTO, userid: number) {
-        const user = await this.UserRepository.findOne({
-            where: {
-                user_id: userid
+
+        try {
+            const user = await this.UserRepository.findOne({
+                where: {
+                    user_id: userid
+                }
+
+            });
+
+
+            if (!user) {
+
+                return errorResponse(404, "User not found");
+            }
+            logger.info({ user_id: user.user_id }, 'user found')
+
+            //check if project already exists
+            const project = await this.ProjectRepository.findOne({
+                where: {
+                    user: { user_id: user.user_id },
+                    name: CreateProjectDTO.name,
+                    description: CreateProjectDTO.description,
+                    is_deleted: false
+                },
+                relations: ["user"]
+            });
+
+            if (project) {
+
+                return errorResponse(409, "Project already exists");
             }
 
-        });
+            logger.info({ project }, 'project already exists');
 
+            const newProject = new Project_entity();
+            logger.info({ projectId: newProject.project_id }, 'New project instance created');
+            /* this also works
+            const newproject = await this.ProjectRepository.findOne({
+                 where: {
+                     name: CreateProjectDTO.name,
+                     description: CreateProjectDTO.description,
+                     user: user
+                 }
+             }); */
+            newProject.name = CreateProjectDTO.name;
+            newProject.description = CreateProjectDTO.description;
+            newProject.user = user;
+            logger.info({ name: newProject.name, userId: user!.user_id }, 'Project entity populated');
 
-        if (!user) {
-         
-            return errorResponse(404, "User not found");
+            await this.ProjectRepository.save(newProject);
+
+            auditLog({
+                action: AuditAction.PROJECT_CREATED,
+                userId: userid,
+                resource: "Project",
+                resourceId: String(newProject.project_id),
+                metadata: {
+                    name: newProject.name,
+                    description: newProject.description,
+                }
+            })
+            return successResponse(201, "Project created successfully", newProject);
         }
-        logger.info({ user_id: user.user_id }, 'user found')
-
-        //check if project already exists
-        const project = await this.ProjectRepository.findOne({
-            where: {
-                name: CreateProjectDTO.name,
-                description: CreateProjectDTO.description,
-                is_deleted: false
-            },
-            relations: ["user"]
-        });
-
-        if (project) {
-           
-            return errorResponse(400, "Project already exists");
-        }
-
-        logger.info({ project }, 'project already exists');
-
-        const newProject = new Project_entity();
-        logger.info({ projectId: newProject.project_id }, 'New project instance created');
-        /* this also works
-        const newproject = await this.ProjectRepository.findOne({
-             where: {
-                 name: CreateProjectDTO.name,
-                 description: CreateProjectDTO.description,
-                 user: user
-             }
-         }); */
-        newProject.name = CreateProjectDTO.name;
-        newProject.description = CreateProjectDTO.description;
-        newProject.user = user;
-        logger.info({ name: newProject.name, userId: user!.user_id }, 'Project entity populated');
-
-        await this.ProjectRepository.save(newProject);
-
-        auditLog({
-            action: AuditAction.PROJECT_CREATED,
-            userId: userid,
-            resource: "Project",
-            resourceId: String(newProject.project_id),
-            metadata: {
-                name: newProject.name,
-                description: newProject.description,
+        catch (error) {
+            logger.error({ err: error, user_id: userid }, 'Error creating project');
+            let errorMessage = "unable to create project";
+            if (error instanceof Error) {
+                errorMessage = error.message;
             }
-        })
-        return newProject;
+            return errorResponse(500, errorMessage);
 
+        }
 
 
 
@@ -95,6 +107,15 @@ export class Project_service {
             getPagination(page, limit);
         try {
 
+            const user = await this.UserRepository.findOne({
+                where: {
+                    user_id: userId
+                }
+            });
+
+            if (!user) {
+                return errorResponse(404, "User not found");
+            }
 
             const [projects, total] = await this.ProjectRepository.findAndCount({
                 where: {
@@ -139,7 +160,6 @@ export class Project_service {
 
 
             return successResponse(200, "Projects retrieved successfully", {
-                data: projects,
                 meta: {
                     total,
                     page: currentPage,

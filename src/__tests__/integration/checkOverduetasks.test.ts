@@ -17,11 +17,6 @@ afterAll(async () => {
     }
 });
 
-afterEach(async () => {
-    // clean up after each test
-    await TestDbHelper.clearDatabase();
-});
-
 describe('handleTaskCron Integration Tests', () => {
     it('should mark overdue pending tasks as OVERDUE', async () => {
         const repo = AppDataSource.getRepository(Task_entity);

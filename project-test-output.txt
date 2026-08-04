@@ -1,0 +1,608 @@
+
+> task_manager@1.0.0 test
+> NODE_ENV=test jest --testPathPattern=project
+
+[dotenv@17.3.1] injecting env (18) from .env.test -- tip: 🛡️ auth for agents: https://vestauth.com
+  console.log
+    [dotenv@17.3.1] injecting env (9) from .env.local,.env -- tip: 🛡️ auth for agents: https://vestauth.com
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env.test -- tip: ⚙️  enable debug logging with { debug: true }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    [dotenv@17.3.1] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+
+      at _log (node_modules/dotenv/lib/main.js:139:11)
+
+  console.log
+    Database connected: test
+
+      at Object.<anonymous> (src/__tests__/setup.ts:15:13)
+
+  console.log
+    Initializing middlewares...
+
+      at App.initializeMiddlewares (src/app.ts:37:17)
+
+  console.log
+    Initializing controllers...
+
+      at App.initializeControllers (src/app.ts:59:17)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+  console.log
+    email : true
+
+      at validateEmail (src/validator/user_validation.ts:5:13)
+
+FAIL src/__tests__/integration/project.test.ts (6.904 s)
+  Project Integration Tests
+    POST /api/v1/projects
+      ✕ should create a project successfully (155 ms)
+      ✕ should reject request without authentication (30 ms)
+      ✕ should reject a name shorter than 5 characters (90 ms)
+      ✕ should reject a name with no letters (numbers only) (88 ms)
+      ✕ should reject a whitespace-only name (75 ms)
+      ✕ should trim leading/trailing whitespace from name (75 ms)
+      ✕ should reject a description shorter than 10 characters (69 ms)
+      ✕ should accept a description containing numbers and punctuation (73 ms)
+      ✕ should reject missing name (76 ms)
+      ✕ should reject missing description (83 ms)
+      ✕ should reject extra/unexpected fields (e.g. project_id in body) (87 ms)
+      ✕ should reject duplicate project (same name + description) for the same user (81 ms)
+      ✕ should allow two different users to create projects with the same name (129 ms)
+      ✕ should reject SQL injection attempts in name: ' OR '1'='1 (79 ms)
+      ✕ should reject SQL injection attempts in name: '; DROP TABLE users; -- (79 ms)
+      ✕ should reject SQL injection attempts in name: ' OR 1=1 -- (70 ms)
+      ✕ should reject SQL injection attempts in name: admin'-- (70 ms)
+      ✕ should reject SQL injection attempts in name: ' UNION SELECT * FROM users -- (70 ms)
+      ✕ should reject XSS attempts in name: <script>alert('xss')</script> (71 ms)
+      ✕ should reject XSS attempts in name: <img src=x onerror=alert(1)> (69 ms)
+      ✕ should reject XSS attempts in name: javascript:alert(1) (73 ms)
+
+  ● Project Integration Tests › POST /api/v1/projects › should create a project successfully
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      52 |                 .set('Authorization', `Bearer ${accessToken}`)
+      53 |                 .send(payload)
+    > 54 |                 .expect('Content-Type', /json/);
+         |                  ^
+      55 |
+      56 |             expect(response.body.status_code).toBe(201);
+      57 |             expect(response.body.success).toBe(true);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:54:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject request without authentication
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: false
+    Received: undefined
+
+      71 |
+      72 |             expect(response.body.status_code).toBe(401);
+    > 73 |             expect(response.body.success).toBe(false);
+         |                                           ^
+      74 |         });
+      75 |
+      76 |         // --- Input validation ---
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:73:43)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject a name shorter than 5 characters
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      83 |                 .set('Authorization', `Bearer ${accessToken}`)
+      84 |                 .send(generateProjectPayload({ name: 'abc' }))
+    > 85 |                 .expect('Content-Type', /json/);
+         |                  ^
+      86 |
+      87 |             expect(response.body.status_code).toBe(400);
+      88 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:85:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject a name with no letters (numbers only)
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+       96 |                 .set('Authorization', `Bearer ${accessToken}`)
+       97 |                 .send(generateProjectPayload({ name: '123456' }))
+    >  98 |                 .expect('Content-Type', /json/);
+          |                  ^
+       99 |
+      100 |             expect(response.body.status_code).toBe(400);
+      101 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:98:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject a whitespace-only name
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      109 |                 .set('Authorization', `Bearer ${accessToken}`)
+      110 |                 .send(generateProjectPayload({ name: '     ' }))
+    > 111 |                 .expect('Content-Type', /json/);
+          |                  ^
+      112 |
+      113 |             expect(response.body.status_code).toBe(400);
+      114 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:111:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should trim leading/trailing whitespace from name
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      123 |                 .set('Authorization', `Bearer ${accessToken}`)
+      124 |                 .send(payload)
+    > 125 |                 .expect('Content-Type', /json/);
+          |                  ^
+      126 |
+      127 |             expect(response.body.status_code).toBe(201);
+      128 |             expect(response.body.data.name).toBe(payload.name.trim());
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:125:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject a description shorter than 10 characters
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      136 |                 .set('Authorization', `Bearer ${accessToken}`)
+      137 |                 .send(generateProjectPayload({ description: 'short' }))
+    > 138 |                 .expect('Content-Type', /json/);
+          |                  ^
+      139 |
+      140 |             expect(response.body.status_code).toBe(400);
+      141 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:138:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should accept a description containing numbers and punctuation
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      152 |                 .set('Authorization', `Bearer ${accessToken}`)
+      153 |                 .send(payload)
+    > 154 |                 .expect('Content-Type', /json/);
+          |                  ^
+      155 |
+      156 |             // If this fails with 400, the description regex is still too restrictive
+      157 |             expect(response.body.status_code).toBe(201);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:154:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject missing name
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      167 |                 .set('Authorization', `Bearer ${accessToken}`)
+      168 |                 .send(payload)
+    > 169 |                 .expect('Content-Type', /json/);
+          |                  ^
+      170 |
+      171 |             expect(response.body.status_code).toBe(400);
+      172 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:169:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject missing description
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      182 |                 .set('Authorization', `Bearer ${accessToken}`)
+      183 |                 .send(payload)
+    > 184 |                 .expect('Content-Type', /json/);
+          |                  ^
+      185 |
+      186 |             expect(response.body.status_code).toBe(400);
+      187 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:184:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject extra/unexpected fields (e.g. project_id in body)
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      196 |                 .set('Authorization', `Bearer ${accessToken}`)
+      197 |                 .send(payload)
+    > 198 |                 .expect('Content-Type', /json/);
+          |                  ^
+      199 |
+      200 |             expect(response.body.status_code).toBe(400);
+      201 |         });
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:198:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject duplicate project (same name + description) for the same user
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      216 |                 .set('Authorization', `Bearer ${accessToken}`)
+      217 |                 .send(payload)
+    > 218 |                 .expect('Content-Type', /json/);
+          |                  ^
+      219 |
+      220 |             expect(response.body.status_code).toBe(409);
+      221 |             expect(response.body.success).toBe(false);
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:218:18)
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should allow two different users to create projects with the same name
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: undefined
+
+      239 |
+      240 |             // This will fail until the duplicate check is scoped per-user (see write-up)
+    > 241 |             expect(resA.body.status_code).toBe(201);
+          |                                           ^
+      242 |             expect(resB.body.status_code).toBe(201);
+      243 |         });
+      244 |
+
+      at Object.<anonymous> (src/__tests__/integration/project.test.ts:241:43)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject SQL injection attempts in name: ' OR '1'='1
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      252 |                 .set('Authorization', `Bearer ${accessToken}`)
+      253 |                 .send(generateProjectPayload({ name: payload }))
+    > 254 |                 .expect('Content-Type', /json/);
+          |                  ^
+      255 |
+      256 |             expect(response.body.status_code).toBe(400);
+      257 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:254:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject SQL injection attempts in name: '; DROP TABLE users; --
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      252 |                 .set('Authorization', `Bearer ${accessToken}`)
+      253 |                 .send(generateProjectPayload({ name: payload }))
+    > 254 |                 .expect('Content-Type', /json/);
+          |                  ^
+      255 |
+      256 |             expect(response.body.status_code).toBe(400);
+      257 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:254:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject SQL injection attempts in name: ' OR 1=1 --
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      252 |                 .set('Authorization', `Bearer ${accessToken}`)
+      253 |                 .send(generateProjectPayload({ name: payload }))
+    > 254 |                 .expect('Content-Type', /json/);
+          |                  ^
+      255 |
+      256 |             expect(response.body.status_code).toBe(400);
+      257 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:254:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject SQL injection attempts in name: admin'--
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      252 |                 .set('Authorization', `Bearer ${accessToken}`)
+      253 |                 .send(generateProjectPayload({ name: payload }))
+    > 254 |                 .expect('Content-Type', /json/);
+          |                  ^
+      255 |
+      256 |             expect(response.body.status_code).toBe(400);
+      257 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:254:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject SQL injection attempts in name: ' UNION SELECT * FROM users --
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      252 |                 .set('Authorization', `Bearer ${accessToken}`)
+      253 |                 .send(generateProjectPayload({ name: payload }))
+    > 254 |                 .expect('Content-Type', /json/);
+          |                  ^
+      255 |
+      256 |             expect(response.body.status_code).toBe(400);
+      257 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:254:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject XSS attempts in name: <script>alert('xss')</script>
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      265 |                 .set('Authorization', `Bearer ${accessToken}`)
+      266 |                 .send(generateProjectPayload({ name: payload }))
+    > 267 |                 .expect('Content-Type', /json/);
+          |                  ^
+      268 |
+      269 |             expect(response.body.status_code).toBe(400);
+      270 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:267:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject XSS attempts in name: <img src=x onerror=alert(1)>
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      265 |                 .set('Authorization', `Bearer ${accessToken}`)
+      266 |                 .send(generateProjectPayload({ name: payload }))
+    > 267 |                 .expect('Content-Type', /json/);
+          |                  ^
+      268 |
+      269 |             expect(response.body.status_code).toBe(400);
+      270 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:267:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+  ● Project Integration Tests › POST /api/v1/projects › should reject XSS attempts in name: javascript:alert(1)
+
+    expected "Content-Type" matching /json/, got "text/html; charset=utf-8"
+
+      265 |                 .set('Authorization', `Bearer ${accessToken}`)
+      266 |                 .send(generateProjectPayload({ name: payload }))
+    > 267 |                 .expect('Content-Type', /json/);
+          |                  ^
+      268 |
+      269 |             expect(response.body.status_code).toBe(400);
+      270 |             expect(response.body.success).toBe(false);
+
+      at src/__tests__/integration/project.test.ts:267:18
+      ----
+      at Test._assertHeader (node_modules/supertest/lib/test.js:289:16)
+      at node_modules/supertest/lib/test.js:365:13
+      at Test._assertFunction (node_modules/supertest/lib/test.js:342:13)
+      at Test.assert (node_modules/supertest/lib/test.js:195:23)
+      at localAssert (node_modules/supertest/lib/test.js:138:14)
+      at Server.<anonymous> (node_modules/supertest/lib/test.js:152:11)
+
+Test Suites: 1 failed, 1 total
+Tests:       21 failed, 21 total
+Snapshots:   0 total
+Time:        7.431 s, estimated 10 s
+Ran all test suites matching /project/i.

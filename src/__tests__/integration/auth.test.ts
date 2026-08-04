@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import App from '../../app';
 import AppDataSource from '../../ormconfig';
-import { TestDbHelper, generateTestUser } from '../helpers/db.helper';
+import { generateTestUser } from '../helpers/db.helper';
 import { sqlInjectionPayloads, xssPayloads } from '../helpers/securitypayload';
 
 describe('Auth Integration Tests', () => {
@@ -20,11 +20,6 @@ describe('Auth Integration Tests', () => {
         }
     });
 
-    beforeEach(async () => {
-        // Clear user data before each test
-        await TestDbHelper.clearUserData();
-    });
-
     afterAll(async () => {
         // Cleanup is handled by setup.ts
     });
@@ -38,8 +33,8 @@ describe('Auth Integration Tests', () => {
                 .send(testUser)
                 .expect('Content-Type', /json/);
 
-            expect(response.body.status_code).toBe(200);
-            expect(response.body.status).toBe('success');
+            expect(response.body.status_code).toBe(201);
+            expect(response.body.success).toBe(true);
             expect(response.body.message).toBe('User registered successfully');
             expect(response.body.data).toHaveProperty('user_id');
             expect(response.body.data.email).toBe(testUser.email);
@@ -55,8 +50,8 @@ describe('Auth Integration Tests', () => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(400);
-            expect(response.body.status).toBe('failed');
-            expect(response.body.message).toBe('Enter a valid email address');
+            expect(response.body.success).toBe(false);
+            expect(response.body.message).toBe('Please provide a valid email');
         });
 
         it('should reject duplicate user registration', async () => {
@@ -73,8 +68,8 @@ describe('Auth Integration Tests', () => {
                 .send(testUser)
                 .expect('Content-Type', /json/);
 
-            expect(response.body.status_code).toBe(400);
-            expect(response.body.status).toBe('failed');
+            expect(response.body.status_code).toBe(409);
+            expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('User already exists');
         });
 
@@ -89,32 +84,33 @@ describe('Auth Integration Tests', () => {
                 .send(incompleteUser)
                 .expect('Content-Type', /json/);
 
-            expect(response.body.status_code).toBe(500);
-            expect(response.body.status).toBe('failed');
+            expect(response.body.status_code).toBe(400);
+            expect(response.body.success).toBe(false);
         });
 
         it.each(sqlInjectionPayloads)('should reject SQL injection attempts with %s', async (payload) => {
-         const response = await request(server)
-    .post('/api/v1/auth/register')
-    .send({ ...generateTestUser(), username: payload })
-    .expect('Content-Type', /json/);
+            const response = await request(server)
+                .post('/api/v1/auth/register')
+                .send({ ...generateTestUser(), username: payload })
+                .expect('Content-Type', /json/);
 
-  expect(response.body.status_code).toBe(400);
-  expect(response.body.status).toBe('failed');
-});   
+            expect(response.body.status_code).toBe(400);
+            expect(response.body.success).toBe(false);
+        });
 
-it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
-  const response = await request(server)
-    .post('/api/v1/auth/register')
-    .send({ ...generateTestUser(), username: payload })
-    .expect('Content-Type', /json/);
+        it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
+            const response = await request(server)
+                .post('/api/v1/auth/register')
+                .send({ ...generateTestUser(), username: payload })
+                .expect('Content-Type', /json/);
 
-  expect(response.body.status_code).toBe(400);
-  expect(response.body.status).toBe('failed');
-});   
-                
+            expect(response.body.status_code).toBe(400);
+            expect(response.body.success).toBe(false);
+        });
+
     });
 
+    // tests for user login
     describe('POST /api/v1/auth/login', () => {
         it('should login successfully with valid credentials', async () => {
             const testUser = generateTestUser();
@@ -134,7 +130,7 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(200);
-            expect(response.body.status).toBe('success');
+            expect(response.body.success).toBe(true);
             expect(response.body.message).toBe('User logged in successfully');
             expect(response.body.data).toHaveProperty('accessToken');
             expect(response.body.data).toHaveProperty('refreshToken');
@@ -160,7 +156,7 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(404);
-            expect(response.body.status).toBe('failed');
+            expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('User not found');
         });
 
@@ -174,7 +170,7 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(404);
-            expect(response.body.status).toBe('failed');
+            expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('User not found');
         });
 
@@ -202,6 +198,7 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
         });
     });
 
+    // test for find user by email
     describe('POST /api/v1/auth/user', () => {
         it('should find user by email', async () => {
             const testUser = generateTestUser();
@@ -218,7 +215,7 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(200);
-            expect(response.body.status).toBe('success');
+            expect(response.body.success).toBe(true);
             expect(response.body.message).toBe('User retrieved successfully');
             expect(response.body.data.email).toBe(testUser.email);
         });
@@ -230,7 +227,7 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(404);
-            expect(response.body.status).toBe('failed');
+            expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('User not found');
         });
 
@@ -241,11 +238,12 @@ it.each(xssPayloads)('should reject XSS attempts with %s', async (payload) => {
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(400);
-            expect(response.body.status).toBe('failed');
+            expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('Email is required');
         });
     });
 
+    // test for token refresh flow
     describe('Token Refresh Flow', () => {
         it('should handle multiple logins and update refresh token', async () => {
             const testUser = generateTestUser();

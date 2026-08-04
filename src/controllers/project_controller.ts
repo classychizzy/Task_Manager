@@ -21,13 +21,8 @@ export class Project_Controller {
             const userId = req.user!.id
             logger.debug({ userId }, 'createProject called');
             const project = await this.Project_service.CreateProject(req.body, userId);
-            let response = {
-                status_code: '201',
-                message: 'Project created successfully',
-                data: project
 
-            }
-            return res.json(response);
+            return res.status(project.status_code || 201).json(project);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in createProject');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -46,7 +41,7 @@ export class Project_Controller {
                 limit ? Number(limit) : undefined
             );
 
-            return res.json(projectResponse);
+            return res.status(projectResponse.status_code || 200).json(projectResponse);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getAllProjects');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -60,12 +55,8 @@ export class Project_Controller {
             logger.debug({ userId: userid, projectId }, 'getProjectById called');
             const project = await this.Project_service.fetchProjectById(Number(projectId), userid);
 
-            let response = {
-                status_code: '200',
-                message: 'Project retrieved successfully',
-                data: project
-            }
-            return res.json(response);
+
+            return res.status(project.status_code || 200).json(project);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getProjectById');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -79,13 +70,7 @@ export class Project_Controller {
             logger.debug({ projectId, userId }, 'UpdateProject called');
             const result = await this.Project_service.updateProject(Number(projectId), userId, req.body);
 
-            let response = {
-                status_code: '200',
-                message: 'Project updated successfully',
-                data: result
-            }
-
-            return res.json(response);
+            return res.status(result.status_code || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in UpdateProject');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -99,13 +84,8 @@ export class Project_Controller {
             logger.debug({ projectId, userId }, 'DeleteProject called');
             const result = await this.Project_service.DeleteProject(Number(projectId), userId);
 
-            let response = {
-                status_code: '200',
-                message: 'Project deleted successfully',
-                data: result
-            }
 
-            return res.json(response);
+            return res.status(result.status_code || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in DeleteProject');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -118,12 +98,8 @@ export class Project_Controller {
             const userId = req.user!.id;
             logger.debug({ projectId: projectid, userId }, 'restoreProject called');
             const result = await this.Project_service.restoreProject(Number(projectid), userId);
-            let response = {
-                status_code: '200',
-                message: 'Project restored successfully',
-                data: result
-            }
-            return res.json(response);
+
+            return res.status(result.status_code || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in restoreProject');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });

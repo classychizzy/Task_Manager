@@ -3,12 +3,12 @@
 import { ResponseDTO, PaginationMeta } from "../dto/response_dto";
 
 export const successResponse = <T>(
-    statusCode: number,
+    status_code: number,
     message: string,
     data: T,
     meta?: PaginationMeta
 ): ResponseDTO<T> => ({
-    statusCode,
+    status_code,
     success: true,
     message,
     data,
@@ -16,11 +16,11 @@ export const successResponse = <T>(
 });
 
 export const errorResponse = (
-    statusCode: number,
+    status_code: number,
     message: string,
     error?: string
 ): ResponseDTO => ({
-    statusCode,
+    status_code,
     success: false,
     message,
     error,

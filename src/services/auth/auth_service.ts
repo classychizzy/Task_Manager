@@ -1,4 +1,6 @@
 import { UserDTO } from "../../dto/user_dto";
+import { findbyEmailDTO } from "../../dto/findbyEmail_dto";
+import { LoginDTO } from "../../dto/login_dto";
 import { UserPayload } from "../../types/userpayload";
 import { UserRepository } from "../../repositories/user_repository";
 //import { STATUS_CODES } from "http";
@@ -17,7 +19,6 @@ import { IsNull } from "typeorm";
 import { logger } from "../../lib/logger";
 import { auditLog } from "../../utils/auditlogs";
 import { AuditAction } from "../../enums/auditActions";
-import { LoginDto } from "../../dto/login_dto";
 import { successResponse, errorResponse } from "../../utils/responsehelper";
 import { UpdateUserDTO } from "../../dto/update_user_dto";
 import { ChangePasswordDTO } from "../../dto/changePassword_Dto";
@@ -135,7 +136,7 @@ export class Auth_Service {
         }
     }
 
-    async findUserByEmail(userData: UserDTO) {
+    async findUserByEmail(userData: findbyEmailDTO) {
 
         logger.debug({ email: userData.email }, 'findUserByEmail called');
 
@@ -143,7 +144,7 @@ export class Auth_Service {
         try {
 
             if (!userData?.email) {
-                return errorResponse(401, 'Email is required');
+                return errorResponse(400, 'Email is required');
             }
 
             const user = await this.userRepository.findOne(
@@ -183,7 +184,7 @@ export class Auth_Service {
 
             let response = {
                 status_code: 200,
-                status: 'success',
+                success: true,
                 message: 'User retrieved successfully',
                 data: user
             }
@@ -206,7 +207,7 @@ export class Auth_Service {
         }
     }
 
-    async loginUser(userData: LoginDto) {
+    async loginUser(userData: LoginDTO) {
         try {
             // const isemailValid = validateEmail(userData.email);
 
@@ -222,12 +223,11 @@ export class Auth_Service {
             if (!user) {
                 auditLog({
                     action: AuditAction.LOGIN_FAILED_USER_NOT_FOUND,
-                    userId: user!.user_id,
+                    // userId: user!.user_id, (null as user is non existent here)
                     resource: "AUTH",
-                    resourceId: user!.user_id.toString(),
+                    resourceId: "unknown", // user is non-existent in this case
                     metadata: {
-                        email: user!.email,
-                        username: user!.username,
+                        email: userData.email, // returns the submitted email
                     }
                 });
 
@@ -249,20 +249,24 @@ export class Auth_Service {
             // }
 
             if (!user.checkIfUnencryptedPasswordIsValid(userData.password)) {
-               
+
+
+
+                auditLog({
+                    action: AuditAction.LOGIN_FAILED_INVALID_PASSWORD,
+                    userId: user.user_id,
+                    resource: "AUTH",
+                    resourceId: user.user_id.toString(),
+                    metadata: {
+                        email: user.email,
+                        username: user.username,
+                    }
+                });
+
                 return errorResponse(404, 'User not found');
+
             }
 
-            auditLog({
-                action: AuditAction.LOGIN_FAILED_INVALID_PASSWORD,
-                userId: user.user_id,
-                resource: "AUTH",
-                resourceId: user.user_id.toString(),
-                metadata: {
-                    email: user.email,
-                    username: user.username,
-                }
-            });
 
             const payload: UserPayload = {
                 id: user.user_id,
@@ -354,7 +358,7 @@ export class Auth_Service {
             logger.debug({ userId: token?.user_id, expiresAt: token?.expires_at }, 'Refresh token found');
 
             if (!token) {
-               
+
                 return errorResponse(404, 'Refresh token not found');
             }
             // check if token is expired
@@ -395,10 +399,10 @@ export class Auth_Service {
             await this.RefreshRepository.save(token);
 
             const data = {
-               
-                    accessToken: accessToken,
-                    refreshToken: refreshToken,
-                    user: user
+
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                user: user
             }
 
             return successResponse(200, 'Refresh token generated successfully', data);
@@ -537,7 +541,7 @@ export class Auth_Service {
             logger.info({ user: user.user_id }, 'user is updated')
             await this.userRepository.save(user);
 
-            const {password, ...userWithoutPassword} = user;
+            const { password, ...userWithoutPassword } = user;
 
             return successResponse(200, 'User updated successfully', userWithoutPassword);
 
@@ -573,7 +577,7 @@ export class Auth_Service {
             if (!isMatch) {
                 return errorResponse(401, 'Invalid current password');
             }
-             const isSamePassword = user.checkIfUnencryptedPasswordIsValid(data.newPassword);
+            const isSamePassword = user.checkIfUnencryptedPasswordIsValid(data.newPassword);
             logger.debug({ isSamePassword: isSamePassword }, 'Password match');
 
             if (isSamePassword) {
@@ -584,7 +588,7 @@ export class Auth_Service {
             await user.hashPassword();
             logger.info({ user: user.user_id }, 'user password is changed')
             await this.userRepository.save(user);
-            await this.RefreshRepository.delete({user_id: userId})
+            await this.RefreshRepository.delete({ user_id: userId })
 
             return successResponse(200, 'User password changed successfully', null);
 
@@ -600,22 +604,22 @@ export class Auth_Service {
         }
     }
 
-    public async forgotPassword( data: forgotPasswordDto){
-        try{
+    public async forgotPassword(data: forgotPasswordDto) {
+        try {
             const user = await this.userRepository.findOne({
-                where:{
+                where: {
                     email: data.email
                 },
             });
-            
+
             logger.debug({ user: user?.user_id }, 'User fetched for forgot password');
 
             if (!user) {
                 return errorResponse(404, 'User not found');
             }
 
-            const {rawToken, hashedToken} = generateResetToken();
-//temporal fix would use test email service to  test this later
+            const { rawToken, hashedToken } = generateResetToken();
+            // temporal fix would use test email service to test this later
             if (process.env.NODE_ENV !== 'production') {
                 logger.debug({ rawToken }, 'Reset token (DEV ONLY - do not log in production)');
             }
@@ -625,66 +629,61 @@ export class Auth_Service {
             user.resetPasswordTokenExpiresAt = expiresAt;
             await this.userRepository.save(user);
 
-           
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
-    await sendPasswordResetEmail(user.email, resetLink);
+            const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+            await sendPasswordResetEmail(user.email, resetLink);
 
-    logger.info({ userId: user.user_id }, "Password reset token generated");
+            logger.info({ userId: user.user_id }, "Password reset token generated");
 
             return successResponse(200, 'User password reset token generated successfully', null);
+        } catch (error) {
+            logger.error({ err: error }, 'Error during forgot password');
+            let errorMessage = "An unknown error occurred during forgot password.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+            return errorResponse(500, 'Internal server error.', errorMessage);
         }
-        catch(error){
+    }
 
+    public async resetPassword(data: ResetPasswordDto) {
+        try {
+            const hashedToken = hashResetToken(data.token);
+
+            const user = await this.userRepository.findOne({
+                where: { resetPasswordTokenHash: hashedToken },
+            });
+
+            if (!user) {
+                return errorResponse(400, "Invalid or expired reset token");
+            }
+
+            if (!user.resetPasswordTokenExpiresAt || user.resetPasswordTokenExpiresAt < new Date()) {
+                return errorResponse(400, "Invalid or expired reset token");
+            }
+
+            user.password = data.newPassword;
+            user.hashPassword(); // synchronous method, no await needed
+
+            // Invalidate the token immediately — single use
+            user.resetPasswordTokenHash = null;
+            user.resetPasswordTokenExpiresAt = null;
+
+            await this.userRepository.save(user);
+            await this.RefreshRepository.delete({ user_id: user.user_id }); // revoke sessions
+
+            logger.info({ userId: user.user_id }, "Password reset successfully");
+
+            return successResponse(200, "Password reset successfully", null);
+        } catch (error) {
+            logger.error({ err: error }, 'Error during user password reset');
+
+            let errorMessage = "An unknown error occurred during user password reset.";
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            }
+
+            return errorResponse(500, 'Internal server error.', errorMessage);
         }
-
-        
-
     }
 
-  public  async resetPassword(data: ResetPasswordDto) {
-  try {
-    const hashedToken = hashResetToken(data.token);
-
-    const user = await this.userRepository.findOne({
-      where: { resetPasswordTokenHash: hashedToken },
-    });
-
-    if (!user) {
-      return errorResponse(400, "Invalid or expired reset token");
-    }
-
-    if (!user.resetPasswordTokenExpiresAt || user.resetPasswordTokenExpiresAt < new Date()) {
-      return errorResponse(400, "Invalid or expired reset token");
-
-
-}
- if (!user.resetPasswordTokenExpiresAt || user.resetPasswordTokenExpiresAt < new Date()) {
-      return errorResponse(400, "Invalid or expired reset token");
-    }
-
-    user.password = data.newPassword;
-    await user.hashPassword(); // confirm this is awaited if async
-
-    // Invalidate the token immediately — single use
-    user.resetPasswordTokenHash = null;
-    user.resetPasswordTokenExpiresAt = null;
-
-    await this.userRepository.save(user);
-    await this.RefreshRepository.delete({ user_id: user.user_id }); // revoke sessions
-
-    logger.info({ userId: user.user_id }, "Password reset successfully");
-
-    return successResponse(200, "Password reset successfully", null);
-  }
-  catch (error) {
-    logger.error({ err: error }, 'Error during user password reset');
-
-    let errorMessage = "An unknown error occurred during user password reset.";
-    if (error instanceof Error) {
-        errorMessage = error.message;
-    }
-
-    return errorResponse(500, 'Internal server error.', errorMessage);
-  }
-}
 }

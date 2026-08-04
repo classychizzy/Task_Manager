@@ -25,7 +25,7 @@ export class Comment_Controller {
 
             if (!content) {
                 return res.status(400).json({
-                    statusCode: 400,
+                    status_code: 400,
                     success: false,
                     message: 'Content is required',
                     data: null
@@ -33,10 +33,10 @@ export class Comment_Controller {
             }
 
             const result = await this.commentService.createComment(taskId, userId, content);
-            return res.status(result.statusCode).json(result);
+            return res.status(result.status_code).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in createComment');
-            return res.status(500).json({ statusCode: 500, success: false, message: 'Internal server error' });
+            return res.status(500).json({ status_code: 500, success: false, message: 'Internal server error' });
         }
     }
 
@@ -51,10 +51,10 @@ export class Comment_Controller {
                 page ? Number(page) : undefined,
                 limit ? Number(limit) : undefined
             );
-            return res.status(result.statusCode).json(result);
+            return res.status(result.status_code).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getCommentsForTask');
-            return res.status(500).json({ statusCode: 500, success: false, message: 'Internal server error' });
+            return res.status(500).json({ status_code: 500, success: false, message: 'Internal server error' });
         }
     }
 
@@ -65,10 +65,10 @@ export class Comment_Controller {
             logger.debug({ commentId, requesterId }, 'deleteComment called');
 
             const result = await this.commentService.deleteComment(commentId, requesterId);
-            return res.status(result.statusCode).json(result);
+            return res.status(result.status_code).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in deleteComment');
-            return res.status(500).json({ statusCode: 500, success: false, message: 'Internal server error' });
+            return res.status(500).json({ status_code: 500, success: false, message: 'Internal server error' });
         }
     }
 
@@ -80,10 +80,10 @@ export class Comment_Controller {
             logger.debug({ commentId, userId }, 'updateComment called');
 
             const result = await this.commentService.updateComment(commentId, userId, content);
-            return res.status(result.statusCode).json(result);
+            return res.status(result.status_code).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in updateComment');
-            return res.status(500).json({ statusCode: 500, success: false, message: 'Internal server error' });
+            return res.status(500).json({ status_code: 500, success: false, message: 'Internal server error' });
         }
     }
 

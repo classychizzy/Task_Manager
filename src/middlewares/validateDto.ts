@@ -14,10 +14,14 @@ export const validateDto = <T>(DtoClass: ClassConstructor<T>) => {
     });
 
     if (errors.length > 0) {
+      const firstError = errors[0]?.constraints
+        ? Object.values(errors[0].constraints)[0]
+        : "Validation failed";
       console.log(`validating DTO: ${DtoClass.name}`);
       return res.status(400).json({
-        status: "error",
-        message: "Validation failed",
+        status_code: 400,
+        success: false,
+        message: firstError,
         errors: errors.map((err) => ({
           field: err.property,
           constraints: err.constraints,

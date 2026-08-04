@@ -1,8 +1,12 @@
 import AppDataSource from '../ormconfig';
 import * as dotenv from 'dotenv';
+import * as cron from 'node-cron';
+import { TestDbHelper } from './helpers/db.helper';
 dotenv.config({ path: '.env.test' });
 
 // Setup runs before all tests
+
+
 beforeAll(async () => {
     //verify the database is connected
     if (process.env.NODE_ENV !== 'test') {
@@ -24,8 +28,8 @@ afterAll(async () => {
     }
 });
 
-// Clean up database between tests (optional but recommended)
+// Clean up database between tests
 afterEach(async () => {
-    // You can add cleanup logic here if needed
-    // For example, clearing specific tables between tests
+    // Globally clear the database between tests to ensure test isolation
+    await TestDbHelper.clearDatabase();
 });

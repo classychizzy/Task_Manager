@@ -8,7 +8,7 @@ export interface PaginationMeta {
 }
 
 export interface ResponseDTO<T = null> {
-    statusCode: number;
+    status_code: number;
     success: boolean;
     message: string;
     data?: T | undefined;
