@@ -135,6 +135,15 @@ export class Project_service {
 
             });
 
+
+            const sanitizedProjects = projects.map(project => {
+                const { password, ...userWithoutPassword } = project.user;
+                return {
+                    ...project,
+                    user: userWithoutPassword,
+                };
+            });
+
             logger.info({ userId }, "Searching for projects with userId:");
 
             // First, check what projects exist with just the user filter: i used this to debug
@@ -159,13 +168,14 @@ export class Project_service {
             // console.log("PROJECTS WITH DELETED FILTER (false):", JSON.stringify(projectsWithDeletedFilter, null, 2));
 
 
-            return successResponse(200, "Projects retrieved successfully", {
-                meta: {
-                    total,
-                    page: currentPage,
-                    limit: pageSize,
-                    totalPages: Math.ceil(total / pageSize),
-                },
+            return successResponse(200, "Projects retrieved successfully",
+                sanitizedProjects, {
+
+                total,
+                page: currentPage,
+                limit: pageSize,
+                totalPages: Math.ceil(total / pageSize),
+
             });
         } catch (error) {
             logger.error({ err: error, userId }, 'Error retrieving all projects');
@@ -205,10 +215,7 @@ export class Project_service {
                 return errorResponse(404, "Project not found");
             }
 
-            return successResponse(200, "Project retrieved successfully", {
-                data: project,
-
-            })
+            return successResponse(200, "Project retrieved successfully", project);
         }
 
         catch (error) {
@@ -246,6 +253,10 @@ export class Project_service {
 
             logger.debug({ project }, "project found")
 
+            if (!updateData.name && !updateData.description) {
+                return errorResponse(400, "No update data provided");
+            }
+
             if (updateData.name) {
                 project.name = updateData.name;
             }
@@ -270,9 +281,7 @@ export class Project_service {
                 }
             })
 
-            return successResponse(200, "Project updated successfully", {
-                data: project,
-            });
+            return successResponse(200, "Project updated successfully", project);
 
         } catch (error) {
             logger.error({ err: error, projectId, userId }, 'Error updating project');
@@ -293,7 +302,7 @@ export class Project_service {
 
                     user: {
                         user_id: userId
-                    }
+                    },
                 },
 
             });
@@ -329,13 +338,10 @@ export class Project_service {
             })
 
 
-            return successResponse(200, "Project deleted successfully", {
-                data: null,
-
-            });
+            return successResponse(200, "Project deleted successfully", null);
         } catch (error) {
             logger.error({ err: error, projectId, userId }, 'Error deleting project');
-            let errorMessage = "unable to retreive project";
+            let errorMessage = "unable to delete project";
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
@@ -348,7 +354,6 @@ export class Project_service {
             const restoreProject = await this.ProjectRepository.findOne({
                 where: {
                     project_id: projectId,
-                    is_deleted: true,
                     user: {
                         user_id: userId
                     }
@@ -361,6 +366,12 @@ export class Project_service {
                 return errorResponse(404, "Project not found");
 
             }
+            if (!restoreProject.is_deleted) {
+                // check for isdeleted attribute if false it means it was never deleted 
+                // and hence cannot be restored
+                return errorResponse(409, "Project is not deleted");
+
+            }
 
 
             restoreProject.is_deleted = false;
@@ -368,11 +379,20 @@ export class Project_service {
             restoreProject.updated_at = new Date();
             logger.info({ projectId, userId }, 'Project restored');
 
+            auditLog({
+                action: AuditAction.PROJECT_RESTORED,
+                userId: userId,
+                resource: "Project",
+                resourceId: String(projectId),
+                metadata: {
+                    name: restoreProject.name,
+                    description: restoreProject.description,
+                }
+            })
+
             await this.ProjectRepository.save(restoreProject);
 
-            return successResponse(200, "Project restored successfully", {
-                data: null,
-            });
+            return successResponse(200, "Project restored successfully", null);
         }
         catch (error) {
             logger.error({ err: error, projectId, userId }, 'Error restoring project');

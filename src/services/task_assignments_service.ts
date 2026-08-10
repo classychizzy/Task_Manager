@@ -8,6 +8,7 @@ import { logger } from '../lib/logger';
 import { auditLog } from '../utils/auditlogs';
 import { AuditAction } from '../enums/auditActions';
 import { successResponse, errorResponse } from '../utils/responsehelper';
+import { getPagination } from '../utils/pagination';
 
 export class TaskAssignment_Service {
     private taskAssignmentRepository: typeof Task_assignment_Repository;
@@ -27,7 +28,7 @@ export class TaskAssignment_Service {
             const task = await this.taskRepository.findOne({
                 where: {
                     task_id: taskId,
-                    is_deleted: false
+
                 },
                 // relations: ["project", "project.user"] // this is a non rbac way of checking ownership
             });
@@ -49,12 +50,13 @@ export class TaskAssignment_Service {
 
 
             if (!requesterAssignment) {
-                return errorResponse(403, "you are not assigned to this task");
+                //404 consistent with security best practices - don't leak information
+                return errorResponse(404, "you are not assigned to this task");
             }
             logger.info({ requesterAssignment }, 'requester assignment found')
 
             if (requesterAssignment.permission !== TaskPermission.OWNER) {
-                return errorResponse(403, "only owners are permitted to assign tasks");
+                return errorResponse(404, "only owners are permitted to assign tasks");
             }
 
             // 3. Find user by email the user here is the asignee i.e the person we wish to assign
@@ -72,7 +74,7 @@ export class TaskAssignment_Service {
                 where: {
                     task: { task_id: taskId },
                     user: { user_id: assignee.user_id },
-                    is_deleted: false
+
                 }
             });
 
@@ -145,12 +147,8 @@ export class TaskAssignment_Service {
             // console.log('=== END DEBUG ===');
 
             if (!requester || requester.permission !== TaskPermission.OWNER) {
-                let response = {
-                    status_code: 403,
-                    message: 'only owner can change permission',
-                    data: null
-                }
-                return response;
+
+                return errorResponse(404, 'only owner can change permission');
             }
 
             const assignment = await this.taskAssignmentRepository.findOne({
@@ -162,12 +160,8 @@ export class TaskAssignment_Service {
             });
 
             if (!assignment) {
-                let response = {
-                    status_code: 404,
-                    message: 'Assignment not found',
-                    data: null
-                }
-                return response;
+
+                return errorResponse(404, 'assignment not found');
             }
 
             assignment.permission = Permission;
@@ -228,12 +222,12 @@ export class TaskAssignment_Service {
                 }
             });
             if (!requester || requester.permission !== TaskPermission.OWNER) {
-                return errorResponse(403, "only owner can remove user from task");
+                return errorResponse(404, "only owner can remove user from task");
             }
             //owner protection logic
 
             else if (userId === requesterId) {
-                return errorResponse(403, "you cannot remove yourself from the task");
+                return errorResponse(409, "you cannot remove yourself from the task");
             }
 
             const assignment = await this.taskAssignmentRepository.findOne({
@@ -260,19 +254,16 @@ export class TaskAssignment_Service {
     }
 
 
+    async getTaskAssignments(taskId: number, requesterId: number, page?: number, limit?: number) {
+        const { skip, take, page: currentPage, limit: pageSize } = getPagination(page, limit);
 
-
-
-    async getTaskAssignments(taskId: number, requesterId: number) {
-        // i think this endpoint needs pagination
         try {
-            // to check assignment as a user
             const task = await this.taskRepository.findOne({
                 where: { task_id: taskId, is_deleted: false }
             });
 
             if (!task) {
-                return { status_code: 404, status: 'failed', message: 'Task not found', data: null };
+                return errorResponse(404, 'Task not found');
             }
 
             const requesterAssignment = await this.taskAssignmentRepository.findOne({
@@ -280,16 +271,29 @@ export class TaskAssignment_Service {
             });
 
             if (!requesterAssignment) {
-                return errorResponse(403, "you must be assigned to the task to view its assignments");
+                return errorResponse(404, "you must be assigned to the task to view its assignments");
             }
 
-            const assignments = await this.taskAssignmentRepository.find({
+            const [assignments, total] = await this.taskAssignmentRepository.findAndCount({
                 where: { task: { task_id: taskId }, is_deleted: false },
-                relations: ["user"]
+                relations: ["user"],
+                skip,
+                take,
+                order: { created_at: 'DESC' }
             });
 
+            const sanitizedAssignments = assignments.map(a => {
+                const { password, ...userWithoutPassword } = a.user;
+                return { ...a, user: userWithoutPassword };
+            });
 
-            return successResponse(200, "task assignments retrieved successfully", assignments);
+            return successResponse(200, "task assignments retrieved successfully", sanitizedAssignments, {
+                total,
+                page: currentPage,
+                limit: pageSize,
+                totalPages: Math.ceil(total / pageSize),
+            });
+
         } catch (error) {
             logger.error({ err: error, taskId, requesterId }, 'Error fetching task assignments');
             return errorResponse(500, 'internal server error while fetching task assignments');
@@ -303,11 +307,11 @@ export class TaskAssignment_Service {
                 relations: ["task", "task.project"]
             });
             //console.log(assignments);
+            const message = assignments.length === 0
+                ? "you have no task assignments"
+                : "user assignments retrieved successfully";
 
-            if (!assignments){
-                return errorResponse(404, "user has no assignments");
-            }
-            return successResponse(200, "user assignments retrieved successfully", assignments);
+            return successResponse(200, message, assignments);
         } catch (error) {
             logger.error({ err: error, userId }, 'Error fetching user assignments');
             return errorResponse(500, 'internal server error while fetching user assignments');
@@ -316,37 +320,32 @@ export class TaskAssignment_Service {
 
     async getAssignmentsForOtherUser(targetUserId: number, requesterId: number) {
         try {
-            //owner is able to check all users he's assigned tasks to
             const targetAssignments = await this.taskAssignmentRepository.find({
                 where: { user: { user_id: targetUserId }, is_deleted: false },
                 relations: ["task", "task.project"]
             });
 
-            logger.debug({ targetUserId, assignmentCount: targetAssignments.length }, 'Target user assignments lookup');
-            if (targetAssignments.length === 0) {
-                return errorResponse(404, "user has no assignments");
-            }
+            const ownedAssignments = await this.taskAssignmentRepository.find({
+                where: {
+                    user: { user_id: requesterId },
+                    permission: TaskPermission.OWNER,
+                    is_deleted: false
+                },
+                relations: ["task"]
+            });
 
-            const filteredAssignments: Task_assignment_entity[] = [];
-            for (const assignment of targetAssignments) {
-                const isOwner = await this.taskAssignmentRepository.findOne({
-                    where: {
-                        task: { task_id: assignment.task.task_id },
-                        user: { user_id: requesterId },
-                        permission: TaskPermission.OWNER,
-                        is_deleted: false
-                    }
-                });
-                if (isOwner) filteredAssignments.push(assignment);
-            }
+            const ownedTaskIds = new Set(ownedAssignments.map(a => a.task.task_id));
 
-            logger.debug({ filteredCount: filteredAssignments.length }, 'Filtered assignments shared with requester');
+            const filteredAssignments = targetAssignments.filter(assignment =>
+                ownedTaskIds.has(assignment.task.task_id)
+            );
 
             if (filteredAssignments.length === 0) {
-                return errorResponse(403, "you do not share any tasks with this user");
+                return errorResponse(404, "no shared assignments found");
             }
 
             return successResponse(200, "user assignments retrieved successfully", filteredAssignments);
+
         } catch (error) {
             logger.error({ err: error, targetUserId, requesterId }, 'Error fetching other user assignments');
             return errorResponse(500, 'internal server error while fetching other user assignments');
@@ -388,7 +387,7 @@ export class TaskAssignment_Service {
             logger.debug({ requesterId, hasAssignment: !!requesterAssignment }, 'Requester assignment lookup in bulkAssign');
 
             if (!requesterAssignment || requesterAssignment.permission !== TaskPermission.OWNER) {
-                return errorResponse(403, "only owner can assign users to task");
+                return errorResponse(404, "only owner can assign users to task");
             }
 
             const results: {
@@ -490,11 +489,11 @@ export class TaskAssignment_Service {
             });
 
             if (!presentOwner) {
-                return errorResponse(403, "you are not the owner of this task");
+                return errorResponse(404, "you are not the owner of this task");
             }
             //verify if the request user is the same as the present owner
             if (presentOwner.user.user_id !== userId) {
-                return errorResponse(403, "you are not authorized to transfer ownership of this task");
+                return errorResponse(404, "you are not authorized to transfer ownership of this task");
             }
 
             //check if new owner exists in task assignment

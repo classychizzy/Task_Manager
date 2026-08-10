@@ -53,6 +53,10 @@ export class Project_Controller {
             const userid = req.user!.id;
             const projectId = req.params.projectId;
             logger.debug({ userId: userid, projectId }, 'getProjectById called');
+
+            if (isNaN(Number(projectId))) {
+                return res.status(400).json({ status_code: 400, status: false, message: "Invalid project id" });
+            }
             const project = await this.Project_service.fetchProjectById(Number(projectId), userid);
 
 
@@ -68,6 +72,10 @@ export class Project_Controller {
             const projectId = req.params.projectId;
             const userId = req.user!.id;
             logger.debug({ projectId, userId }, 'UpdateProject called');
+
+            if (isNaN(Number(projectId))) {
+                return res.status(400).json({ status_code: 400, status: false, message: "Invalid project id" });
+            }
             const result = await this.Project_service.updateProject(Number(projectId), userId, req.body);
 
             return res.status(result.status_code || 200).json(result);
@@ -82,6 +90,12 @@ export class Project_Controller {
             const projectId = req.params.projectId;
             const userId = req.user!.id;
             logger.debug({ projectId, userId }, 'DeleteProject called');
+
+
+            if (isNaN(Number(projectId))) {
+                return res.status(400).json({ status_code: 400, status: false, message: "Invalid project id" });
+            }
+
             const result = await this.Project_service.DeleteProject(Number(projectId), userId);
 
 
@@ -97,6 +111,11 @@ export class Project_Controller {
             const projectid = req.params.projectId;
             const userId = req.user!.id;
             logger.debug({ projectId: projectid, userId }, 'restoreProject called');
+
+            if (isNaN(Number(projectid))) {
+                return res.status(400).json({ status_code: 400, status: false, message: "Invalid project id" });
+            }
+
             const result = await this.Project_service.restoreProject(Number(projectid), userId);
 
             return res.status(result.status_code || 200).json(result);

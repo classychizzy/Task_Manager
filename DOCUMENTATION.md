@@ -214,3 +214,47 @@ reminder emails for overdue tasks
 weekly reports
 exporting tasks to PDF
 generating analytics
+
+
+fetchprojectbyId edge cases
+Core behavior
+
+Project exists and belongs to the requesting user → 200, returns project with tasks
+Project exists but belongs to a different user → 404 (not 403) — this is the IDOR-safe choice, since returning 403 would confirm to an attacker "this project ID exists, you're just not allowed to see it," leaking information. 404 is the correct, non-leaking response, consistent with how you've handled similar cases elsewhere
+Project doesn't exist at all (invalid/non-existent projectId) → 404, same message as above — deliberately indistinguishable from "exists but not yours," for the same enumeration-prevention reason
+Soft-deleted project → should return 404 (already correctly filtered via is_deleted: false)
+
+Input validation
+
+projectId is non-numeric (e.g. /projects/abc) — since this comes from req.params.projectId and gets Number()-converted in your controller, confirm Number("abc") → NaN is handled gracefully (doesn't crash the query, returns 400 or 404 cleanly rather than a 500)
+projectId is missing/empty in the URL — shouldn't be reachable given your route definition (/:projectId/...), but worth a defensive test anyway
+
+Authentication
+
+No token → 401 (handled by middleware, not this service)
+Invalid/expired token → 403 (per your authenticateToken middleware's existing behavior)
+
+Response contract
+
+Response includes tasks relation correctly (confirm the array is populated, not empty when tasks exist)
+Response doesn't leak the user relation's password — wait, actually check: does this query even load the user relation? Looking at your code, relations: ["tasks"] — no user relation loaded here, so there's no password-leak risk in this particular method, unlike getAllProjects. Worth confirming intentionally: do you want user info returned with a single project fetch? If yes, add the relation and remember to strip password; if no, current behavior is fine as-is.
+
+Concurrency (lower priority, edge case)
+
+Project gets soft-deleted by a concurrent request between the initial existence check and this fetch — not really applicable here since there's only one query, no multi-step race condition in this specific method
+
+comments
+The industry-standard approach for free-text fields
+
+The consensus (OWASP's guidance included) is: don't restrict input characters for free text — sanitize/encode on output instead.
+
+Length limits — yes, always. Prevents abuse (someone pasting a 500,000-character string) and DB bloat
+Trim whitespace — yes
+Reject empty/whitespace-only — yes
+No character whitelist — let people type anything, including <, >, &, emoji, non-Latin scripts
+XSS protection happens at render time, not input time — when the comment is eventually displayed (in your frontend, or anywhere else it's rendered as HTML), it must be escaped/encoded there — e.g. React does this automatically by default when rendering strings in JSX; if you ever build raw HTML templates, you'd need explicit escaping (like escapeHtml() or a templating engine that auto-escapes)
+SQL injection isn't a concern here at all — since TypeORM parameterizes queries, arbitrary comment content (including '; DROP TABLE style text) is stored as inert data, never executed
+
+This is why your earlier sqlInjectionPayloads/xssPayloads tests made sense for name (structured field, whitelist expected to reject them) but wouldn't make sense for content here — rejecting <script> as input isn't the right defense for a comment field; the defense is escaping it wherever it's displayed.
+
+

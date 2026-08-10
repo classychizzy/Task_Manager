@@ -21,6 +21,15 @@ export class Comment_Controller {
             const userId = req.user!.id;
             const { content } = req.body;
 
+            if (isNaN(taskId)) {
+                return res.status(400).json({
+                    status_code: 400,
+                    success: false,
+                    message: 'Invalid task ID',
+                    data: null
+                });
+            }
+
             logger.debug({ taskId, userId }, 'createComment called');
 
             if (!content) {
@@ -45,6 +54,15 @@ export class Comment_Controller {
             const taskId = Number(req.params.taskId);
             logger.debug({ taskId }, 'getCommentsForTask called');
             const { page, limit } = req.query;
+
+            if (isNaN(taskId)) {
+                return res.status(400).json({
+                    status_code: 400,
+                    success: false,
+                    message: 'Invalid task ID',
+                    data: null
+                });
+            }
 
             const result = await this.commentService.getCommentsForTask(
                 taskId,

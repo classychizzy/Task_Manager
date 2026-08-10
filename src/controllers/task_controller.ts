@@ -5,6 +5,7 @@ import { logger } from '../lib/logger';
 import { validateDto } from '../middlewares/validateDto';
 import { TaskDTO } from '../dto/task_dto';
 import { STATUS_CODES } from 'http';
+import { UpdateTaskDTO } from '../dto/updateTask_dto';
 
 export class Task_Controller {
     public router: Router;
@@ -21,18 +22,15 @@ export class Task_Controller {
             const userId = req.user!.id
             const projectId = Number(req.params.projectId);
             logger.debug({ userId, projectId }, 'createTask called');
+
+            if (isNaN(projectId)) {
+                return res.status(400).json({ status: false, message: 'Invalid projectId' });
+            }
             const task = await this.Task_Service.createTask(req.body, projectId, userId);
-            if (task && 'status_code' in task) {
-                return res.status(Number(task.status_code)).json(task);
-            }
 
-            let response = {
-                status_code: 201,
-                message: 'Task created successfully',
-                data: task
+            return res.status(task.status_code || 201).json(task);
 
-            }
-            return res.json(response);
+
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in createTask');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -42,8 +40,12 @@ export class Task_Controller {
     public async getAllTasks(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = req.user!.id;
-            const projectId = req.params.projectId;
+            const projectId = Number(req.params.projectId);
             logger.debug({ userId, projectId }, 'getAllTasks called');
+
+            if (isNaN(projectId)) {
+                return res.status(400).json({ status: false, message: 'Invalid projectId' });
+            }
             const { page, limit } = req.query;
 
             const taskResponse = await this.Task_Service.getAllTasks(
@@ -53,17 +55,9 @@ export class Task_Controller {
                 limit ? Number(limit) : undefined
             );
 
-            if (taskResponse && 'status_code' in taskResponse) {
-                return res.status(Number(taskResponse.status_code)).json(taskResponse);
-            }
 
-            let response = {
-                status_code: 200,
-                message: 'Tasks retrieved successfully',
-                data: taskResponse
-            }
+            return res.status(taskResponse.status_code || 200).json(taskResponse);
 
-            return res.json(response);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getAllTasks');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -73,20 +67,16 @@ export class Task_Controller {
     public async getTaskById(req: AuthenticatedRequest, res: Response) {
         try {
             const userId = req.user!.id;
-            const taskId = req.params.taskId;
+            const taskId = Number(req.params.taskId);
             logger.debug({ userId, taskId }, 'getTaskById called');
+
+            if (isNaN(taskId)) {
+                return res.status(400).json({ status: false, message: 'Invalid taskId' });
+            }
             const task = await this.Task_Service.getTaskById(Number(taskId), userId);
 
-            if (task && 'status_code' in task) {
-                return res.status(Number(task.status_code)).json(task);
-            }
+            return res.status(task.status_code || 200).json(task);
 
-            let response = {
-                status_code: 200,
-                message: 'Task retrieved successfully',
-                data: task
-            }
-            return res.json(response);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in getTaskById');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -95,22 +85,17 @@ export class Task_Controller {
 
     public async UpdateTask(req: AuthenticatedRequest, res: Response) {
         try {
-            const taskId = req.params.taskId;
+            const taskId = Number(req.params.taskId);
             const userId = req.user!.id;
             logger.debug({ taskId, userId }, 'UpdateTask called');
+
+            if (isNaN(taskId)) {
+                return res.status(400).json({ status: false, message: 'Invalid taskId' });
+            }
             const result = await this.Task_Service.updateTask(Number(taskId), userId, req.body);
 
-            if (result && 'status_code' in result) {
-                return res.status(Number(result.status_code)).json(result);
-            }
+            return res.status(result.status_code || 200).json(result);
 
-            let response = {
-                status_code: 200,
-                message: 'Task updated successfully',
-                data: result
-            }
-
-            return res.json(response);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in UpdateTask');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -119,22 +104,17 @@ export class Task_Controller {
 
     public async DeleteTask(req: AuthenticatedRequest, res: Response) {
         try {
-            const taskId = req.params.taskId;
+            const taskId = Number(req.params.taskId);
             const userId = req.user!.id;
             logger.debug({ taskId, userId }, 'DeleteTask called');
+
+            if (isNaN(taskId)) {
+                return res.status(400).json({ status: false, message: 'Invalid taskId' });
+            }
             const result = await this.Task_Service.deleteTask(Number(taskId), userId);
 
-            if (result && 'status_code' in result) {
-                return res.status(Number(result.status_code)).json(result);
-            }
+            return res.status(result.status_code || 200).json(result);
 
-            let response = {
-                status_code: 200,
-                message: 'Task deleted successfully',
-                data: result
-            }
-
-            return res.json(response);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in DeleteTask');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -143,21 +123,19 @@ export class Task_Controller {
 
     public async restoreTask(req: AuthenticatedRequest, res: Response) {
         try {
-            const taskId = req.params.taskId;
+            const taskId = Number(req.params.taskId);
             const userId = req.user!.id;
             logger.debug({ taskId, userId }, 'restoreTask called');
+
+            if (isNaN(taskId)) {
+                return res.status(400).json({ status: false, message: 'Invalid taskId' });
+            }
             const result = await this.Task_Service.restoreTask(Number(taskId), userId);
 
-            if (result && 'status_code' in result) {
-                return res.status(Number(result.status_code)).json(result);
-            }
+            return res.status(result.status_code || 200).json(result);
 
-            let response = {
-                status_code: 200,
-                message: 'Task restored successfully',
-                data: result
-            }
-            return res.json(response);
+
+
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in restoreTask');
             return res.status(500).json({ status: 'failed', message: 'Internal server error' });
@@ -168,7 +146,7 @@ export class Task_Controller {
         this.router.post('/create/:projectId', validateDto(TaskDTO), this.createTask.bind(this));
         this.router.get('/all/:projectId', this.getAllTasks.bind(this));
         this.router.get('/:taskId', this.getTaskById.bind(this));
-        this.router.put('/:taskId/update', validateDto(TaskDTO), this.UpdateTask.bind(this));
+        this.router.put('/:taskId/update', validateDto(UpdateTaskDTO), this.UpdateTask.bind(this));
         this.router.delete('/:taskId/delete', this.DeleteTask.bind(this));
         this.router.put('/:taskId/restore', this.restoreTask.bind(this));
 

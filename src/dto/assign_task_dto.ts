@@ -1,11 +1,14 @@
 
+import { IsEmail, IsIn, IsOptional } from "class-validator";
+import { Transform } from "class-transformer";
 import { TaskPermission } from "../enums/Taskpermission_enum";
-import { IsEmail, IsEnum } from "class-validator";
 
 export class AssignTaskDTO {
-    @IsEmail(undefined, { message: "Invalid email format" })
+    @IsEmail({}, { message: "Invalid email format" })
+    @Transform(({ value }) => typeof value === 'string' ? value.trim().toLowerCase() : value)
     email: string;
 
-    @IsEnum(TaskPermission)
+    @IsOptional()
+    @IsIn([TaskPermission.VIEW, TaskPermission.EDIT], { message: "Permission must be 'view' or 'edit'" })
     permission?: TaskPermission;
 }
