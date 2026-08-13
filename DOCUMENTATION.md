@@ -123,6 +123,11 @@ All routes are prefixed with `/api/v1` unless stated otherwise.
 | `PUT` | `/comments/:commentId` | Edit a previously made comment. |
 | `DELETE` | `/comments/:commentId` | Delete a specific comment. |
 
+
+# important
+- cross env package added to script to help with  handling environment variables across different platforms .  
+
+
 testing phase
 edgecases
 Authentication Phase

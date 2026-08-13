@@ -26,6 +26,7 @@ import { forgotPasswordDto } from "../../dto/forgot_password_dto";
 import { ResetPasswordDto } from "../../dto/resetPassword_dto";
 import { generateResetToken, hashResetToken } from "../../utils/reset_token";
 import { sendPasswordResetEmail } from "../../utils/mailer";
+import { RefreshTokenDTO } from "../../dto/refresh_dto";
 dotenv.config();
 
 
@@ -215,6 +216,7 @@ export class Auth_Service {
             const user = await this.userRepository.findOne({
                 where: {
                     email: userData.email,
+                    is_deleted: false,
                 }
             });
 
@@ -234,6 +236,11 @@ export class Auth_Service {
 
                 return errorResponse(404, 'User not found');
             }
+
+            if (user!.is_deleted === true) {
+                return errorResponse(404, 'User not found');
+            }
+
 
 
 
@@ -340,7 +347,7 @@ export class Auth_Service {
 
     }
 
-    async refreshToken(refreshtoken: string) {
+    async refreshToken(refreshtoken: RefreshTokenDTO) {
 
         try {
             if (!refreshtoken || typeof refreshtoken !== "string") {
@@ -472,73 +479,81 @@ export class Auth_Service {
 
     }
 
-    async DeleteUser(userId: number) {
+    async DeleteUser(requesterId: number) {
         try {
             const user = await this.userRepository.findOne({
-                where: {
-                    user_id: userId
-                },
+                where: { user_id: requesterId }
             });
-
-            const token = await this.RefreshRepository.findOne({
-                where: {
-                    user_id: userId,
-                    revoked_at: IsNull()
-                },
-            });
-
-            logger.debug({ userId: user?.user_id }, 'User fetched for deletion');
-            logger.debug({ userId: token?.user_id }, 'Active token found for user');
 
             if (!user) {
                 return errorResponse(404, 'User not found');
             }
 
+            if (user.is_deleted) {
+                return errorResponse(409, 'Account already deleted');
+            }
+
             user.is_deleted = true;
-            logger.info({ user: user.is_deleted }, 'user is deleted')
+            user.deleted_at = new Date();
             await this.userRepository.save(user);
 
-            if (token) {
+            const activeTokens = await this.RefreshRepository.find({
+                where: {
+                    user_id: requesterId,
+                    revoked_at: IsNull()
+                }
+            });
+
+            for (const token of activeTokens) {
                 token.revoked_at = new Date();
-                logger.info({ token: token.revoked_at }, 'token is deleted')
-                await this.RefreshRepository.save(token);
             }
+            if (activeTokens.length > 0) {
+                await this.RefreshRepository.save(activeTokens);
+            }
+
+            logger.info({ userId: requesterId, revokedTokenCount: activeTokens.length }, 'User account deleted, sessions revoked');
 
             return successResponse(200, 'User deleted successfully', null);
 
         } catch (error) {
-            logger.error({ err: error }, 'Error during user deletion');
-
+            logger.error({ err: error, requesterId }, 'Error during user deletion');
             let errorMessage = "An unknown error occurred during user deletion.";
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
-
             return errorResponse(500, 'Internal server error.', errorMessage);
         }
     }
 
-    //missing update user
+
     async UpdateUser(userId: number, data: UpdateUserDTO) {
         try {
-            const user = await this.userRepository.findOne({
-                where: {
-                    user_id: userId
-                },
-            });
-
-            logger.debug({ userId: user?.user_id }, 'User fetched for update');
+            const user = await this.userRepository.findOne({ where: { user_id: userId } });
 
             if (!user) {
                 return errorResponse(404, 'User not found');
             }
 
-            user.username = data.username! ?? user.username;
-            user.email = data.email! ?? user.email;
-            user.firstName = data.firstName! ?? user.firstName;
-            user.lastName = data.lastName! ?? user.lastName;
+            if (data.email && data.email !== user.email) {
+                const emailTaken = await this.userRepository.findOne({ where: { email: data.email } });
+                if (emailTaken) {
+                    return errorResponse(409, 'Email already in use');
+                }
+            }
 
-            logger.info({ user: user.user_id }, 'user is updated')
+            if (data.username && data.username !== user.username) {
+                const usernameTaken = await this.userRepository.findOne({ where: { username: data.username } });
+                if (usernameTaken) {
+                    return errorResponse(409, 'Username already in use');
+                }
+            }
+
+            user.username = data.username ?? user.username;
+            user.email = data.email ?? user.email;
+            user.firstName = data.firstName ?? user.firstName;
+            user.lastName = data.lastName ?? user.lastName;
+            user.updated_at = new Date();
+
             await this.userRepository.save(user);
 
             const { password, ...userWithoutPassword } = user;
@@ -546,13 +561,11 @@ export class Auth_Service {
             return successResponse(200, 'User updated successfully', userWithoutPassword);
 
         } catch (error) {
-            logger.error({ err: error }, 'Error during user update');
-
+            logger.error({ err: error, userId }, 'Error during user update');
             let errorMessage = "An unknown error occurred during user update.";
             if (error instanceof Error) {
                 errorMessage = error.message;
             }
-
             return errorResponse(500, 'Internal server error.', errorMessage);
         }
     }
@@ -571,6 +584,7 @@ export class Auth_Service {
                 return errorResponse(404, 'User not found');
             }
 
+
             const isMatch = user.checkIfUnencryptedPasswordIsValid(data.currentPassword);
             logger.debug({ isMatch: isMatch }, 'Password match');
 
@@ -581,7 +595,7 @@ export class Auth_Service {
             logger.debug({ isSamePassword: isSamePassword }, 'Password match');
 
             if (isSamePassword) {
-                return errorResponse(401, 'New password cannot be same as current password');
+                return errorResponse(400, 'New password cannot be same as current password');
             }
 
             user.password = data.newPassword;
@@ -615,7 +629,8 @@ export class Auth_Service {
             logger.debug({ user: user?.user_id }, 'User fetched for forgot password');
 
             if (!user) {
-                return errorResponse(404, 'User not found');
+                logger.info({ email: data.email }, 'Password reset requested for non-existent email');
+                return successResponse(200, 'If that email is registered, a reset link has been sent.', null);
             }
 
             const { rawToken, hashedToken } = generateResetToken();
@@ -630,11 +645,13 @@ export class Auth_Service {
             await this.userRepository.save(user);
 
             const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
+            logger.info({ resetLink: resetLink }, 'about to send email, reset link')
             await sendPasswordResetEmail(user.email, resetLink);
+            logger.info({ user: user.email }, "Password reset email sent successfully");
 
             logger.info({ userId: user.user_id }, "Password reset token generated");
 
-            return successResponse(200, 'User password reset token generated successfully', null);
+            return successResponse(200, 'If that email is registered, a reset link has been sent.', null);
         } catch (error) {
             logger.error({ err: error }, 'Error during forgot password');
             let errorMessage = "An unknown error occurred during forgot password.";

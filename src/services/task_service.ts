@@ -184,9 +184,6 @@ export class Task_Service {
 
     async getTaskById(taskId: number, userId: number) {
         try {
-
-            // Step 1: check the requester has any assignment on this task
-            // also we need permitted assigned users to be able to retrieve task info
             const assignment = await this.Task_assignment_Repository.findOne({
                 where: {
                     task: { task_id: taskId },
@@ -199,77 +196,59 @@ export class Task_Service {
                 return errorResponse(404, "task not found");
             }
 
-            // fetch the actual task
             const task = await this.TaskRepository.findOne({
                 where: {
-                    // any user with an assignment can view the task not just the owner
                     task_id: taskId,
-                    user_id: userId,
                     is_deleted: false,
                 },
                 relations: ["project"]
             });
 
             if (!task) {
-
                 return errorResponse(404, "task not found");
             }
+
             return successResponse(200, "task retrieved successfully", task);
-
-
 
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error retrieving task by ID');
-
-
             return errorResponse(500, "unable to retrieve task");
-
         }
     }
 
     async updateTask(taskId: number, userId: number, updateData: UpdateTaskDTO) {
         try {
-            const assignment = await this.TaskRepository.manager
-                .getRepository('Task_assignment_entity')
-                .findOne({
-                    where: {
-                        task: { task_id: taskId },
-                        user: { user_id: userId },
-                        is_deleted: false
-                    }
-                });
+            const assignment = await this.Task_assignment_Repository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false
+                }
+            });
 
             if (!assignment || (assignment.permission !== TaskPermission.EDIT && assignment.permission !== TaskPermission.OWNER)) {
                 return errorResponse(404, "task not found");
             }
+
             const task = await this.TaskRepository.findOne({
                 where: {
                     task_id: taskId,
-                    user_id: userId,
                     is_deleted: false,
                 }
             });
 
-            logger.debug({ task }, 'Task fetched');
-
             if (!task) {
-
                 return errorResponse(404, "task not found");
             }
 
-
-
             if (updateData.title) {
                 task.title = updateData.title;
-                logger.debug({ task }, 'Task title updated');
             }
             if (updateData.description) {
                 task.description = updateData.description;
-                logger.debug({ task }, 'Task description updated');
             }
             if (updateData.status) {
                 task.status = updateData.status;
-                logger.debug({ task }, 'Task status updated');
             }
             if (updateData.dueDate) {
                 const parsedDate = parseFlexibleDate(updateData.dueDate);
@@ -280,10 +259,7 @@ export class Task_Service {
             }
 
             task.updated_at = new Date();
-
             await this.TaskRepository.save(task);
-
-            logger.info({ taskId, userId }, 'Task updated successfully');
 
             auditLog({
                 action: AuditAction.TASK_UPDATED,
@@ -297,44 +273,37 @@ export class Task_Service {
                         status: task.status,
                         dueDate: task.dueDate,
                     }
-
                 }
             });
-
 
             return successResponse(200, "task updated successfully", task);
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error updating task');
             return errorResponse(500, "unable to update task");
-
         }
     }
 
     async deleteTask(taskId: number, userId: number) {
         try {
-
-            const assignment = await this.TaskRepository.manager
-                .getRepository('Task_assignment_entity')
-                .findOne({
-                    where: {
-                        task: { task_id: taskId },
-                        user: { user_id: userId },
-                        is_deleted: false,
-                        permission: TaskPermission.OWNER
-                    }
-                });
+            const assignment = await this.Task_assignment_Repository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false,
+                    permission: TaskPermission.OWNER
+                }
+            });
 
             if (!assignment) {
                 return errorResponse(404, "task not found");
             }
+
             const task = await this.TaskRepository.findOne({
                 where: {
                     task_id: taskId,
-                    user_id: userId,
                 }
             });
 
-            logger.debug('task found')
             if (!task) {
                 return errorResponse(404, "task not found");
             }
@@ -343,54 +312,40 @@ export class Task_Service {
                 return errorResponse(409, "task already deleted");
             }
 
-            // soft delete implementation
-            // task.deleted_at = new Date();
             task.is_deleted = true;
             task.updated_at = new Date();
-
             await this.TaskRepository.save(task);
 
             logger.info({ taskId, userId }, 'Task soft deleted');
-
-
-
-
             return successResponse(200, "task deleted successfully", null);
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error deleting task');
             return errorResponse(500, "unable to delete task");
-
         }
     }
-
     async restoreTask(taskId: number, userId: number) {
         try {
-
-            const assignment = await this.TaskRepository.manager
-                .getRepository('Task_assignment_entity')
-                .findOne({
-                    where: {
-                        task: { task_id: taskId },
-                        user: { user_id: userId },
-                        is_deleted: false,
-                        permission: TaskPermission.OWNER
-                    }
-                });
+            const assignment = await this.Task_assignment_Repository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false,
+                    permission: TaskPermission.OWNER
+                }
+            });
 
             if (!assignment) {
                 return errorResponse(404, "task not found");
             }
 
-            let restoreTask = await this.TaskRepository.findOne({
+            const restoreTask = await this.TaskRepository.findOne({
                 where: {
-                    task_id: taskId,
-                    user_id: userId
+                    task_id: taskId
                 }
-            })
+            });
 
             if (!restoreTask) {
                 return errorResponse(404, "task not found");
-
             }
 
             if (!restoreTask.is_deleted) {
@@ -398,9 +353,8 @@ export class Task_Service {
             }
 
             restoreTask.is_deleted = false;
-            restoreTask.deleted_at = null
+            restoreTask.deleted_at = null;
             restoreTask.updated_at = new Date();
-
             await this.TaskRepository.save(restoreTask);
 
             logger.info({ taskId, userId }, 'Task restored');
@@ -408,7 +362,6 @@ export class Task_Service {
         } catch (error) {
             logger.error({ err: error, taskId, userId }, 'Error restoring task');
             return errorResponse(500, "unable to restore task");
-
         }
     }
 }

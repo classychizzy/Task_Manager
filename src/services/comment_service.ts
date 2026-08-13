@@ -6,20 +6,37 @@ import { CommentDTO } from "../dto/comment_dto";
 import { getPagination } from "../utils/pagination";
 import { logger } from "../lib/logger";
 import { errorResponse, successResponse } from "../utils/responsehelper";
+import { Task_assignment_Repository } from "../repositories/task_assignment_repository";
+import { TaskPermission } from "../enums/Taskpermission_enum";
 
 export class Comment_Service {
     private commentRepository: typeof CommentRepository;
     private taskRepository: typeof TaskRepository;
     private userRepository: typeof UserRepository;
+    taskAssignmentRepository: any;
 
     constructor() {
         this.commentRepository = CommentRepository;
         this.taskRepository = TaskRepository;
         this.userRepository = UserRepository;
+        this.taskAssignmentRepository = Task_assignment_Repository;
     }
 
     async createComment(taskId: number, userId: number, commentDTO: CommentDTO) {
         try {
+            const assignment = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false,
+                }
+
+            });
+
+            if (!assignment) {
+                return errorResponse(404, 'Task not found');
+            }
+
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
                 return errorResponse(404, 'Task not found');
@@ -47,14 +64,25 @@ export class Comment_Service {
         }
     }
 
-    async getCommentsForTask(taskId: number, page?: number, limit?: number) {
+    async getCommentsForTask(taskId: number, userId: number, page?: number, limit?: number) {
         const { skip, take, page: currentPage, limit: pageSize } = getPagination(page, limit);
         try {
+            const assignment = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { user_id: userId },
+                    is_deleted: false,
+                }
+            });
+
+            if (!assignment) {
+                return errorResponse(404, 'Task not found');
+            }
+
             const task = await this.taskRepository.findOne({ where: { task_id: taskId, is_deleted: false } });
             if (!task) {
                 return errorResponse(404, 'Task not found');
             }
-            logger.info({ task }, "Task fetched");
 
             const [comments, total] = await this.commentRepository.findAndCount({
                 where: { task: { task_id: taskId } },
@@ -64,6 +92,8 @@ export class Comment_Service {
                 order: { created_at: "DESC" }
             });
 
+
+
             const meta = {
                 total,
                 page: currentPage,
@@ -71,9 +101,16 @@ export class Comment_Service {
                 totalPages: Math.ceil(total / pageSize),
             };
 
-            return successResponse(200, 'Comments retrieved successfully', comments, meta);
+            const sanitizedComments = comments.map(c => {
+                const { password, ...userWithoutPassword } = c.user;
+                return { ...c, user: userWithoutPassword };
+            });
+
+            return successResponse(200, 'Comments retrieved successfully', sanitizedComments, meta);
+
+
         } catch (error) {
-            logger.error({ err: error, taskId }, 'Error retrieving comments for task');
+            logger.error({ err: error, taskId, userId }, 'Error retrieving comments for task');
             return errorResponse(500, 'Internal server error');
         }
     }
@@ -95,10 +132,6 @@ export class Comment_Service {
                 return errorResponse(404, 'Comment not found');
             }
 
-            if (!requesterId) {
-                return errorResponse(403, 'You can only delete your own comments');
-            }
-
             await this.commentRepository.remove(comment);
 
             return successResponse(200, 'Comment deleted successfully', null);
@@ -108,7 +141,7 @@ export class Comment_Service {
         }
     }
 
-    async updateComment(commentId: number, userId: number, CommentDTO: CommentDTO) {
+    async updateComment(commentId: number, userId: number, commentDTO: CommentDTO) {
         try {
             const comment = await this.commentRepository.findOne({
                 where: {
@@ -122,11 +155,8 @@ export class Comment_Service {
                 return errorResponse(404, 'Comment not found');
             }
 
-            if (!comment.user.user_id) {
-                return errorResponse(403, 'You can only update your own comments');
-            }
-
-            if (CommentDTO.content) comment.content = CommentDTO.content;
+            comment.content = commentDTO.content;
+            comment.updated_at = new Date();
 
             await this.commentRepository.save(comment);
 

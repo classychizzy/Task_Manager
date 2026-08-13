@@ -7,6 +7,7 @@ import { AssignTaskDTO } from "../dto/assign_task_dto";
 import { UpdateTaskPermissionDTO } from "../dto/updateAssign_task_dto";
 import { BulkAssignTaskDTO } from "../dto/bulkAssignUsers_dto";
 import { TransferOwnershipDTO } from "../dto/transferofOwnership_dto";
+import { DeleteResult } from "typeorm";
 
 
 export class TaskAssignment_Controller {
@@ -190,19 +191,19 @@ export class TaskAssignment_Controller {
             const result = await this.taskAssignmentService.bulkAssignUsers(
                 assignments, Number(taskId), requesterId);
 
-            return res.status(200).json(result);
+            return res.status(result.status_code || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in bulkAssignUsers');
-            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+            return res.status(500).json({ status: false, message: 'Internal server error' });
         }
     }
 
     public async TransferOwnership(req: AuthenticatedRequest, res: Response) {
         try {
-            const taskId = req.params.taskId;
-            const requestUserId = req.user!.id; // The user making the request
-            const presentOwnerId = req.body.presentOwnerId; // Usually the same as requestUserId
-            const newOwnerId = req.body.newOwnerId;
+
+            const taskId = Number(req.params.taskId);
+            const presentOwnerId = req.user!.id; // The user making the request
+            const newOwnerEmail = req.body.newOwnerEmail; //new owner email
 
             if (isNaN(Number(taskId)) || !taskId) {
                 return res.status(400).json({
@@ -211,13 +212,13 @@ export class TaskAssignment_Controller {
                 });
             }
 
-            logger.info({ taskId, requestUserId, presentOwnerId, newOwnerId }, 'TransferOwnership called');
+            logger.info({ taskId, presentOwnerId, newOwnerEmail }, 'TransferOwnership called');
 
-            const result = await this.taskAssignmentService.TransferOwnership(requestUserId, Number(taskId), presentOwnerId, newOwnerId);
-            return res.status(200).json(result);
+            const result = await this.taskAssignmentService.TransferOwnership(taskId, presentOwnerId, newOwnerEmail);
+            return res.status(result.status_code || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in TransferOwnership');
-            return res.status(500).json({ status: 'failed', message: 'Internal server error' });
+            return res.status(500).json({ status: false, message: 'Internal server error' });
         }
     }
 

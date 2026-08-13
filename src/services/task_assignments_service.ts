@@ -472,12 +472,8 @@ export class TaskAssignment_Service {
         }
     }
 
-
-
-
-    async TransferOwnership(userId: number, taskId: number, presentOwnerId: number, newOwnerId: number) {
+    async TransferOwnership(taskId: number, presentOwnerId: number, newOwnerEmail: string) {
         try {
-            logger.info({ taskId, presentOwnerId, newOwnerId }, 'TransferOwnership called');
             const presentOwner = await this.taskAssignmentRepository.findOne({
                 where: {
                     task: { task_id: taskId },
@@ -489,58 +485,62 @@ export class TaskAssignment_Service {
             });
 
             if (!presentOwner) {
-                return errorResponse(404, "you are not the owner of this task");
-            }
-            //verify if the request user is the same as the present owner
-            if (presentOwner.user.user_id !== userId) {
-                return errorResponse(404, "you are not authorized to transfer ownership of this task");
+                return errorResponse(404, "task not found");
             }
 
-            //check if new owner exists in task assignment
-            let newOwner = await this.taskAssignmentRepository.findOne({
+            const newOwnerUser = await this.userRepository.findOne({
+                where: { email: newOwnerEmail, is_deleted: false }
+            });
+
+            if (!newOwnerUser) {
+                return errorResponse(404, "user not found");
+            }
+
+            // to avoid transferring ownership to self
+            if (newOwnerUser.user_id === presentOwnerId) {
+                return errorResponse(409, "you already own this task");
+            }
+
+            let newOwnerAssignment = await this.taskAssignmentRepository.findOne({
                 where: {
                     task: { task_id: taskId },
-                    user: { user_id: newOwnerId },
+                    user: { user_id: newOwnerUser.user_id },
                     is_deleted: false
                 },
                 relations: ['user']
             });
 
-            if (!newOwner) {
-                //verify if the new owner is the same as the present owner
-                const userExists = await this.userRepository.findOne({ where: { user_id: newOwnerId } });
-                if (!userExists) {
-                    return { status_code: 404, message: 'New owner not found', data: null };
-                }
-
-
-                // Create new assignment
-                newOwner = this.taskAssignmentRepository.create({
+            if (!newOwnerAssignment) {
+                newOwnerAssignment = this.taskAssignmentRepository.create({
                     task: { task_id: taskId },
-                    user: { user_id: newOwnerId },
+                    user: { user_id: newOwnerUser.user_id },
                     permission: TaskPermission.OWNER,
                     is_deleted: false
                 });
             } else {
-                // Update existing assignment to OWNER
-                newOwner.permission = TaskPermission.OWNER;
+                newOwnerAssignment.permission = TaskPermission.OWNER;
             }
 
             presentOwner.permission = TaskPermission.EDIT;
 
-            await this.taskAssignmentRepository.save([presentOwner, newOwner]);
+            await this.taskAssignmentRepository.save([presentOwner, newOwnerAssignment]);
 
-            // Update the task owner (creator) field
-            const task = await this.taskRepository.findOne({ where: { task_id: taskId } });
-            if (task) {
-                task.user_id = newOwnerId; // Update the task's user relationship
-                await this.taskRepository.save(task);
-            }
+            auditLog({
+                action: AuditAction.TASK_OWNERSHIP_TRANSFERRED,
+                userId: presentOwnerId,
+                resource: "Task_assignment",
+                resourceId: String(taskId),
+                metadata: { newOwnerId: newOwnerUser.user_id, newOwnerEmail }
+            });
 
-            return successResponse(200, "ownership transferred successfully", { presentOwner, newOwner });
+            return successResponse(200, "ownership transferred successfully", { presentOwner, newOwnerAssignment });
+
         } catch (error) {
-            logger.error({ err: error, taskId, presentOwnerId, newOwnerId }, 'Error in TransferOwnership');
+            logger.error({ err: error, taskId, presentOwnerId, newOwnerEmail }, 'Error in TransferOwnership');
             return errorResponse(500, 'internal server error while transferring ownership');
         }
     }
+
+
+
 }
