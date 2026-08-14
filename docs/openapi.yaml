@@ -1,0 +1,495 @@
+openapi: 3.0.0
+info:
+  title: task-manager
+  version: 1.0.0
+servers:
+  - url: undefined://{{baseURL}}
+tags:
+  - name: auth
+  - name: projects
+  - name: tasks
+  - name: task_assignments
+  - name: comments
+paths:
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: bulk user registeration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                firstName: '{{first_name}}'
+                lastName: '{{last_name}}'
+                username: '{{username}}'
+                email: '{{email}}'
+                password: '{{password}}'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/user:
+    post:
+      tags:
+        - auth
+      summary: find user by email
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: leo@junkmail.com
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: user login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: chizobacokonkwo@gmail.com
+                password: loveit123
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/delete/me:
+    delete:
+      tags:
+        - auth
+      summary: Delete user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: refresh
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                refreshToken: '{{refreshtoken}}'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      summary: logout user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: chizobacokonkwo@gmail.com
+                password: loveit123
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/change/password:
+    put:
+      tags:
+        - auth
+      summary: change password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                currentPassword: '@Frankisawesome123'
+                newPassword: Frankwonder@234
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/forgot-password:
+    post:
+      tags:
+        - auth
+      summary: forgot password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: frankiesin@mail.com
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/reset-password:
+    post:
+      tags:
+        - auth
+      summary: reset password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                token: '{{token}}'
+                newPassword: '@Frankisawesome123'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /projects/create:
+    post:
+      tags:
+        - projects
+      summary: create project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: '{{name}}'
+                description: '{{description}}'
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json: {}
+  /projects/all:
+    get:
+      tags:
+        - projects
+      summary: get all projects
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /projects/:projectId/update:
+    put:
+      tags:
+        - projects
+      summary: update project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: greetings in foreign languages
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /projects/:projectId:
+    get:
+      tags:
+        - projects
+      summary: fetch project by id
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /projects/:projectId/delete:
+    delete:
+      tags:
+        - projects
+      summary: delete project
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /projects/:projectId/restore:
+    put:
+      tags:
+        - projects
+      summary: restore project
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /tasks/create/:projectId:
+    post:
+      tags:
+        - tasks
+      summary: create task
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                title: recommendation for track team
+                description: recommend a fitness tool
+                dueDate: '2027-01-21'
+                status: pending
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json: {}
+  /tasks/all/:projectId:
+    get:
+      tags:
+        - tasks
+      summary: fetch all tasks
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /tasks/1:
+    get:
+      tags:
+        - tasks
+      summary: fetch task
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /tasks/1/update:
+    put:
+      tags:
+        - tasks
+      summary: update a task
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                description: lists of steps to learn a new language
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /tasks/1/delete:
+    delete:
+      tags:
+        - tasks
+      summary: delete task
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /tasks/:taskId/restore:
+    put:
+      tags:
+        - tasks
+      summary: restore task
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/assign/:taskId:
+    post:
+      tags:
+        - task_assignments
+      summary: assign task to user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                email: rtomlins0@google.fr
+                permission: edit
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/update/:taskId/12:
+    put:
+      tags:
+        - task_assignments
+      summary: update user permission
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                permission: edit
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/permission/:taskId:
+    get:
+      tags:
+        - task_assignments
+      summary: get user's permission
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/remove/:taskId:
+    delete:
+      tags:
+        - task_assignments
+      summary: remove user
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/assignments/:taskId:
+    get:
+      tags:
+        - task_assignments
+      summary: get task assignments on specific task
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/assignedtasks:
+    get:
+      tags:
+        - task_assignments
+      summary: get user's assigned task
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/bulkassign/:taskId:
+    post:
+      tags:
+        - task_assignments
+      summary: bulk assignment of users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                assignments:
+                  - email: rtomlins0@google.fr
+                    permission: edit
+                  - email: mbolus3@pcworld.com
+                    permission: view
+                  - email: rgossipin2@amazonaws.com
+                    permission: edit
+                  - email: katt4@mozilla.com
+                    permission: view
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/assignments/user/:userId:
+    get:
+      tags:
+        - task_assignments
+      summary: get assignments for other users
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /taskassignments/transfer/:taskId:
+    put:
+      tags:
+        - task_assignments
+      summary: transfer of ownership
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                newOwnerEmail: ''
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /create/:taskId:
+    post:
+      tags:
+        - comments
+      summary: create comment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                content: task ownership has been transferrred to tomlins
+                priority_level: high
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /task/:taskId:
+    get:
+      tags:
+        - comments
+      summary: get comment
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /update/:commentId:
+    put:
+      tags:
+        - comments
+      summary: update comment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                priority_level: medium
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}

@@ -3,10 +3,12 @@ import { logger } from '../lib/logger';
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../types/express/auth-request';
 
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development';
+
 // 1. Global baseline — applies to the whole app, generous, just stops raw flooding
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'test' ? 1000 : 10, // bypass for test environment test
+  max: isTestEnv ? 1000 : 10,  // bypass for test and dev environment test
   standardHeaders: true,
   legacyHeaders: false,
   message: {

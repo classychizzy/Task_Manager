@@ -59,14 +59,14 @@ describe('Remove User From Task Integration Tests', () => {
     };
 
     // NOTE: route/param shape assumed. Service takes (taskId, userId, requesterId),
-    // and the route was registered as DELETE '/remove/:taskId' with no :userId,
-    // so userId is assumed to travel in the request body. Adjust if your
+    // and the route was registered as DELETE '/remove/:taskId' with no email,
+    // so email is assumed to travel in the request body. Adjust if your
     // controller actually expects it as a route param or query param instead.
-    const removeUser = (accessToken: string, taskId: number | string, userId: number | string) => {
+    const removeUser = (accessToken: string, taskId: number | string, email: string) => {
         return request(server)
             .delete(`/api/v1/taskassignments/remove/${taskId}`)
             .set('Authorization', `Bearer ${accessToken}`)
-            .send({ userId });
+            .send({ email });
     };
 
     describe('DELETE /taskassignments/remove/:taskId', () => {
@@ -90,7 +90,7 @@ describe('Remove User From Task Integration Tests', () => {
 
             await assignTask(owner.accessToken, taskId, { email: assignee.email });
 
-            const response = await removeUser(owner.accessToken, taskId, assignee.userId)
+            const response = await removeUser(owner.accessToken, taskId, assignee.email)
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(200);
@@ -107,7 +107,7 @@ describe('Remove User From Task Integration Tests', () => {
             const taskId = task.body.data.task_id;
 
             await assignTask(owner.accessToken, taskId, { email: assignee.email });
-            await removeUser(owner.accessToken, taskId, assignee.userId);
+            await removeUser(owner.accessToken, taskId, assignee.email);
 
             const response = await request(server)
                 .get(`/api/v1/taskassignments/permission/${taskId}`)
@@ -123,7 +123,7 @@ describe('Remove User From Task Integration Tests', () => {
             const task = await createTask(owner.accessToken, project.body.data.project_id);
             const taskId = task.body.data.task_id;
 
-            const response = await removeUser(owner.accessToken, taskId, owner.userId)
+            const response = await removeUser(owner.accessToken, taskId, owner.email)
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(409);
@@ -143,7 +143,7 @@ describe('Remove User From Task Integration Tests', () => {
             await assignTask(owner.accessToken, taskId, { email: viewer.email, permission: 'view' });
             await assignTask(owner.accessToken, taskId, { email: target.email, permission: 'view' });
 
-            const response = await removeUser(viewer.accessToken, taskId, target.userId)
+            const response = await removeUser(viewer.accessToken, taskId, target.email)
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(404);
@@ -157,11 +157,11 @@ describe('Remove User From Task Integration Tests', () => {
             const task = await createTask(owner.accessToken, project.body.data.project_id);
             const taskId = task.body.data.task_id;
 
-            const response = await removeUser(owner.accessToken, taskId, notAssigned.userId)
+            const response = await removeUser(owner.accessToken, taskId, notAssigned.email)
                 .expect('Content-Type', /json/);
 
             expect(response.body.status_code).toBe(404);
-            expect(response.body.message).toBe('assignment not found');
+            expect(response.body.message).toBe('target user not found');
         });
 
         it('should not actually remove the user when attempted by a non-owner', async () => {

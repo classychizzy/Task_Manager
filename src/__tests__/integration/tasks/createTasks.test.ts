@@ -171,7 +171,7 @@ describe('Create Task Integration Tests', () => {
 
             expect(response.body.status_code).toBe(400);
             expect(response.body.success).toBe(false);
-            expect(response.body.message).toBe('invalid date format');
+            expect(response.body.message).toBe('invalid date format, use YYYY-MM-DD format');
         });
 
         it('should accept a plain ISO date (YYYY-MM-DD) as due date', async () => {

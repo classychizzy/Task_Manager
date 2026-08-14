@@ -211,9 +211,9 @@ export class TaskAssignment_Service {
         }
     }
 
-    async removeUserFromTask(taskId: number, userId: number, requesterId: number) {
+    async removeUserFromTask(taskId: number, email: string, requesterId: number) {
         try {
-            logger.debug({ taskId, userId, requesterId }, 'removeUserFromTask called');
+            logger.debug({ taskId, email, requesterId }, 'removeUserFromTask called');
             const requester = await this.taskAssignmentRepository.findOne({
                 where: {
                     task: { task_id: taskId },
@@ -224,16 +224,28 @@ export class TaskAssignment_Service {
             if (!requester || requester.permission !== TaskPermission.OWNER) {
                 return errorResponse(404, "only owner can remove user from task");
             }
+            const targetUser = await this.taskAssignmentRepository.findOne({
+                where: {
+                    task: { task_id: taskId },
+                    user: { email: email },
+                    is_deleted: false
+                }
+            });
+
             //owner protection logic
 
-            else if (userId === requesterId) {
+            if (!targetUser) {
+                return errorResponse(404, "target user not found");
+            }
+
+            else if (targetUser.user_id === requesterId) {
                 return errorResponse(409, "you cannot remove yourself from the task");
             }
 
             const assignment = await this.taskAssignmentRepository.findOne({
                 where: {
                     task: { task_id: taskId },
-                    user: { user_id: userId },
+                    user: { user_id: targetUser.user_id },
                     is_deleted: false
                 }
             });
@@ -245,10 +257,10 @@ export class TaskAssignment_Service {
             assignment.is_deleted = true;
             assignment.updated_at = new Date();
             await this.taskAssignmentRepository.save(assignment);
-            logger.info({ taskId, userId, requesterId }, 'User removed from task');
+            logger.info({ taskId, email, requesterId }, 'User removed from task');
             return successResponse(200, "user removed from task successfully", assignment);
         } catch (error) {
-            logger.error({ err: error, taskId, userId, requesterId }, 'Error in removeUserFromTask');
+            logger.error({ err: error, taskId, email, requesterId }, 'Error in removeUserFromTask');
             return errorResponse(500, 'internal server error');
         }
     }

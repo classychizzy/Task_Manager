@@ -70,13 +70,14 @@ export class Task_Service {
 
 
             let dueDate: Date | null = null;
+            //make sure date is in isoformat
             if (createTaskDTO.dueDate) {
                 dueDate = parseFlexibleDate(createTaskDTO.dueDate);
                 logger.debug({ dueDate }, 'Due date parsed');
 
                 if (!dueDate) {
                     logger.error({ dueDate: createTaskDTO.dueDate }, 'Invalid date format');
-                    return errorResponse(400, "invalid date format");
+                    return errorResponse(400, "invalid date format, use YYYY-MM-DD format");
                 }
             }
 
@@ -110,6 +111,7 @@ export class Task_Service {
                     description: newTask.description,
                     dueDate: newTask.dueDate,
                     status: newTask.status,
+                    task_id: newTask.task_id,
                     project_id: projectId
                 }
             });

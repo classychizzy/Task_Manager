@@ -145,7 +145,7 @@ export class Task_Controller {
 
     private initializeRoutes() {
         this.router.post('/create/:projectId', validateDto(TaskDTO), this.createTask.bind(this));
-        this.router.get('/all/:projectId', strictAuthLimiter, this.getAllTasks.bind(this));
+        this.router.get('/all/:projectId', this.getAllTasks.bind(this));
         this.router.get('/:taskId', this.getTaskById.bind(this));
         this.router.put('/:taskId/update', validateDto(UpdateTaskDTO), this.UpdateTask.bind(this));
         this.router.delete('/:taskId/delete', this.DeleteTask.bind(this));

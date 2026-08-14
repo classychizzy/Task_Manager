@@ -6,9 +6,14 @@ import cors from 'cors';
 import AppDataSource from './ormconfig';
 
 import helmet from 'helmet';
-
+import YAML from 'yaml';
+import swaggerUi from 'swagger-ui-express';
 import { Request, Response } from 'express';
 import * as http from 'http';
+
+import * as fs from 'fs';
+import * as path from 'path';
+
 import { globalLimiter } from './middlewares/ratelimiter';
 
 import { HealthController } from './controllers/health_controller';
@@ -44,10 +49,16 @@ class App {
         this.app.use(requestLogger); //request logger middleware
         this.app.use(globalLimiter); //global rate limiter
 
-        this.app.use((err: any, req: Request, res: Response, next: any) => {
-            console.error(err.stack) // this shows you the real error
-            res.status(500).json({ message: err.message })
-        })
+        // Swagger / OpenAPI docs — publicly accessible, no auth required
+        const openApiPath = path.join(__dirname, '../docs/openapi.yaml');
+        if (fs.existsSync(openApiPath)) {
+            const openApiDocument = YAML.parse(fs.readFileSync(openApiPath, 'utf8'));
+            this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
+            console.log('Swagger docs available at /api-docs');
+        } else {
+            console.warn('openapi.yaml not found — skipping Swagger docs setup');
+        }
+
 
     }
 
@@ -79,6 +90,12 @@ class App {
             authenticateToken,
             new Comment_Controller().router
         );
+
+        //error handler is last after routes
+        this.app.use((err: any, req: Request, res: Response, next: any) => {
+            console.error(err.stack) // this shows you the real error
+            res.status(500).json({ message: err.message })
+        })
 
 
     }

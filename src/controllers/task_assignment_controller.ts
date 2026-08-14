@@ -8,6 +8,7 @@ import { UpdateTaskPermissionDTO } from "../dto/updateAssign_task_dto";
 import { BulkAssignTaskDTO } from "../dto/bulkAssignUsers_dto";
 import { TransferOwnershipDTO } from "../dto/transferofOwnership_dto";
 import { DeleteResult } from "typeorm";
+import { RemoveUserFromTaskDTO } from "../dto/RemoveUserFromTask_dto";
 
 
 export class TaskAssignment_Controller {
@@ -93,15 +94,15 @@ export class TaskAssignment_Controller {
         try {
             const taskId = req.params.taskId;
             const requesterId = req.user!.id; //id of the user i.e ownerremoving the user
-            const userId = req.body.userId; //id of the user to be removed
-            logger.debug({ taskId, requesterId, userId }, 'removeUserFromTask called');
+            const email = req.body.email; //id of the user to be removed
+            logger.debug({ taskId, requesterId, email }, 'removeUserFromTask called');
 
             if (isNaN(Number(taskId))) {
                 return res.status(400).json({ status: false, message: "Invalid task id" });
 
             }
             const result = await this.taskAssignmentService.removeUserFromTask(Number(taskId),
-                Number(userId), requesterId);
+                email, requesterId);
             return res.status(result.status_code || 200).json(result);
         } catch (error) {
             logger.error({ err: error }, 'Unhandled error in removeUserFromTask');
@@ -226,7 +227,7 @@ export class TaskAssignment_Controller {
         this.router.post('/assign/:taskId', validateDto(AssignTaskDTO), this.AssignUsertoTask.bind(this));
         this.router.put('/update/:taskId/:userId', validateDto(UpdateTaskPermissionDTO), this.UpdatePermission.bind(this));
         this.router.get('/permission/:taskId', this.getUserTaskPermission.bind(this));
-        this.router.delete('/remove/:taskId', this.removeUserFromTask.bind(this));
+        this.router.delete('/remove/:taskId', validateDto(RemoveUserFromTaskDTO), this.removeUserFromTask.bind(this));
         this.router.get('/assignments/:taskId', this.getTaskAssignments.bind(this));
         this.router.get('/assignedtasks', this.getUserassignedtasks.bind(this));
         this.router.get('/assignments/user/:userId', this.getAssignmentsForOtherUser.bind(this));
