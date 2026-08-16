@@ -13,7 +13,7 @@ const app = new App();
 
 app.initializeDatabase().then(() => {
     console.log("Database is connected and ready for queries.");
-    if (process.env.RUN_CRON === 'true') {
+    if (process.env.NODE_ENV !== 'development' && process.env.RUN_CRON === 'true') {
         handleTaskCron();
         console.log('cron jobs started');
     }

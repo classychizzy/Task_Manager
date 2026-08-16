@@ -3,7 +3,8 @@ info:
   title: task-manager
   version: 1.0.0
 servers:
-  - url: undefined://{{baseURL}}
+  - url: http://localhost:9000/api/v1
+    description: Local development server
 tags:
   - name: auth
   - name: projects
@@ -43,7 +44,8 @@ paths:
             schema:
               type: object
               example:
-                email: leo@junkmail.com
+                email: '[EMAIL_ADDRESS]'
+                password: '[PASSWORD]'
       responses:
         '200':
           description: Successful response

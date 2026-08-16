@@ -297,14 +297,6 @@
           "response": []
         },
         {
-          "name": "New Request",
-          "request": {
-            "method": "GET",
-            "header": []
-          },
-          "response": []
-        },
-        {
           "name": "change password",
           "request": {
             "auth": {
@@ -1469,24 +1461,8 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "delete comment",
-          "request": {
-            "method": "GET",
-            "header": []
-          },
-          "response": []
         }
       ]
-    },
-    {
-      "name": "health",
-      "request": {
-        "method": "GET",
-        "header": []
-      },
-      "response": []
     }
   ],
   "variable": [
