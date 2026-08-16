@@ -9,7 +9,7 @@ dotenv.config({ path: ['.env.local', '.env'] });
 
 
 
-const isProduction = process.env.NODE_ENV === 'prod';
+const isProduction = process.env.NODE_ENV === 'production';
 
 const host = isProduction ? process.env.POSTGRES_HOST_LIVE : process.env.POSTGRES_HOST;
 const port = isProduction ? Number(process.env.POSTGRES_PORT_LIVE) : Number(process.env.POSTGRES_PORT);
@@ -38,7 +38,9 @@ const AppDataSource = new DataSource({
       : "src/entities/*{.js,.ts}",
   ],
   migrations: ["src/migration/*{.ts}"],
+  ssl: isProduction ? { rejectUnauthorized: false } : false,
 });
+
 
 
 
