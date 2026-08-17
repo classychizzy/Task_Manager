@@ -20,6 +20,9 @@ if (!host || !port || !username || !password || !database) {
 
 }
 
+console.log('NODE_ENV:', JSON.stringify(process.env.NODE_ENV));
+console.log('KEYS:', Object.keys(process.env).filter(k => k.toUpperCase().includes('POSTGRES')));
+
 const AppDataSource = new DataSource({
   type: 'postgres',
   host: host,
