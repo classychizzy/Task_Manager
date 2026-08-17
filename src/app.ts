@@ -63,7 +63,15 @@ class App {
     }
 
 
+
     private initializeControllers() {
+        this.app.get("/", (_req: Request, res: Response) => {
+            res.status(200).json({
+                status: "ok",
+                service: "Task Manager API",
+                docs: "/api-docs",
+            });
+        });
         this.app.use("/welcome", async function (req: Request, res: Response) {
             res.status(200).send("Welcome to Task Manager");
         });

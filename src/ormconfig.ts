@@ -34,6 +34,12 @@ const AppDataSource = new DataSource({
   username: username,
   password: password,
   database: database,
+  // Enabled deliberately, against the usual production guidance. This project
+  // has no migration files yet, so synchronize is the only mechanism creating
+  // the schema on a fresh database. The known risk — TypeORM altering columns
+  // automatically on entity changes — is acceptable here because the deployment
+  // runs against a dedicated database with no data to preserve. Migrations will
+  // replace this.
   synchronize: true,//process.env.NODE_ENV === 'test',
   logging: false, //["query", "error"] use this when logging errors related to db mismatch
   entities: [

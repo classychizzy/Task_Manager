@@ -2,6 +2,10 @@
 
 # Task Manager API
 
+**Live API:** https://task-manager-net8.onrender.com  
+**API Documentation:** https://task-manager-net8.onrender.com/api-docs
+
+
 A production-style backend built with TypeScript, Express, PostgreSQL, and TypeORM that demonstrates secure authentication, role-based authorization, task collaboration, audit logging, background processing, and production-ready API design.
 
 Designed to simulate the architecture and security practices used in modern SaaS applications.
