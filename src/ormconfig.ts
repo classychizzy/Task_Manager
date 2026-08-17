@@ -1,11 +1,8 @@
-import { DataSource } from "typeorm";
 import * as dotenv from 'dotenv';
-
-//import * as dotenv dotenv';
-
-
 dotenv.config({ path: ['.env.local', '.env'] });
 // console.log(`Hello ${process.env.HELLO}`);
+import { DataSource } from "typeorm";
+
 
 
 
