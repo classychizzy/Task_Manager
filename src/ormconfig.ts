@@ -7,12 +7,17 @@ import { DataSource } from "typeorm";
 
 
 const isProduction = process.env.NODE_ENV === 'production';
+const host = process.env.POSTGRES_HOST;
+const port = Number(process.env.POSTGRES_PORT);
+const username = process.env.POSTGRES_USER;
+const password = process.env.POSTGRES_PASS;
+const database = process.env.POSTGRES_DB;
 
-const host = isProduction ? process.env.POSTGRES_HOST_LIVE : process.env.POSTGRES_HOST;
-const port = isProduction ? Number(process.env.POSTGRES_PORT_LIVE) : Number(process.env.POSTGRES_PORT);
-const username = isProduction ? process.env.POSTGRES_USER_LIVE : process.env.POSTGRES_USER;
-const password = isProduction ? process.env.POSTGRES_PASS_LIVE : process.env.POSTGRES_PASS;
-const database = isProduction ? process.env.POSTGRES_DB_LIVE : process.env.POSTGRES_DB;
+// const host = isProduction ? process.env.POSTGRES_HOST_LIVE : process.env.POSTGRES_HOST;
+// const port = isProduction ? Number(process.env.POSTGRES_PORT_LIVE) : Number(process.env.POSTGRES_PORT);
+// const username = isProduction ? process.env.POSTGRES_USER_LIVE : process.env.POSTGRES_USER;
+// const password = isProduction ? process.env.POSTGRES_PASS_LIVE : process.env.POSTGRES_PASS;
+// const database = isProduction ? process.env.POSTGRES_DB_LIVE : process.env.POSTGRES_DB;
 
 console.log('NODE_ENV:', JSON.stringify(process.env.NODE_ENV));
 console.log('KEYS:', Object.keys(process.env).filter(k => k.toUpperCase().includes('POSTGRES')));
@@ -32,9 +37,7 @@ const AppDataSource = new DataSource({
   synchronize: true,//process.env.NODE_ENV === 'test',
   logging: false, //["query", "error"] use this when logging errors related to db mismatch
   entities: [
-    isProduction ?
-      "dist/entities/*{.js,.ts}"
-      : "src/entities/*{.js,.ts}",
+    __dirname + "/entities/*{.js,.ts}",
   ],
   migrations: ["src/migration/*{.ts}"],
   ssl: isProduction ? { rejectUnauthorized: false } : false,
