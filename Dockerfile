@@ -1,4 +1,4 @@
-
+# for deployment purpose, the --build-arg command in docker compose is the one
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
