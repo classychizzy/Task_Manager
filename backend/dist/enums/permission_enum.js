@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Permission = void 0;
+var Permission;
+(function (Permission) {
+    Permission["ASSIGN_TASK"] = "assign_task";
+    Permission["UNASSIGN_TASK"] = "unassign_task";
+    Permission["VIEW_TASK_ASSIGNMENTS"] = "view_task_assignments";
+    Permission["TRANSFER_OWNERSHIP"] = "transfer_ownership";
+    Permission["BULK_ASSIGN_USERS"] = "bulk_assign_users";
+    Permission["REMOVE_USER_FROM_TASK"] = "remove_user_from_task";
+    Permission["GET_USER_ASSIGNED_TASKS"] = "get_user_assigned_tasks";
+    Permission["GET_ASSIGNMENTS_FOR_OTHER_USER"] = "get_assignments_for_other_user";
+    Permission["UPDATE_PERMISSION"] = "update_permission";
+    Permission["GET_USER_TASK_PERMISSION"] = "get_user_task_permission";
+    Permission["GET_ALL_USERS_PERMISSIONS"] = "get_all_users_permissions";
+    Permission["GET_ALL_TASKS_PERMISSIONS"] = "get_all_tasks_permissions";
+    Permission["GET_ALL_ASSIGNMENTS"] = "get_all_assignments";
+    Permission["GET_ALL_TASKS_ASSIGNMENTS"] = "get_all_tasks_assignments";
+})(Permission || (exports.Permission = Permission = {}));

@@ -1,0 +1,102 @@
+version: "3"
+services:
+  app:
+    build: .
+    container_name: task-manager-app-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - app_data:/data/app
+    env_file:
+      - docker.env
+    environment:
+      - RUN_CRON=false
+    depends_on:
+      - postgres-db
+    restart: unless-stopped
+    networks:
+      - task-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  worker:
+    build: .
+    container_name: task-manager-worker
+    env_file:
+      - docker.env
+    environment:
+      - RUN_CRON=true
+    depends_on:
+      - postgres-db
+    restart: unless-stopped
+    networks:
+      - task-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres-db:
+    container_name: postgres-db
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - docker.env
+    networks:
+      - task-network
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    env_file:
+      - docker.env
+    depends_on:
+      - postgres-db
+    networks:
+      - task-network
+
+  # test database
+  postgres_test:
+    container_name: postgres_test
+    image: postgres:latest
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: task_manager_test
+    networks:
+      - task-network
+
+  pgadmin_test:
+    container_name: pgadmin_test
+    image: dpage/pgadmin4
+    ports:
+      - "8081:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres_test
+    networks:
+      - task-network
+
+networks:
+  task-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+  app_data:
