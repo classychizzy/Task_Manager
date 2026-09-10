@@ -36,6 +36,7 @@
 .login-form input {
     padding: 10px 12px;
     font-size: 14px;
+    background-color: #ffffff;
     border: 1px solid #e4e2df;
     border-radius: 4px;
     outline: none;
@@ -58,7 +59,7 @@
     color: #a8a5a0;
 }
 
-.login-form button {
+.submit-button {
     margin-top: 24px;
     padding: 11px;
     font-size: 14px;
@@ -71,11 +72,11 @@
     transition: background-color 0.15s ease;
 }
 
-.login-form button:hover:not(:disabled) {
+.submit-button:hover:not(:disabled) {
     background-color: #3a3836;
 }
 
-.login-form button:disabled {
+.submit-button:disabled {
     background-color: #a8a5a0;
     cursor: not-allowed;
 }
