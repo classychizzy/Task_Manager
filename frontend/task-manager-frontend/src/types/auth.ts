@@ -2,8 +2,8 @@ export interface User {
     user_id: string;
     email: string;
     username: string;
-    firstname: string;
-    lastname: string;
+    firstName: string;
+    lastName: string;
 
 }
 
@@ -24,4 +24,15 @@ export interface RegisterPayload {
     username: string;
     email: string;
     password: string;
+}
+
+export interface UpdateUserPayload {
+    firstName?: string;
+    lastName?: string;
+    username?: string;
+}
+
+export interface ChangePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
 }

@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await loginRequest(email, password);
         const { accessToken, refreshToken, user } = response.data;
 
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
+        if (accessToken) localStorage.setItem("accessToken", accessToken);
+        if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
         setUser(user);
     }

@@ -1,14 +1,25 @@
 // src/api/projects.ts
 import apiClient from "./client";
 import type { ApiResponse } from "../types/Responsehandler";
-import type { Project } from "../types/project";
+import type { Project, PaginationMeta, createProject } from "../types/project";
 
-export async function getProjects(): Promise<ApiResponse<Project[]>> {
-    const { data } = await apiClient.get<ApiResponse<Project[]>>("/projects");
+export interface ProjectsResponse extends ApiResponse<Project[]> {
+    meta?: PaginationMeta;
+}
+
+export async function getAllProjects(page = 1, limit = 10): Promise<ProjectsResponse> {
+    const { data } = await apiClient.get<ProjectsResponse>("/projects/all", {
+        params: { page, limit },
+    });
     return data;
 }
 
-export async function getProject(project_id: string): Promise<ApiResponse<Project>> {
-    const { data } = await apiClient.get<ApiResponse<Project>>(`/projects/${project_id}`);
+export async function createProject(
+    payload: createProject
+): Promise<ApiResponse<Project>> {
+    const { data } = await apiClient.post<ApiResponse<Project>>(
+        "/projects/create",
+        payload
+    );
     return data;
 }

@@ -1,0 +1,111 @@
+.create-project-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fafaf9;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.create-project-form {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px 32px;
+    background: #ffffff;
+    border: 1px solid #e4e2df;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.create-project-form h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #1c1b1a;
+}
+
+.create-project-subtitle {
+    margin: -4px 0 16px;
+    font-size: 13px;
+    color: #6b6864;
+}
+
+.create-project-form label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b6864;
+    margin-top: 12px;
+}
+
+.create-project-form input,
+.create-project-form textarea {
+    background-color: #ffffff;
+    color: #1c1b1a;
+    color-scheme: light;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid #e4e2df;
+    border-radius: 4px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s ease;
+}
+
+.create-project-form input:focus,
+.create-project-form textarea:focus {
+    border-color: #a8a5a0;
+}
+
+.create-project-error {
+    margin: 8px 0 0;
+    font-size: 13px;
+    color: #b0483f;
+}
+
+.create-project-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.cancel-button {
+    flex: 1;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b6864;
+    background: none;
+    border: 1px solid #e4e2df;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.cancel-button:hover {
+    color: #1c1b1a;
+    border-color: #a8a5a0;
+}
+
+.submit-button {
+    flex: 2;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #1c1b1a;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+    background-color: #3a3836;
+}
+
+.submit-button:disabled {
+    background-color: #a8a5a0;
+    cursor: not-allowed;
+}
